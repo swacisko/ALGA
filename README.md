@@ -34,5 +34,4 @@ You can run ALGA specifying only one file with reads (in that case just remove _
 
 # Additional parameters:
 To use ALGA for transcripts, please add the _\-\-rna=1_ option.<br>
-If you have suspicions, that ends of reads are of poor quality, you can trim some fixed number of nucleotides from left and right ends using respectively options _\-\-retl=5_ and _-\-retr=7_.<br>
-
+If you have suspicions, that the input data is for some reason of very low quality and may after read correction still contain large number of errors, you can additionally set option _\-\-error-rate=0.02_ (the value used, here 0.02, should denote the average expected fraction of errors).
