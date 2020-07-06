@@ -1,14 +1,25 @@
 # ALGA
 This repository contains code of ALGA - a _de novo_ genome assembler.
 
+---
+
 # Description:
-ALGA is a _de novo_ genome assembler based on the _overlap-layout-consensus_ strategy and works in the typical phases: data preprocessing, graph construction, graph simplification and graph traversal. ALGA works on short-read input, preferable paired-end library. Please make sure that the reads you provide as an input have a very good quality (we advise to correct raw reads using [_Musket_](http://musket.sourceforge.net/homepage.htm)).
+ALGA (ALgorithm for Genome Assembly) is a genome-scale de novo sequence assembler based on the overlap graph approach. The method accepts at the input reads from the next generation DNA sequencing, paired or not. It
+can be used without setting any parameter by a user, parameters are
+adjusted internally by ALGA on the basis of input data. Only one
+optional parameter is left, the maximum allowed error rate in overlaps
+of reads, with its default (and suggested) value 0. <br>
+
+Please make sure that the reads you provide as an input have a very good quality (we advise to correct raw reads using [_Musket_](http://musket.sourceforge.net/homepage.htm)).
+
+---
 
 # Requirements:
-CMake VERSION 2.8.7 or higher
+CMake VERSION 2.8.7 or higher<br>
 c++ 17 or higher
 
 
+---
 
 # Installation:
 Use cmake to obtain a binary file, e.g. in linux in the main directory you can use the following commands:
@@ -20,18 +31,20 @@ make
 
 After this, the executable file named "ALGA" should be in the "build" directory
 
+---
+
 # Usage tips:
 PLEASE use [_Musket_](http://musket.sourceforge.net/homepage.htm) software to correct reads, before running ALGA. <br>
 Typical usage of ALGA consists in specifying one or two input files (both with .fastq or .fasta extension), number of threads and an output file name for contigs.
+<br>
 
-./ALGA &nbsp;
-_\-\-file1=somepath1/corrected-reads_1.fastq_ &nbsp; 
-_\-\-file2=somepath2/corrected-reads_2.fastq_ &nbsp; 
-_\-\-threads=8_ &nbsp; 
-_\-\-output=contigs.fasta_ &nbsp; 
+```
+./ALGA --file1=path1/reads_1.fastq --file2=path2/reads_2.fastq --threads=8 --output=contigs.fasta
+```
 
-You can run ALGA specifying only one file with reads (in that case just remove _\-\-file2=somepath2/corrected-reads_2.fastq_ clause).
+You can run ALGA specifying only one file with reads (in that case just remove _\-\-file2=path2/reads_2.fastq_ clause).
+
+---
 
 # Additional parameters:
-To use ALGA for transcripts, please add the _\-\-rna=1_ option.<br>
-If you have suspicions, that the input data is for some reason of very low quality and may after read correction still contain large number of errors, you can additionally set option _\-\-error-rate=0.02_ (the value used, here 0.02, should denote the average expected fraction of errors).
+If you have suspicions, that the input data is for some reason of very poor quality and may - even after read correction - still contain large number of errors, you can additionally set option _\-\-error-rate=0.02_ (the value used, here 0.02, should denote the average expected fraction of errors).
