@@ -10,41 +10,44 @@ adjusted internally by ALGA on the basis of input data. Only one
 optional parameter is left, the maximum allowed error rate in overlaps
 of reads, with its default (and suggested) value 0. <br>
 
-Please make sure that the reads you provide as an input have a very good quality (we advise to correct raw reads using [_Musket_](http://musket.sourceforge.net/homepage.htm)).
+Please make sure that the reads you provide as an input have a very good quality (it is strongly recommended to use [_Musket_](http://musket.sourceforge.net/homepage.htm), a tool for read correction based on a k-mer analysis,
+before running ALGA).
 
 ---
 
 # Requirements:
 CMake VERSION 2.8.7 or higher<br>
-c++ 17 or higher
+C++ 17 or higher
 
 
 ---
 
 # Installation:
-Use cmake to obtain a binary file, e.g. in linux in the main directory you can use the following commands:
+Download the archive with code of ALGA and unpack it, or clone the ALGA repository. Use
+CMake to obtain the binary file. For example, in Linux, in the main directory of ALGA, you can
+use the following commands:
 
 mkdir build <br>
 cd build <br>
 cmake .. <br>
 make
 
-After this, the executable file named "ALGA" should be in the "build" directory
+After this, the executable file named "ALGA" should be in the "build" directory.
 
 ---
 
 # Usage tips:
 PLEASE use [_Musket_](http://musket.sourceforge.net/homepage.htm) software to correct reads, before running ALGA. <br>
-Typical usage of ALGA consists in specifying one or two input files (both with .fastq or .fasta extension), number of threads and an output file name for contigs.
+A typical usage of ALGA consists in specifying one or two input files (both with .fastq or .fasta extension), the number of threads and the output file name for contigs.
 <br>
 
 ```
 ./ALGA --file1=path1/reads_1.fastq --file2=path2/reads_2.fastq --threads=8 --output=contigs.fasta
 ```
 
-You can run ALGA specifying only one file with reads (in that case just remove _\-\-file2=path2/reads_2.fastq_ clause).
+You can run ALGA specifying only one input file. In that case just remove the argument _\-\-file2=path2/reads_2.fastq_. The number of threads is an optional parameter and can be removed, it is set to 6 by default.
 
 ---
 
 # Additional parameters:
-If you have suspicions, that the input data is for some reason of very poor quality and may - even after read correction - still contain large number of errors, you can additionally set option _\-\-error-rate=0.02_ (the value used, here 0.02, should denote the average expected fraction of errors).
+If you suspect that the input data are for some reason of very poor quality and may – even after the read correction – still contain a large number of errors, you can additionally use the option _\-\-error-rate=0.02_ (the value used, here 0.02, denotes the average expected fraction of errors).
