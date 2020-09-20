@@ -28,7 +28,9 @@ typedef long long LL;
  */
 class AlignmentController {
 public:
-    
+
+    virtual ~AlignmentController(){};
+
     virtual bool canAlign( Read *r1, Read *r2, int offset ) = 0; // returns true, if reads r1 and r2 can be aligned if r2 starts at position offset of r1
 
 //    static int calculateReadOverlap( Read *r1, Read *r2, int offset ){ return min( r1->size(), r2->size() + offset ) - offset;  }

@@ -421,7 +421,7 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                     if( Read::calculateReadOverlap( suff->read, pref->read, offset ) < currentPrefSufLength ) continue; // this line here prohibits included alignment
 
                         if( currentPrefSufLength < Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ){
-                            smallOverlapEdges[ suffId ].push_back( {prefId,offset} ); // i add normale edges here
+                            smallOverlapEdges[ suffId ].push_back( {prefId,offset} ); // i add normal edges here
                             if( smallOverlapEdges[suffId].size() > Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ){
                                 smallOverlapEdges[suffId].erase( smallOverlapEdges[suffId].begin() );
 

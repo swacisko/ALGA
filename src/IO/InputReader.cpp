@@ -40,7 +40,7 @@ InputReader::InputReader() {
     STRreads = VI(Params::THREADS,0);
     Nreads = VI(Params::THREADS,0);
 
-    NsInRead = VVI( Params::THREADS, VI(350,0) );
+    NsInRead = VVI( Params::THREADS, VI(1000,0) );
 }
 
 InputReader::InputReader(const InputReader& orig) {

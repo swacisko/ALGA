@@ -130,6 +130,8 @@ public:
     static int SEQUENCE_TOTAL_LENGTH;
     static vector< Read* > READS; // vector containing all reads.
     static Graph GRAPH; // here is the structure of created graph.
+
+    static vector<char> pairedReadOffset;
     
     static void addRead(string s, vector<Read*> & READS = Global::READS);
     

@@ -82,7 +82,7 @@ public:
      */
     void pushDirectedEdge(int a, int b, int offset);
 
-    void removeDirectedEdge( int a, int b ); // removes edge (a,b) from the graph if exists. Changes sequence of neighbors of a during execution.
+    bool removeDirectedEdge(int a, int b ); // removes edge (a,b) from the graph if exists. Changes sequence of neighbors of a during execution.
     void mergeVertices( int a, int b, int offset ); // merges vertices a and b. All edges (a,x) will be added as (b,x). (b,a) will be removed if exists to avoid cycles. (a,b) will be present with given offset.
 
     /**
@@ -225,14 +225,11 @@ public:
     void writeContractedPath( int a, int b );
 
     void lockNode(int id){
-        /*cerr << "locking " << id << " / " << mutexes->size() << endl;*/
-        (*mutexes)[id].lock();
-        /*cerr << "locked" << endl; */
+//        (*mutexes)[id].lock();
+        while(!(*mutexes)[id].try_lock() ); // active waiting
     }
     void unlockNode(int id){
-        /*cerr << "unlocking " << id << endl;*/
         (*mutexes)[id].unlock();
-        /*cerr << "unlocked" << endl;*/
     }
     vector<mutex> *mutexes;
 

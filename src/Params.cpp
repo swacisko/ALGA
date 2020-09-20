@@ -244,7 +244,7 @@ void Params::initializeParams(int argc, char **argv) {
 //        {alg.c_str(),                                                   required_argument,          0,  0 },
 //        {li_kmer_intervals.c_str(),                                     required_argument,          0,  0 },
 //        {li_kmer_length.c_str(),                                        required_argument,          0,  0 },
-//        {redirect_cerr.c_str(),                                         required_argument,          0,  0 },
+        {redirect_cerr.c_str(),                                         required_argument,          0,  0 },
 //        {max_offset_considered_for_alignment.c_str(),                   required_argument,          0,  0 },
 //        {max_offset_parallel_paths.c_str(),                             required_argument,          0,  0 },
 //        {max_offset_dangling_branches.c_str(),                          required_argument,          0,  0 },
@@ -283,7 +283,7 @@ void Params::initializeParams(int argc, char **argv) {
 //        {min_offset_for_alignment.c_str(),                              required_argument,          0,  0 },
 //        {rpr.c_str(),                                                   required_argument,          0,  0 },
 //        {remove_pref_reads.c_str(),                                     required_argument,          0,  0 },
-//        {serialize.c_str(),                                             required_argument,          0,  0 },
+        {serialize.c_str(),                                             required_argument,          0,  0 },
 //        {rna.c_str(),                                                   required_argument,          0,  0 },
 //        {scale.c_str(),                                                 required_argument,          0,  0 },
 //        {tpn.c_str(),                                                required_argument,          0,  0 },
@@ -581,7 +581,7 @@ void Params::initializeParams(int argc, char **argv) {
             if (it == string::npos) it = logName.find(".fastq");
             if (it != string::npos) logName.erase(it);
             errStream.open(logName + ".log");
-            cerr.rdbuf(errStream.rdbuf());
+//            cerr.rdbuf(errStream.rdbuf());
         }
     }
 

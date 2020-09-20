@@ -246,6 +246,8 @@ void GraphSimplifier::simplifyGraphOld() {
 
             if( i == REMOVE_ITERATIONS-1 && removed > 0 ) REMOVE_ITERATIONS++;
 
+            if( i >= 15 && removed <= 30 ) break; // just to prevent very long loops that sometimes occur in the graph and make absolutely no influence on the quality of the results.
+
         }
 
         Global::removeIsolatedReads();
@@ -638,7 +640,9 @@ int GraphSimplifier::removeDanglingBranches(int maxOffset) {
     int progressCounter = 0;
     for( auto e : toRemove ){
         branchesRemoved++;
-        G->removeDirectedEdge( e.first, e.second );
+        if( G->removeDirectedEdge( e.first, e.second ) == false ){
+            cerr << "Trying to remove an edge that is not present in the graph! In removeDanglingBranches()" << endl;
+        }
         MyUtils::writeProgress(progressCounter+1,G->size(),progressCounter, "RemoveDanglingBranches, removing edges" ,1);
     }
     toRemove.clear();
@@ -801,7 +805,8 @@ bool GraphSimplifier::contractPathNodes() {
 
     Graph GRev = G->getReverseGraph();
 //    cerr << "GRev = " << endl << GRev << endl;
-    VI pathNodes;
+//    VI pathNodes;
+    deque<int> pathNodes;
     for( int i=0; i<G->size(); i++ ){
         if( (*G)[i].size() == 1 && GRev[i].size() == 1 ) pathNodes.push_back(i);
     }
@@ -810,9 +815,13 @@ bool GraphSimplifier::contractPathNodes() {
     bool anyContractionDone = false;
     int contractionsDone = 0;
     int progressCounter = 0;
-    for( int i=0; i<pathNodes.size(); i++ ){
+//    for( unsigned i=0; i<pathNodes.size(); i++ ){
+//        int b = pathNodes[i];
 
-        int b = pathNodes[i];
+    unsigned cnt = 0;
+    while( !pathNodes.empty() ){
+        int b = pathNodes.front();
+        pathNodes.pop_front();
 
         if( (*G)[b].size() == 0 ) continue;
 
@@ -837,8 +846,8 @@ bool GraphSimplifier::contractPathNodes() {
             pathNodes.push_back(c);
         }
 
-        MyUtils::writeProgress(i+1,pathNodes.size(), progressCounter, "contracting paths progress",1);
-
+        cnt++;
+        MyUtils::writeProgress(cnt,G->size(), progressCounter, "contracting paths progress",1); // just roughly accurate
     }
     cerr << endl;
     cerr << "There were " << contractionsDone << " contractions" << endl;

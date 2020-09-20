@@ -97,10 +97,11 @@ void Graph::mergeVertices(int a, int b, int offset) {
 }
 
 
-void Graph::removeDirectedEdge(int a, int b) {
+bool Graph::removeDirectedEdge(int a, int b) {
 //    if( !contractedEdges.empty() ) contractedEdges[a].erase(b);
     if( !contractedEdges.empty() ) contractedEdges[a]->erase(b);
 
+    bool removed = false;
         int p = V[a].size() - 1;
         for (int i = V[a].size() - 1; i >= 0; i--) {
             if (V[a][i].first == b) {
@@ -108,12 +109,11 @@ void Graph::removeDirectedEdge(int a, int b) {
 
                 V[a].pop_back();
                 p--;
-
-
+                removed = true;
             }
         }
 
-
+    return removed;
 }
 
 
@@ -231,7 +231,10 @@ void Graph::write(int a, int b) {
 bool Graph::deserializeGraph(string fileName) {
 
     ifstream str( fileName, ios::binary | ios::in );
-    if( str.good() == false ) return false;
+    if( str.good() == false ) {
+        str.close();
+        return false;
+    }
 
     int s;
     str.read( (char *) &s, sizeof( s ) );
@@ -246,7 +249,7 @@ bool Graph::deserializeGraph(string fileName) {
     int progressCounter = 0;
     for( int i=0; i<s; i++ ){
         int id;
-        str.read( (char *) &id, sizeof(id) ); // this is id ov fiven vertex
+        str.read( (char *) &id, sizeof(id) ); // this is id of given vertex
 
         int t; // number of neighbors
         str.read( (char* ) &t, sizeof(t) );
@@ -707,7 +710,7 @@ void Graph::reverseGraph() {
 
     VVPII rev(size());
     VI *inDegrees = getInDegrees();
-    for( int i=0; i<size(); i++ ) rev.reserve( (*inDegrees)[i] );
+    for( int i=0; i<size(); i++ ) rev[i].reserve( (*inDegrees)[i] );
     delete inDegrees;
     inDegrees = nullptr;
 

@@ -39,6 +39,7 @@ void Global::addRead(string s, vector<Read*> & READS) { // adds read to the set 
 
 vector<Read*> Global::READS(0);
 Graph Global::GRAPH(0);
+vector<char> Global::pairedReadOffset;
 double Global::AVG_READ_LENGTH = 0;
 
 void Global::writeReads(int a, int b) {

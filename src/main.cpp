@@ -25,6 +25,7 @@
 #include <queue>
 #include <GraphCreators/GraphCreatorPairwiseKmerBranch.h>
 #include <ContigCreators/ContigCorrector.h>
+#include <assert.h>
 
 #include "IO/InputReader.h"
 #include "Global.h"
@@ -141,6 +142,140 @@ int main(int argc, char** argv) {
 
     MyUtils::process_mem_usage();
 
+    bool write_and_read = false;
+    if( Params::ADD_PAIRED_READS == false ) write_and_read = false;
+
+    {
+        unsigned id = 0;
+
+        if(write_and_read) cerr << "WRITING REMAINING READS TO A SINGLE FASTA FILE" << endl;
+        else cerr << "Remapping reads to the set of valid ids" << endl;
+        ofstream str;
+        if(write_and_read) str.open( Params::TEST_NAME + "remaining_reads.fasta" );
+        Global::pairedReadOffset.clear();
+
+//        vector<Read*> newReads;
+        unsigned back_index = 0;
+
+        auto swap_reads = [&back_index]( int i ){
+            Global::READS[back_index] = Global::READS[i];
+            Global::READS[back_index+1] = Global::READS[i+1];
+            back_index += 2;
+        };
+
+
+        for( unsigned i=0; i<Global::READS.size(); i+=2 ){
+//            assert(Global::READS[20] != nullptr && Global::READS[22] != nullptr);
+
+            if( Global::READS[i] != nullptr ){
+                ++id;
+//                cerr << "increasing id" << endl;
+//                DEBUG(i);
+//                DEBUG(id);
+
+                assert( Global::READS[i+1] != nullptr ); // this should not happen - either both read r and its reverse complimentary are present, or neither.
+
+                if(write_and_read) str << "read_" << id << "\n";
+                if(write_and_read) str << Global::READS[i]->getSequenceAsString() << "\n";
+//                Global::removeRead(i);
+
+                if( (i%4) == 0  ){
+
+                    if( i+2 < Global::READS.size() && Global::READS[i+2] != nullptr ){
+//                        cerr << "Adding read and paired read" << endl;
+//                        DEBUG( (*Global::READS[i]) );
+//                        DEBUG( (*Global::READS[i+2]) );
+
+                        Global::pairedReadOffset.push_back(1); // for i-th read
+                        Global::pairedReadOffset.push_back(1); // for reverse complimentary read
+
+                        if(!write_and_read) swap_reads(i);
+
+                        Global::pairedReadOffset.push_back(2); // for paired reads
+                        Global::pairedReadOffset.push_back(2); // for reverse complimentary paired read
+
+                        if(!write_and_read) swap_reads(i+2);
+
+                    }else{
+//                        cerr << "\tAdding only read" << endl;
+//                        DEBUG( (*Global::READS[i]) );
+                        Global::pairedReadOffset.push_back(0);
+                        Global::pairedReadOffset.push_back(0); // for reverse complimentary read
+
+                        if(!write_and_read) swap_reads(i);
+                    }
+                }else if( Global::READS[i-2] == nullptr ){
+//                    cerr << "\t\tAdding only paired read" << endl;
+//                        DEBUG( (*Global::READS[i]) );
+                    Global::pairedReadOffset.push_back(0); // for this read - its paired read was removed
+                    Global::pairedReadOffset.push_back(0); // for reverse complimentary read
+
+                    if(!write_and_read) swap_reads(i);
+                }
+
+            }
+
+
+            if( write_and_read && (i%4) == 2 ){
+                Global::removeRead(i-2);
+                Global::removeRead(i);
+            }
+
+            if(!write_and_read && (i%4) == 2 &&  2*id != back_index){ // just for test
+                DEBUG(i);
+                DEBUG(id);
+                DEBUG(2*id);
+                DEBUG(back_index);
+                assert( 2*id == back_index );
+            }
+        }
+        if(write_and_read){
+            cerr << "The are " << id << " reads written to .fasta file (no complimentary reverse reads here)" << endl;
+            str.flush();
+            str.close();
+        }
+        else{
+            DEBUG(id);
+            DEBUG(2*id);
+            DEBUG(back_index);
+        }
+
+        if(write_and_read) vector<Read*>().swap( Global::READS );
+        else{
+            DEBUG(Global::READS.size());
+            Global::READS.resize(back_index);
+            vector<Read*>(  Global::READS.begin(), Global::READS.end() ).swap( Global::READS );
+            DEBUG(Global::READS.size());
+            for(int i=0; i<Global::READS.size(); i++) Global::READS[i]->setId(i);
+        }
+    }
+
+    if(write_and_read){
+        Params::inStreamFilePath1 = Params::TEST_NAME + "remaining_reads.fasta";
+        Params::INPUT_FILE_TYPE = Params::FASTA;
+
+        auto tl = Params::READ_END_TRIM_LEFT, tr = Params::READ_END_TRIM_RIGHT;
+        Params::READ_END_TRIM_LEFT = Params::READ_END_TRIM_RIGHT = 0;
+
+        Params::ADD_PAIRED_READS = 0;
+//        DEBUG(Params::ADD_COMP_REV_READS);
+//        Params::ADD_COMP_REV_READS = 1;
+        InputReader reader;
+        reader.readInput();
+        Params::ADD_PAIRED_READS = 1;
+
+        Params::READ_END_TRIM_LEFT = tl;
+        Params::READ_END_TRIM_RIGHT = tr;
+
+        DEBUG(Global::pairedReadOffset.size());
+        DEBUG(Global::READS.size());
+        assert( Global::READS.size() == Global::pairedReadOffset.size() );
+    }
+
+    READS = &Global::READS;
+
+    assert( Global::READS.size() == Global::pairedReadOffset.size() );
+
     Global::GRAPH = Graph( Global::READS.size() );
     Graph *G = &Global::GRAPH;
 
@@ -203,8 +338,8 @@ int main(int argc, char** argv) {
     MyUtils::process_mem_usage();
 
 //    bool usePkbSupplement = ( Params::TPN.find( "suppl" ) != string::npos );
-//    bool usePkbSupplement = Params::USE_GRAPH_CREATOR_SUPPLEMENT;
-    bool usePkbSupplement = true;
+    bool usePkbSupplement = Params::USE_GRAPH_CREATOR_SUPPLEMENT;
+//    bool usePkbSupplement = true;
     if(usePkbSupplement){
         TimeMeasurer::startMeasurement( "GraphCreator PKB Supplement" );
 
@@ -293,7 +428,7 @@ int main(int argc, char** argv) {
         cerr << endl << "AFTER SIMPLIFIER - CONTRACTING PATHS" << endl;
         MyUtils::process_mem_usage();
 
-    }
+    } // end of simplifier
 
 
         G->retainOnlySmallestOffset();
@@ -312,6 +447,46 @@ int main(int argc, char** argv) {
 
 
 
+   /* { // testing treewidth of connected components #TEST
+        VPII edges;
+        edges.reserve( 2*G->countEdges() );
+        for( int i=0; i<G->size(); i++ ){
+            int a = i;
+            for( PII p : (*G)[i] ){
+                int b = p.first;
+                edges.emplace_back( a,b );
+                edges.emplace_back( b,a );
+            }
+        }
+
+        sort( edges.begin(), edges.end() );
+        edges.resize( unique( edges.begin() , edges.end() ) - edges.begin() );
+
+        VI mapper(G->size(),-1);
+        int id_map = 0;
+        int prev = -1;
+        for(int i=0; i<edges.size(); i++){
+            int a = edges[i].first;
+            if( a != prev ){
+                mapper[a] = id_map;
+                id_map++;
+                prev = a;
+            }
+        }
+
+        auto mapped_edges = edges;
+        transform( edges.begin(), edges.end(), mapped_edges.begin(), [&mapper](PII p){ return PII(mapper[p.first], mapper[p.second]); }  );
+
+        string path = "mapped_graph.txt";
+        cerr << "Writing graph to file" << endl;
+        ofstream str(path);
+        str << id_map << " " << mapped_edges.size() / 2 << endl;
+        for( PII p : mapped_edges ) if( p.first < p.second ) str << p.first << " " << p.second << endl;
+        str.close();
+
+        cerr << "Graph written!" << endl;
+        exit(1);
+    } // end of testing treewidth module*/
 
 
 //        GraphVisualizer gviz;

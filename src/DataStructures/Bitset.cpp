@@ -190,8 +190,8 @@ Bitset& Bitset::operator>>=(int offset) {
 }
 
 int Bitset::operator[](int ind) {
-//    if( (V[ BL_NUM(ind) ] & bits[ IND_IN_BL(ind) ]) != 0 ) return 1;
-    if( (V.at( BL_NUM(ind) ) & bits.at( IND_IN_BL(ind) ) ) != 0 ) return 1;
+    if( (V[ BL_NUM(ind) ] & bits[ IND_IN_BL(ind) ]) != 0 ) return 1;
+//    if( (V.at( BL_NUM(ind) ) & bits.at( IND_IN_BL(ind) ) ) != 0 ) return 1;
     else return 0;
 }
 
@@ -215,13 +215,13 @@ Bitset& Bitset::operator=(const Bitset& oth) {
 Bitset& Bitset::set(int pos, bool value) {   
     if( pos >= size() ) return *this;
     
-//    if( value ) V[ BL_NUM(pos) ] |= bits[ IND_IN_BL(pos) ];
-    if( value ) V.at( BL_NUM(pos) ) |= bits.at( IND_IN_BL(pos) );
-//    else V[ BL_NUM(pos) ] &= (~bits[ IND_IN_BL(pos) ]);
-    else V.at( BL_NUM(pos) ) &= (~bits.at( IND_IN_BL(pos) ) );
+    if( value ) V[ BL_NUM(pos) ] |= bits[ IND_IN_BL(pos) ];
+//    if( value ) V.at( BL_NUM(pos) ) |= bits.at( IND_IN_BL(pos) );
+    else V[ BL_NUM(pos) ] &= (~bits[ IND_IN_BL(pos) ]);
+//    else V.at( BL_NUM(pos) ) &= (~bits.at( IND_IN_BL(pos) ) );
 
-//    if( BL_NUM(pos) == blocks-1 ) V[ BL_NUM(pos) ] &= lastElementModifier;
-    if( BL_NUM(pos) == blocks()-1 ) V.at( BL_NUM(pos) ) &= lastElementModifier;
+    if( BL_NUM(pos) == blocks()-1 ) V[ BL_NUM(pos) ] &= lastElementModifier;
+//    if( BL_NUM(pos) == blocks()-1 ) V.at( BL_NUM(pos) ) &= lastElementModifier;
     return *this;
 }
 

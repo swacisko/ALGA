@@ -66,7 +66,7 @@ public:
      * text is the displayed text
      * accuracy: if 1 then i will write process state every 1 %. Otherwise i will write the state every 1/accuracy %.
      */
-    static void writeProgress( int processed, int toProcess, int & progressCounter, string text, int accuracy = 1 ){
+    static void writeProgress( unsigned processed, unsigned toProcess, int & progressCounter, string text, int accuracy = 1 ){
         if( toProcess < 0 ){
            if( processed % accuracy == 0 ) {
                cerr << "\r" << text << ": " << processed << flush;

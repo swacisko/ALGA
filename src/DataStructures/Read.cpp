@@ -14,6 +14,7 @@
 #include <DataStructures/Read.h>
 #include <numeric>
 #include <Utils/MyUtils.h>
+#include <Global.h>
 
 #include "DataStructures/Read.h"
 
@@ -295,17 +296,36 @@ int Read::getIdOfPairedRead() {
 }
 
 int Read::getIdOfPairedRead(int id) {
-    if( Params::ADD_PAIRED_READS ){
-        if( Params::ADD_COMP_REV_READS ){
-            if( (id & 3) >= 2 ) return id-2;
-            else return id+2;
+    if( !Global::pairedReadOffset.empty() ){
+        switch(Global::pairedReadOffset[id] ){
+            case 0:{
+                return id;
+            }
+            case 1:{
+                return id+2;
+            }
+            case 2:{
+                return id-2;
+            }
+            default: {
+                return id;
+            }
         }
-        else{
-            if( id & 1 ) return id-1;
-            else return id+1;
+    }else{
+        if( Params::ADD_PAIRED_READS ){
+            if( Params::ADD_COMP_REV_READS ){
+                if( (id & 3) >= 2 ) return id-2;
+                else return id+2;
+            }
+            else{
+                if( id & 1 ) return id-1;
+                else return id+1;
+            }
         }
+        return -1;
+
     }
-    return -1;
+
 }
 
 

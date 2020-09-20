@@ -21,7 +21,7 @@ void OutputWriterNew::writeContigs() {
     string rsoe = ( to_string( Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ) + "-" + to_string( Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ) );
 
     Params::outStream.open( Params::outStreamFileName /*+ "_nrpcp" + to_string(Params::NEW_READS_PER_CONTIG_PERCENTAGE) + "_mopp" + to_string(Params::MAX_OFFSET_PARALLEL_PATHS)
-        + "_modb" + to_string(Params::MAX_OFFSET_DANGLING_BRANCHES) + rsoe + traverse_type +  ".contigs.fasta"*/ );
+        + "_modb" + to_string(Params::MAX_OFFSET_DANGLING_BRANCHES) + rsoe + traverse_type */ +  ".contigs.fasta" );
 
     cout.rdbuf( Params::outStream.rdbuf() );
 

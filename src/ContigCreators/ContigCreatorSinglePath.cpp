@@ -241,6 +241,8 @@ VPII ContigCreatorSinglePath::getNextStepCandidates(int predecessor, int p, vect
 
 bool ContigCreatorSinglePath::canBeNextStepCandidate(int predecessor, int p, int d, int of, vector<pair<Read *, int>> &readsInContig) {
 
+//        cerr << "\tCAUTION! do not lengthening paths!" << endl; return false; // #TEST
+
 //    if( reliablePredecessors[p] == predecessor ) return true;
     if( reliablePredecessors[p].count(predecessor) ) return true;
 
