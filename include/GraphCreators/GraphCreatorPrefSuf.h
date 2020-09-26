@@ -46,7 +46,9 @@ private:
      * This is used to keep only Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN edges with small overlap.
      * It will be used only if Params::SPACE_EFFICIENT is set to 1.
      */
-    VVPII smallOverlapEdges;
+//    VVPII smallOverlapEdges;
+    static const int SOES = 3;
+    vector< pair<unsigned,unsigned>[SOES] > smallOverlapEdges;
 
     /**
      * outdegOverThreshold[i] is the number of edges that would begin in node i in the full-errorless-graph, that would have overlap greater than the threshold of 50 * (1 + scale).

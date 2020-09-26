@@ -121,6 +121,8 @@ int main(int argc, char** argv) {
     DEBUG(sizeof(MILPII));
     DEBUG(sizeof(LPII));
     DEBUG(sizeof(PII));
+    DEBUG(sizeof( vector<int> ));
+    DEBUG(sizeof( PII[3] ));
 
 //    exit(1);
 

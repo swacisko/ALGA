@@ -14,7 +14,9 @@
 
 GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G) : GraphCreator(reads,G), maxReadLength(0) {
     calculateMaxReadLength();
-    smallOverlapEdges = VVPII(G->size());
+//    smallOverlapEdges = VVPII(G->size());
+    smallOverlapEdges = vector< pair<unsigned,unsigned>[SOES] >(G->size());
+    for(int i=0; i<G->size(); i++) for(int j=0; j<SOES; j++) smallOverlapEdges[i][j] = {-1,-1};
 //    for( auto & v : smallOverlapEdges ) v.reserve( Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN+1 );
 }
 
@@ -330,7 +332,7 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         moveSmallOverlapEdgesToGraphJob(0,W-1,0);
         for( auto & p : parallelJobs ) p.join();
 
-        VVPII().swap( smallOverlapEdges );
+        vector<pair<unsigned,unsigned>[SOES]>().swap( smallOverlapEdges );
 
         G->retainOnlySmallestOffset();
 
@@ -421,14 +423,26 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                     if( Read::calculateReadOverlap( suff->read, pref->read, offset ) < currentPrefSufLength ) continue; // this line here prohibits included alignment
 
                         if( currentPrefSufLength < Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ){
-                            smallOverlapEdges[ suffId ].push_back( {prefId,offset} ); // i add normal edges here
-                            if( smallOverlapEdges[suffId].size() > Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ){
-                                smallOverlapEdges[suffId].erase( smallOverlapEdges[suffId].begin() );
 
-                                if( smallOverlapEdges[suffId].size() > Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ){
-                                    cerr << "ERROR in smallOverlapEdges.size() in PS0" << endl; exit(1);
+                            int xx = SOES; for( int j=0; j<SOES; j++ ) if( smallOverlapEdges[suffId][j] == pair<unsigned,unsigned>(-1,-1) ){ xx = j; break; }
+                            if( xx == SOES ){
+                                for(int j=0; j<SOES-1; j++){
+                                    smallOverlapEdges[suffId][j] = smallOverlapEdges[suffId][j+1];
                                 }
+                                xx = SOES-1;
                             }
+
+                            smallOverlapEdges[ suffId ][xx] = {prefId,offset} ; // i add normal edges here
+
+
+//                            smallOverlapEdges[ suffId ].push_back( {prefId,offset} ); // i add normal edges here
+//                            if( smallOverlapEdges[suffId].size() > Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ){
+//                                smallOverlapEdges[suffId].erase( smallOverlapEdges[suffId].begin() );
+//
+//                                if( smallOverlapEdges[suffId].size() > Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN ){
+//                                    cerr << "ERROR in smallOverlapEdges.size() in PS0" << endl; exit(1);
+//                                }
+//                            }
                         }else{
 
                             int C = prefId;
@@ -486,12 +500,15 @@ void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thre
 
         int suffId = suff->read->getId();
         if( currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ){
-            for( auto & p : smallOverlapEdges[suffId] ){
+//            for( auto & p : smallOverlapEdges[suffId] ){
+            for( int j=0; j<SOES; j++ ){
+                auto p = smallOverlapEdges[suffId][j];
+                if(p == pair<unsigned,unsigned>(-1, -1) ) break;
                 G->lockNode( p.first );
                 (*G)[p.first].push_back( { suffId, p.second } ); // i add reverse edges to the graph!!
                 G->unlockNode(p.first);
             }
-            VPII().swap( smallOverlapEdges[suffId] );
+//            pair<unsigned,unsigned>[3]().swap( smallOverlapEdges[suffId] );
         }
     }
 }
