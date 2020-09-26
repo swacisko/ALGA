@@ -6,6 +6,7 @@
 #include <Utils/GraphVisualizer.h>
 #include <Utils/MyUtils.h>
 #include <Global.h>
+#include <cassert>
 
 #include "Utils/GraphVisualizer.h"
 
@@ -242,6 +243,7 @@ void GraphVisualizer::writeWholeGraph(Graph *G, vector<Read *> &reads, string fi
 //             to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN) + ".gv");
 
     out.open(filename + ".gv");
+    assert(out.is_open());
 
     out << "digraph G{" << endl;
 

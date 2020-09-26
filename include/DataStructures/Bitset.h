@@ -45,7 +45,7 @@ public:
     static VT zerosOnes; // onesZeros[i] is the number that has i least significant bits set to 0, the rest are 1.
     
     
-    Bitset( int N=0 ); // creates a bitset with N bits accessible
+    Bitset(unsigned int size= 0); // creates a bitset with N bits accessible
     Bitset(const Bitset& orig);
     ~Bitset();
     
@@ -136,12 +136,13 @@ public:
 private:
 
     VT V;
+//    TYPE* V;
     TYPE lastElementModifier; // it is used to ensure that all bits in last element that have index > N are set to 0 after every operation
-    int N; // size of given vector
+    unsigned N; // size of given vector
 //    unsigned int N; // size of given vector
 //    long long blocks;
 
-    int blocks() const{ return BL_NUM(N-1) + 1; }
+    int blocks() const{ return N == 0 ? 0 : BL_NUM(N-1) + 1; }
 
 
 

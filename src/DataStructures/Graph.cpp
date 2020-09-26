@@ -497,6 +497,7 @@ LPII& Graph::getContractedEdgePath(int a, int b) {
             auto * ptr = new LPII(1, PII( b, findWeight(a,b) ) );
             lockNode(1);
             contractedEdgeDummy.push_back( ptr );
+            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         }
@@ -504,6 +505,7 @@ LPII& Graph::getContractedEdgePath(int a, int b) {
             auto * ptr = new LPII();
             lockNode(1);
             contractedEdgeDummy.push_back( ptr );
+            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         }

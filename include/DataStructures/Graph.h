@@ -296,6 +296,12 @@ private:
     VVPII V;
 
     int edges;
+
+    /**
+     * This is the number of nodes per single mutex. There will be size() / MUTEX_SCALE mutexes in the graph.
+     */
+    static const int MUTEX_SCALE = 64;
+
 };
 
 #endif /* GRAPH_H */

@@ -18,7 +18,7 @@
 
 #include "DataStructures/Bitset.h"
 
-Bitset::Bitset(int size) : N(size) {
+Bitset::Bitset(unsigned int size) : N(size) {
 //    initializeStaticBlock();
 
 //    if(size == 0) cerr << "size = 0 in bitset constructor" << endl;
@@ -29,7 +29,7 @@ Bitset::Bitset(int size) : N(size) {
     lastElementModifier = ZEROS;
     
 //    for( long long i=0; i< ( IND_IN_BL(N)==0 ? BLOCK_SIZE : IND_IN_BL(N)  ); i++ ) lastElementModifier |= bits[i];
-    for( long long i=0; i< ( IND_IN_BL(N)==0 ? BLOCK_SIZE : IND_IN_BL(N)  ); i++ ) lastElementModifier |= bits.at(i);
+    for(long long i=0; i< (IND_IN_BL(size) == 0 ? BLOCK_SIZE : IND_IN_BL(size)  ); i++ ) lastElementModifier |= bits.at(i);
 
    
 }

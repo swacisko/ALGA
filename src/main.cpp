@@ -47,13 +47,32 @@ void initilizeStaticData(){
 
 
 
+class BitsetTest{
+public:
 
+
+    unsigned* V;
+//    vector<unsigned> V;
+//    deque<int> V;
+
+    int lem;
+    unsigned N;
+//    char lem2;
+};
 
 
 
 int main(int argc, char** argv) {
     initilizeStaticData();
 
+//    Bitset::test();
+    DEBUG(sizeof(BitsetTest));
+    DEBUG(sizeof(std::mutex));
+    DEBUG(sizeof(MILPII));
+    DEBUG(sizeof(LPII));
+    DEBUG(sizeof(PII));
+
+//    exit(1);
 
 
     ios_base::sync_with_stdio(0);
@@ -489,9 +508,11 @@ int main(int argc, char** argv) {
     } // end of testing treewidth module*/
 
 
+//    {
 //        GraphVisualizer gviz;
-//        gviz.writeWholeGraph(G,contigs);
-
+//        gviz.writeWholeGraph(G, *READS, Params::TEST_NAME + "_graph_gviz");
+//        gviz.writeInGraphvizFormat(G, contigs);
+//    }
 
 
         cerr << "Before filtering, there are " << contigs.size() << " contigs" << endl;
