@@ -46,6 +46,54 @@ void initilizeStaticData(){
 }
 
 
+void testConcurrency(){
+
+
+    int N = 60;
+    vector< Kmer > kmers(N);
+
+    int T = 6;
+
+    auto fun = [&kmers](int a, int b, int thr){
+        for( int i=a; i<=b; i++ ){
+            kmers[i].length++;
+            kmers[i].hash++;
+            kmers[i].indInRead *= 3;
+            kmers[i].indInRead %= 1'000'001;
+        }
+    };
+
+    int R = 10'000;
+    for( int r=0; r<R; r++ ) {
+        vector<std::thread> parallelJobs;
+
+        int W = (int) ceil((double) N / T);
+        for (int i = 1; i < T; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) N - 1);
+
+            parallelJobs.push_back(thread([=] { fun(a, b, i); }));
+        }
+
+        fun(0, W - 1, 0);
+
+        for (auto &p : parallelJobs) p.join();
+    }
+
+    auto kmersConcurrent = kmers;
+    kmers = vector<Kmer>(N);
+    for( int r=0; r<R; r++ ) fun(0,N-1,0);
+
+    for( int i=0; i<N; i++ ){
+        assert( kmers[i].length == kmersConcurrent[i].length );
+        assert( kmers[i].hash == kmersConcurrent[i].hash );
+        assert( kmers[i].indInRead == kmersConcurrent[i].indInRead );
+    }
+
+    cerr << "Concurrency passed" << endl;
+    exit(1);
+}
+
 
 class BitsetTest{
 public:
@@ -64,6 +112,8 @@ public:
 
 int main(int argc, char** argv) {
     initilizeStaticData();
+
+//    testConcurrency();
 
 //    Bitset::test();
     DEBUG(sizeof(BitsetTest));
@@ -433,6 +483,10 @@ int main(int argc, char** argv) {
                                   to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN) +
                                   "_afterSimplifier.graph");
         }
+
+        G->pruneGraph();
+        Global::removeIsolatedReads();
+
         G->createContractedEdgesVector();
 
 

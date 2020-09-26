@@ -226,10 +226,10 @@ public:
 
     void lockNode(int id){
 //        (*mutexes)[id].lock();
-        while(!(*mutexes)[id].try_lock() ); // active waiting
+        while(!(*mutexes)[id / MUTEX_SCALE].try_lock() ); // active waiting
     }
     void unlockNode(int id){
-        (*mutexes)[id].unlock();
+        (*mutexes)[id / MUTEX_SCALE].unlock();
     }
     vector<mutex> *mutexes;
 
@@ -295,7 +295,7 @@ private:
 
     VVPII V;
 
-    int edges;
+    unsigned edges;
 
     /**
      * This is the number of nodes per single mutex. There will be size() / MUTEX_SCALE mutexes in the graph.

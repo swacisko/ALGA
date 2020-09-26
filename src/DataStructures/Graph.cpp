@@ -26,7 +26,7 @@ Graph::Graph(int N) : edges(0) {
 
     V = VVPII(N);
 //    contractedEdges = VMILPII(N);
-    mutexes = new vector<mutex>(N);
+    mutexes = new vector<mutex>(ceil( (double)N / MUTEX_SCALE) );
 
 
 //    int reserveSize = 2;
@@ -39,7 +39,7 @@ Graph::Graph(const Graph& orig) {
     V = orig.V;
     edges = orig.edges;
     contractedEdges = orig.contractedEdges;
-    this->mutexes = new vector<mutex>(V.size());
+    this->mutexes = new vector<mutex>( ceil( (double)V.size() / MUTEX_SCALE));
 }
 
 Graph::~Graph() {
@@ -243,7 +243,7 @@ bool Graph::deserializeGraph(string fileName) {
     V = VVPII(s);
 //    contractedEdges = VMILPII(s);
     delete mutexes; mutexes = 0;
-    mutexes = new vector<mutex>(s);
+    mutexes = new vector<mutex>( ceil(s / MUTEX_SCALE) );
 
     cerr << endl;
     int progressCounter = 0;
@@ -497,7 +497,7 @@ LPII& Graph::getContractedEdgePath(int a, int b) {
             auto * ptr = new LPII(1, PII( b, findWeight(a,b) ) );
             lockNode(1);
             contractedEdgeDummy.push_back( ptr );
-            DEBUG(contractedEdgeDummy.size());
+//            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         }
@@ -505,7 +505,7 @@ LPII& Graph::getContractedEdgePath(int a, int b) {
             auto * ptr = new LPII();
             lockNode(1);
             contractedEdgeDummy.push_back( ptr );
-            DEBUG(contractedEdgeDummy.size());
+//            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         }
@@ -633,14 +633,14 @@ void Graph::operator=(const Graph &orig) {
     edges = orig.edges;
     contractedEdges = orig.contractedEdges;
     delete mutexes; mutexes = 0;
-    this->mutexes = new vector<mutex>(V.size());
+    this->mutexes = new vector<mutex>(ceil((double)V.size() / MUTEX_SCALE) );
 
 }
 
 void Graph::push_node() {
 
     delete mutexes;
-    mutexes = new vector<mutex>(size()+1);
+    mutexes = new vector<mutex>(ceil( (double)(size()+1) / MUTEX_SCALE) );
     contractedEdges.resize(size()+1);
     V.resize(size()+1);
 }
