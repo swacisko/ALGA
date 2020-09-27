@@ -115,7 +115,8 @@ private:
     /**
      * Reverse graph of G for calculating reliable predecessors.
      */
-    VVPII GRev;
+//    VVPII GRev;
+    unordered_map<unsigned, VPII> GRev;
 
     /**
      * Only edges of that length will be considered for predecessor check

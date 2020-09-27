@@ -181,7 +181,7 @@ vector<Contig *> OutputWriterNew::filterContigs() {
 
 void OutputWriterNew::writeContigsNoFilter(vector<Contig *> contigs) {
     Params::outStream.open( Params::outStreamFileName /*+ "_nrpcp" + to_string(Params::NEW_READS_PER_CONTIG_PERCENTAGE) + "_mopp" + to_string(Params::MAX_OFFSET_PARALLEL_PATHS)
-        + "_modb" + to_string(Params::MAX_OFFSET_DANGLING_BRANCHES) + rsoe + traverse_type*/ /*+  ".contigs.fasta"*/ );
+        + "_modb" + to_string(Params::MAX_OFFSET_DANGLING_BRANCHES) + rsoe + traverse_type*/ +  ".contigs.fasta" );
 
     cout.rdbuf( Params::outStream.rdbuf() );
 
@@ -190,4 +190,6 @@ void OutputWriterNew::writeContigsNoFilter(vector<Contig *> contigs) {
         cout << ">contig_id=" << t->getId() << "_length=" << s.size() << endl;
         writeContig( s, 1e9 );
     }
+
+    Params::outStream.close();
 }

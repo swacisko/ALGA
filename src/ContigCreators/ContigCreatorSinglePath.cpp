@@ -92,7 +92,8 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
 
     DEBUG(reliablePredecessors.size());
     unordered_map< int,unordered_set<int> >().swap(reliablePredecessors);
-    VVPII().swap(GRev);
+//    VVPII().swap(GRev);
+    unordered_map<unsigned,VPII>().swap(GRev);
     VI().swap(dst);
     VB().swap(was);
 
@@ -297,7 +298,12 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
 //    minLengthOfEdgeForReliablePredecessor = 5;
 
     {
-        GRev = G->getReverseGraph().getV();
+//        GRev = G->getReverseGraph().getV();
+        for( int i=0; i<G->size(); i++ ){
+            for( PII p : (*G)[i] ){
+                GRev[p.first].emplace_back( i, p.second );
+            }
+        }
 
 //        int cnt = 0;
 //        for(int i=0; i<GRev.size(); i++) if( GRev[i].empty() ) cnt++;
@@ -312,6 +318,9 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
     auto helper = [=]( int a, int b, int thread_id ){
         int progressCounter = 0;
         for(int i=a; i<=b; i++){
+
+            auto it = GRev.find(i);
+            if(it == GRev.end()) continue;
 
             if( (*G)[i].size() == 1 && (*G)[i][0].second >= minLengthOfEdgeForReliablePredecessor && GRev[i].size() >= 1 ){
 
