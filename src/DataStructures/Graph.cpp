@@ -28,11 +28,6 @@ Graph::Graph(int N) : edges(0) {
 //    contractedEdges = VMILPII(N);
     mutexes = new vector<mutex>(ceil( (double)N / MUTEX_SCALE) );
 
-
-//    int reserveSize = 2;
-//    for( int i=0; i<N; i++ ){
-//        V[i].reserve(reserveSize);
-//    }
 }
 
 Graph::Graph(const Graph& orig) {
@@ -131,6 +126,7 @@ VI* Graph::getInDegrees() {
 //            (*inDeg)[p.first]++;
 //        }
 //    }
+//    return inDeg;
 
 
 
@@ -236,14 +232,14 @@ bool Graph::deserializeGraph(string fileName) {
         return false;
     }
 
-    int s;
+    unsigned s;
     str.read( (char *) &s, sizeof( s ) );
 
 
     V = VVPII(s);
 //    contractedEdges = VMILPII(s);
-    delete mutexes; mutexes = 0;
-    mutexes = new vector<mutex>( ceil(s / MUTEX_SCALE) );
+    if( mutexes != nullptr ){ delete mutexes; mutexes = nullptr;}
+    mutexes = new vector<mutex>( ceil((double)s / LOG2_MUTEX_SCALE) );
 
     cerr << endl;
     int progressCounter = 0;
@@ -277,7 +273,7 @@ bool Graph::deserializeGraph(string fileName) {
 void Graph::serializeGraph(string fileName) {
     ofstream str( fileName, ios::binary | ios::out );
 
-    int s = size();
+    unsigned s = size();
     str.write( (char *) &s, sizeof( s ) );
 
     int progressCounter = 0;
@@ -307,7 +303,8 @@ void Graph::serializeGraph(string fileName) {
 vector<pair<int, int>> Graph::getNeighbors(int id) {
     vector< pair<int,int> > neigh;
         neigh = V[id];
-    return neigh;
+    return std::move(neigh);
+//    return neigh;
 }
 
 
@@ -415,6 +412,8 @@ bool Graph::contractPath(int a, int b, int c) {
 
         return false;
     }
+
+//    if( containsEdge(a,c) ) return true; // #TEST !! CAUTION!, just for test
 
     bool existsLongEdgeAC = containsEdgeLongerOrEqual(a,c, EDGE_LENGTH_THRESHOLD);
     if( existsLongEdgeAC ){
@@ -648,8 +647,15 @@ void Graph::push_node() {
 
 void Graph::clear() {
     VVPII().swap(V);
+
+    for( int i=0; i<contractedEdges.size(); i++ ){
+        if( contractedEdges[i] != nullptr ){
+            delete contractedEdges[i];
+            contractedEdges[i] = nullptr;
+        }
+    }
     contractedEdges.clear();
-    if(mutexes != 0 ){ delete mutexes; mutexes = 0;}
+    if(mutexes != nullptr ){ delete mutexes; mutexes = nullptr;}
 }
 
 LL Graph::countEdges() {
@@ -682,6 +688,7 @@ LL Graph::countEdgesJob(int a, int b, int thread_id) {
 
 
 void Graph::pruneGraph() {
+//    cerr << "in pruneGraph()" << endl;
 
     vector< std::future<void> > futures(Params::THREADS-1);
 
@@ -750,11 +757,18 @@ void Graph::createContractedEdgesVector() {
     contractedEdges = VMILPII( size() );
     VI *indeg = getInDegrees();
 
+    int cnt = 0;
     for( int i=0; i<size(); i++ ){
-        if( V[i].size() > 0 || (*indeg)[i] > 0 ) contractedEdges[i] = new MILPII();
+        if( V[i].size() > 0 || (*indeg)[i] > 0 ){
+            contractedEdges[i] = new MILPII();
+            cnt++;
+        }
     }
+
+//    cerr << "Created " << cnt << " out of " << size() << " MIPLII objects, each of size in bytes: " << sizeof(MILPII) << endl;
 
     delete indeg;
     indeg = nullptr;
 }
+
 

@@ -332,13 +332,13 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         moveSmallOverlapEdgesToGraphJob(0,W-1,0);
         for( auto & p : parallelJobs ) p.join();
 
-        vector<pair<unsigned,unsigned>[SOES]>().swap( smallOverlapEdges );
 
         G->retainOnlySmallestOffset();
 
         cerr << "After moving small overlap edges to graph, G has " << G->countEdges() << " edges" << endl;
 
-//        outdegOverThreshold = vector<char>(G->size());
+        MyUtils::process_mem_usage();
+        vector<pair<unsigned,unsigned>[SOES]>().swap( smallOverlapEdges );
     }
 
 
@@ -512,7 +512,7 @@ void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thre
                 (*G)[p.first].push_back( { suffId, p.second } ); // i add reverse edges to the graph!!
                 G->unlockNode(p.first);
             }
-//            pair<unsigned,unsigned>[3]().swap( smallOverlapEdges[suffId] );
+//            pair<unsigned,unsigned>[3].swap( smallOverlapEdges[suffId] );
         }
     }
 }

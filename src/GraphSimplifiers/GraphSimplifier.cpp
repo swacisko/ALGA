@@ -752,45 +752,9 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
 
 
 int GraphSimplifier::removeDanglingUpperBranches(int maxOffset) {
-    /*Graph GREV = G->getReverseGraph();
-    TimeMeasurer::startMeasurement( "GraphSimplifier_removeDanglingUpperBranches" );
-    Graph *Grev = &GREV;
-
-    swap( Grev, G );
-
-    vector< pair<int,int> > edgesToRemove;
-
-    int branchesRemoved = 0;
-    int progressCounter = 0;
-    for( int i=0; i<G->size(); i++ ){
-        if( (*G)[i].size() >= 2 ){
-//            branchesRemoved += removeDanglingBranchesFromNode(i, maxOffset, edgesToRemove);
-            removeDanglingBranchesFromNode(i, maxOffset, edgesToRemove, 0);
-        }
-        MyUtils::writeProgress( i, G->size(), progressCounter, "progress",1 );
-    }
-
-    swap( Grev,G );
-
-    for( auto e : edgesToRemove ){
-        branchesRemoved++;
-        G->removeDirectedEdge( e.second, e.first );
-    }
-    edgesToRemove.clear();
-
-    GenomeStatisticsCollector::addData( "dangling upper branches removed: ", branchesRemoved );
-    cerr << "\tdangling upper branches removed, " << branchesRemoved << " branches removed" << endl;*/
-
-
-
-
     G->reverseGraph();
     int branchesRemoved = removeDanglingBranches(maxOffset);
     G->reverseGraph();
-
-
-
-
 
     G->pruneGraph();
 
@@ -804,8 +768,10 @@ bool GraphSimplifier::contractPathNodes() {
     TimeMeasurer::startMeasurement( "GraphSimplifier_contractPathNodes" );
 
     Graph GRev = G->getReverseGraph();
-//    cerr << "GRev = " << endl << GRev << endl;
-//    VI pathNodes;
+
+    cerr << "Memory usage in contractPathNodes(), after creating reverse graph, before contracting nodes" << endl;
+    MyUtils::process_mem_usage();
+
     deque<int> pathNodes;
     for( int i=0; i<G->size(); i++ ){
         if( (*G)[i].size() == 1 && GRev[i].size() == 1 ) pathNodes.push_back(i);
@@ -852,6 +818,8 @@ bool GraphSimplifier::contractPathNodes() {
     cerr << endl;
     cerr << "There were " << contractionsDone << " contractions" << endl;
 
+    cerr << "Memory usage in contractPathNodes() after contracting nodes" << endl;
+    MyUtils::process_mem_usage();
 
     TimeMeasurer::stopMeasurement( "GraphSimplifier_contractPathNodes" );
     return anyContractionDone;
@@ -863,6 +831,9 @@ bool GraphSimplifier::contractPathNodes() {
 int GraphSimplifier::mergeLength0Edges(){
     TimeMeasurer::startMeasurement( "GraphSimplifier_mergeLength0Edges" );
     Graph GRev = G->getReverseGraph();
+
+    cerr << "Memory in mergeLength0Edges, after creating reverse graph" << endl;
+    MyUtils::process_mem_usage();
 
     int nodesMerged = 0;
     int progressCounter = 0;

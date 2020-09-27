@@ -124,8 +124,9 @@ int main(int argc, char** argv) {
     DEBUG(sizeof(PII));
     DEBUG(sizeof( vector<int> ));
     DEBUG(sizeof( PII[3] ));
+    DEBUG(sizeof( pair<unsigned,char> ));
 
-//    exit(1);
+    exit(1);
 
 
     ios_base::sync_with_stdio(0);
@@ -498,15 +499,20 @@ int main(int argc, char** argv) {
                                   to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) + "-" +
                                   to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN) +
                                   "_afterSimplifier.graph");
+            cerr << "Memory usage after simplifyGraphOld, before pruning graph and raeds" << endl;
+            MyUtils::process_mem_usage();
         }
 
         G->pruneGraph();
+//        cerr << "Removing isolated reads" << endl;
         Global::removeIsolatedReads();
 
+//        cerr << "Creating contracted edges vector" << endl;
         G->createContractedEdgesVector();
 
 
-        cerr << endl << "AFTER SIMPLIFIER" << endl;
+        cerr << endl << "AFTER SIMPLIFIER, before contracting paths" << endl;
+        MyUtils::process_mem_usage();
 
 
         for (int x = 0; x < 2; x++) {

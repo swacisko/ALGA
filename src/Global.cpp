@@ -58,12 +58,7 @@ void Global::removeRead(int id) {
 void Global::removeIsolatedReads() {
 
     VI* indeg = GRAPH.getInDegrees();
-//
-//
-//    for( int i=0; i<GRAPH.size(); i++ ){
-//        if( (*indeg)[i] == 0 && GRAPH[i].size() == 0 ) removeRead(i);
-//    }
-
+    
     vector< std::future<void> > futures(Params::THREADS-1);
 
     auto worker = [=, &indeg](int a, int b){

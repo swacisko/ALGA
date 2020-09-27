@@ -231,7 +231,7 @@ public:
     void unlockNode(int id){
         (*mutexes)[id >> LOG2_MUTEX_SCALE].unlock();
     }
-    vector<mutex> *mutexes;
+    vector<mutex> *mutexes = nullptr;
 
     void operator=(const Graph &oth);
 
