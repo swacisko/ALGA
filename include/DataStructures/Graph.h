@@ -139,7 +139,6 @@ public:
     /**
      * Function reverses the graph. Is result is the same as *this = this->getReverseGraph(), but uses less memory
      *
-     * CAUTION, FOR NOW IT IS NOT IMPLEMENTED PROPERLY YET!!
      */
     void reverseGraph();
 

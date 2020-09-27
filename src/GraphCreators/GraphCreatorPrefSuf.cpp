@@ -15,8 +15,16 @@
 GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G) : GraphCreator(reads,G), maxReadLength(0) {
     calculateMaxReadLength();
 //    smallOverlapEdges = VVPII(G->size());
-    smallOverlapEdges = vector< pair<unsigned,unsigned>[SOES] >(G->size());
-    for(int i=0; i<G->size(); i++) for(int j=0; j<SOES; j++) smallOverlapEdges[i][j] = {-1,-1};
+
+    smallOverlapEdges = vector< pair<unsigned,unsigned>* >(G->size());
+    for(int i=0; i<G->size(); i++){
+        smallOverlapEdges[i] = new pair<unsigned,unsigned>[SOES];
+        for(int j=0; j<SOES; j++) smallOverlapEdges[i][j] = {-1,-1};
+    }
+
+//    smallOverlapEdges = vector< pair<unsigned,unsigned>[SOES] >(G->size());
+//    for(int i=0; i<G->size(); i++) for(int j=0; j<SOES; j++) smallOverlapEdges[i][j] = {-1,-1};
+
 //    for( auto & v : smallOverlapEdges ) v.reserve( Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN+1 );
 }
 
@@ -67,7 +75,8 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
     while( currentPrefSufLength <= maxReadLength ){
         nextPrefSufIteration();
         LL edges = G->countEdges();
-        cerr << "Iteration " << currentPrefSufLength << " / " << maxReadLength << ".  There are already " << edges << " edges in the graph   ->   avg degree " << ( (double) edges / (double)G->size() ) << endl;
+        cerr << "After Iteration " << currentPrefSufLength << " / " << maxReadLength <<
+            ".  There are already " << edges << " edges in the graph   ->   avg degree " << ( (double) edges / (double)G->size() ) << endl;
     }
     cerr << endl;
 
@@ -78,7 +87,6 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
     G->reverseGraph();
 
-//    removeSmallOverlapEdges();
 
 
 
@@ -88,75 +96,6 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
     Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = oldMOR_ACLER;
 
     TimeMeasurer::stopMeasurement( TimeMeasurer::GRAPH_CREATOR );
-}
-
-void GraphCreatorPrefSuf::removeSmallOverlapEdges() {
-    cerr << endl << "Removing small overlap edges, G has " << G->countEdges() << " edges" << endl;
-
-    int threshold = Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN;
-
-    function< void(int,int,int) > threadJob = [=](int a, int b, int thread_id){
-        for( int i=a; i<=b; i++ ){
-
-            if( (*reads)[i] == nullptr || (*G)[i].empty() ) continue;
-
-            Read* r1 = (*reads)[i];
-
-            sort( (*G)[i].begin(), (*G)[i].end(), [=,&r1]( PII a, PII b ){
-                int overlapA = Read::calculateReadOverlap( r1, (*reads)[a.first], a.second );
-                int overlapB = Read::calculateReadOverlap( r1, (*reads)[b.first], b.second );
-
-                return overlapA > overlapB;
-            } );
-
-            PII back = (*G)[i].back();
-
-            if( (*reads)[ back.first ] == nullptr ){
-                cerr << "r2 == nullptr" << endl;
-                exit(1);
-            }
-
-            Read* r2 = (*reads)[ back.first ];
-            int offset = back.second;
-            int overlap = Read::calculateReadOverlap( r1,r2,offset );
-
-            if( outdegOverThreshold[i] >= threshold ){
-
-                while( overlap < Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP && !(*G)[i].empty() ){
-                    (*G)[i].pop_back();
-                    back = (*G)[i].back();
-                    r2 = (*reads)[ back.first ];
-                    offset = back.second;
-                    overlap = Read::calculateReadOverlap( r1,r2,offset );
-                }
-            }else{
-                int neigh = outdegOverThreshold[i];
-                int p=0;
-                while( p < (*G)[i].size()
-                    && Read::calculateReadOverlap( r1, (*reads)[ (*G)[i][p].first ], (*G)[i][p].second ) >= Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP  ) p++;
-
-                while( neigh < Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN && (*G)[i].size() > p ){
-                    (*G)[i].pop_back();
-                    neigh++;
-                }
-            }
-        }
-    };
-
-    vector<thread> parallelJobs;
-    int W = (int) ceil( (double) G->size() / Params::THREADS );
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = min( i*W, G->size()-1 );
-        int b = min( (i+1)*W-1, G->size()-1 );
-
-        parallelJobs.push_back( thread( [=] { threadJob(a, b, i); } ) );
-    }
-
-    threadJob(0, W - 1, 0);
-
-    for( auto & p : parallelJobs ) p.join();
-
-    cerr << "Removed, now G has " << G->countEdges() << " edges" << endl;
 }
 
 
@@ -184,7 +123,8 @@ void GraphCreatorPrefSuf::createInitialState() {
     }
 
 //    prefixKmersBuckets = G->size();
-    prefixKmersBuckets = MyUtils::getNearestLowerPrime(G->size());
+//    prefixKmersBuckets = MyUtils::getNearestLowerPrime(G->size() ); // #TEST
+    prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3 ) ); // #TEST
 
     DEBUG(G->size());
     DEBUG(prefixKmersBuckets);
@@ -332,13 +272,16 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         moveSmallOverlapEdgesToGraphJob(0,W-1,0);
         for( auto & p : parallelJobs ) p.join();
 
+//        cerr << "Reversing graph!! CAUTION, this should be used only with adding non-reversed edges in moveSmallOverlapEdgesToGraphJob" << endl;
+//        G->reverseGraph();
 
         G->retainOnlySmallestOffset();
 
         cerr << "After moving small overlap edges to graph, G has " << G->countEdges() << " edges" << endl;
 
         MyUtils::process_mem_usage();
-        vector<pair<unsigned,unsigned>[SOES]>().swap( smallOverlapEdges );
+
+        vector<SOES_TYPE>().swap( smallOverlapEdges );
     }
 
 
@@ -513,6 +456,10 @@ void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thre
                 G->unlockNode(p.first);
             }
 //            pair<unsigned,unsigned>[3].swap( smallOverlapEdges[suffId] );
+            if( smallOverlapEdges[suffId] != nullptr ){
+                delete[] smallOverlapEdges[suffId];
+                smallOverlapEdges[suffId] = nullptr;
+            }
         }
     }
 }

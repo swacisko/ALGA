@@ -98,17 +98,19 @@ void testConcurrency(){
 
 class BitsetTest{
 public:
-
-
     unsigned* V;
 //    vector<unsigned> V;
 //    deque<int> V;
-
     int lem;
     unsigned N;
 //    char lem2;
 };
 
+class MyVec{
+    char c;
+    short t;
+    char d;
+};
 
 
 int main(int argc, char** argv) {
@@ -125,8 +127,11 @@ int main(int argc, char** argv) {
     DEBUG(sizeof( vector<int> ));
     DEBUG(sizeof( PII[3] ));
     DEBUG(sizeof( pair<unsigned,char> ));
+    DEBUG( sizeof(Kmer) );
+    DEBUG( sizeof(MyVec) );
+    DEBUG( sizeof(pair<short, char>) );
 
-    exit(1);
+//    exit(1);
 
 
     ios_base::sync_with_stdio(0);
@@ -541,6 +546,8 @@ int main(int argc, char** argv) {
         }
 
 
+
+    exit(1);
 
 //    {
 //        GraphVisualizer gviz;

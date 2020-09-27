@@ -89,7 +89,8 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
     delete inDeg;
     inDeg = 0;
 
-//    vector<unordered_set<int>>().swap(reliablePredecessors);
+
+    DEBUG(reliablePredecessors.size());
     unordered_map< int,unordered_set<int> >().swap(reliablePredecessors);
     VVPII().swap(GRev);
     VI().swap(dst);
@@ -97,6 +98,7 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
 
 
     cerr << "There are " << contigs.size() << " contigs returned" << endl;
+
     return contigs;
 }
 
@@ -296,6 +298,15 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
 
     {
         GRev = G->getReverseGraph().getV();
+
+//        int cnt = 0;
+//        for(int i=0; i<GRev.size(); i++) if( GRev[i].empty() ) cnt++;
+//        DEBUG(cnt);
+//        DEBUG(GRev.size());
+
+        cerr << "Marking reliable predecessors, after creating GRev" << endl;
+        MyUtils::process_mem_usage();
+//        exit(1);
     }
 
     auto helper = [=]( int a, int b, int thread_id ){

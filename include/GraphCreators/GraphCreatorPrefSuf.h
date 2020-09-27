@@ -25,7 +25,6 @@ public:
 
     static void test();
 
-    void removeSmallOverlapEdges();
 
 private:
 
@@ -48,18 +47,12 @@ private:
      */
 //    VVPII smallOverlapEdges;
     static const int SOES = 3;
-    vector< pair<unsigned,unsigned>[SOES] > smallOverlapEdges;
+    typedef pair<unsigned,unsigned>* SOES_TYPE;
+//    vector< SOES_TYPE > smallOverlapEdges;
+    vector< SOES_TYPE > smallOverlapEdges;
 
-    /**
-     * outdegOverThreshold[i] is the number of edges that would begin in node i in the full-errorless-graph, that would have overlap greater than the threshold of 50 * (1 + scale).
-     * This is to remove situations where there is a path a->b->c->...-> v and a->w with offset(a->w) below the threshold.
-     */
-    vector<char> outdegOverThreshold;
 
-    /*
-     * prefixModulatorHash[i] is the hash % BUCKET_MODULATOR value.
-     */
-//    vector< long long > prefixModulatorHash;
+
 
     void removeKmersFromBucketsJob(int a, int b, int thread_id);
 

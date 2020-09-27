@@ -529,7 +529,7 @@ Graph Graph::getReverseGraph() {
         int a = i*W;
         int b = min( (i+1)*W-1, (int)size()-1 );
 
-        parallelJobs.push_back( thread( [=,/*&mutexes,*/&GRev] { getReverseGraphJob(a, b, i, GRev); } ) );
+        parallelJobs.push_back( thread( [=,&GRev] { getReverseGraphJob(a, b, i, GRev); } ) );
     }
 
     getReverseGraphJob(0, W - 1, 0, GRev);
@@ -565,6 +565,8 @@ void Graph::writeNonisolatedNodes(int a, int b) {
             cerr << endl;
         }
     }
+    delete indeg;
+    indeg = nullptr;
 }
 
 void Graph::writeContractedPath(int a, int b) {
