@@ -226,10 +226,10 @@ public:
 
     void lockNode(int id){
 //        (*mutexes)[id].lock();
-        while(!(*mutexes)[id / MUTEX_SCALE].try_lock() ); // active waiting
+        while(!(*mutexes)[id >> LOG2_MUTEX_SCALE].try_lock() ); // active waiting
     }
     void unlockNode(int id){
-        (*mutexes)[id / MUTEX_SCALE].unlock();
+        (*mutexes)[id >> LOG2_MUTEX_SCALE].unlock();
     }
     vector<mutex> *mutexes;
 
@@ -298,9 +298,13 @@ private:
     unsigned edges;
 
     /**
-     * This is the number of nodes per single mutex. There will be size() / MUTEX_SCALE mutexes in the graph.
+     * This is the number of nodes per single mutex. Must be a power of 2
      */
     static const int MUTEX_SCALE = 64;
+    /**
+     * There will be ( size() >> LOG2_MUTEX_SCALE) mutexes in the graph.
+     */
+    static const int LOG2_MUTEX_SCALE = 6;
 
 };
 

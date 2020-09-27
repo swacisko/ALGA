@@ -24,9 +24,12 @@ Bitset::Bitset(unsigned int size) : N(size) {
 //    if(size == 0) cerr << "size = 0 in bitset constructor" << endl;
 
 //    blocks = BL_NUM(N-1) + 1;
-    V = VT( blocks() );
-    for( auto & a : V ) a = ZEROS;
-    lastElementModifier = ZEROS;
+//    V = VT( blocks() );
+    if( blocks() ) {
+        V = new TYPE[blocks()];
+        for (int i = 0; i < blocks(); i++) V[i] = ZEROS;
+        lastElementModifier = ZEROS;
+    }
     
 //    for( long long i=0; i< ( IND_IN_BL(N)==0 ? BLOCK_SIZE : IND_IN_BL(N)  ); i++ ) lastElementModifier |= bits[i];
     for(long long i=0; i< (IND_IN_BL(size) == 0 ? BLOCK_SIZE : IND_IN_BL(size)  ); i++ ) lastElementModifier |= bits.at(i);
@@ -36,9 +39,17 @@ Bitset::Bitset(unsigned int size) : N(size) {
 
 Bitset::Bitset(const Bitset& oth) {
 //    blocks = oth.blocks;
-    N = oth.N;
-    if( V.size() != oth.V.size() ) V.resize( oth.V.size() );
-    for( int i=0; i<V.size(); i++ ) V[i] = oth.V[i];
+    if( size() != oth.size() ) {
+        N = oth.N;
+//        V.resize(oth.blocks());
+        if( V != nullptr ) {
+            delete[] V;
+            V = nullptr;
+        }
+        if( blocks() ) V = new TYPE[oth.blocks()];
+    }
+    if( V == nullptr ) V = new TYPE[blocks()];
+    for( int i=0; i<blocks(); i++ ) V[i] = oth.V[i];
 //    V = oth.V;
     lastElementModifier = oth.lastElementModifier;
 //    lastElementModifier = ZEROS;
@@ -77,7 +88,7 @@ bool Bitset::operator<=(const Bitset& oth) {
 Bitset Bitset::operator<<(int offset) {
     Bitset b( *this );
     b <<= offset;
-    return b;
+    return std::move(b);
 }
 
 Bitset & Bitset::operator<<=(int offset) {
@@ -89,11 +100,11 @@ Bitset & Bitset::operator<<=(int offset) {
         int q2 = BL_NUM(offset - 1 + BLOCK_SIZE);
 
         while (q1 < blocks()) {
-//        TYPE a = ( V[q1] & ( zerosOnes[beg] ) );
-            TYPE a = (V.at(q1) & (zerosOnes.at(beg)));
+            TYPE a = ( V[q1] & ( zerosOnes[beg] ) );
+//            TYPE a = (V.at(q1) & (zerosOnes.at(beg)));
             TYPE b = ZEROS;
-//        if( q2 < blocks ) b = ( V[q2] & ( ~zerosOnes[end+1] ) );
-            if (q2 < blocks()) b = (V.at(q2) & (~zerosOnes.at(end + 1)));
+            if( q2 < blocks() ) b = ( V[q2] & ( ~zerosOnes[end+1] ) );
+//            if (q2 < blocks()) b = (V.at(q2) & (~zerosOnes.at(end + 1)));
 
 
 //            if( beg < 0 || beg >= BLOCK_SIZE || BLOCK_SIZE - 1 - end < 0 || BLOCK_SIZE-1-end >= BLOCK_SIZE  ){
@@ -107,8 +118,8 @@ Bitset & Bitset::operator<<=(int offset) {
             if( BLOCK_SIZE-1-end < BLOCK_SIZE) b <<= (BLOCK_SIZE - 1 - end);
             else b = 0;
 
-//        V[p] = ( a | b );
-            V.at(p) = (a | b);
+        V[p] = ( a | b );
+//            V.at(p) = (a | b);
 
             p++;
             q1++;
@@ -116,8 +127,8 @@ Bitset & Bitset::operator<<=(int offset) {
         }
 
         while (p < blocks()) {
-//        V[p] = ZEROS;
-            V.at(p) = ZEROS;
+            V[p] = ZEROS;
+//            V.at(p) = ZEROS;
             p++;
         }
         return *this;
@@ -145,6 +156,7 @@ Bitset Bitset::operator>>(int offset) {
 }
 
 Bitset& Bitset::operator>>=(int offset) {
+    assert( blocks() >= 1 );
     int p = blocks()-1;
     
     const int end = BLOCK_SIZE-1 - IND_IN_BL(offset);
@@ -156,11 +168,12 @@ Bitset& Bitset::operator>>=(int offset) {
     int q1 = p - BL_NUM(offset -1 + BLOCK_SIZE );
         
     while( q2 >= 0 ){
-//        TYPE b = ( V[q2] & ( ~zerosOnes[end+1] ) );
-        TYPE b = ( V.at(q2) & ( ~zerosOnes.at(end+1) ) );
+        TYPE b = ( V[q2] & ( ~zerosOnes[end+1] ) );
+//        TYPE b = ( V.at(q2) & ( ~zerosOnes.at(end+1) ) );
         TYPE a = ZEROS;
-        if( q1 >= 0 ) a = ( V.at(q1) & ( zerosOnes.at(beg) ) );
-        
+//        if( q1 >= 0 ) a = ( V.at(q1) & ( zerosOnes.at(beg) ) );
+        if( q1 >= 0 ) a = ( V[q1] & ( zerosOnes.at(beg) ) );
+
      //   cerr << "p:     " << p << endl;
      //   cerr << "q1:    " << q1 << "      q2: " << q2 << endl << "a: " << toBinary(a) << endl << "b: " << toBinary(b) << endl << endl;
      //   cerr << "V[q1]: " << toBinary(V[q1]) << "   V[q2]: " << toBinary(V[q2]) << endl;
@@ -174,8 +187,8 @@ Bitset& Bitset::operator>>=(int offset) {
         
      //   cerr << "a: " << toBinary(a) << endl << "b: " << toBinary(b) << endl << endl;
         
-//        V[p] = (a|b);
-        V.at(p) = (a|b);
+        V[p] = (a|b);
+//        V.at(p) = (a|b);
      //   cerr << "V[p]: " << toBinary(V[p]) << endl;
         
         q1--;
@@ -183,8 +196,11 @@ Bitset& Bitset::operator>>=(int offset) {
         p--;
     }
     
-//    while( p >= 0 ) V[p--] = ZEROS;
-    while( p >= 0 ) V.at(p--) = ZEROS;
+    while( p >= 0 ) {
+        V[p] = ZEROS;
+        p--;
+    }
+//    while( p >= 0 ) V.at(p--) = ZEROS;
 
     return *this;
 }
@@ -197,14 +213,18 @@ int Bitset::operator[](int ind) {
 
 Bitset& Bitset::operator=(const Bitset& oth) {
 //    blocks = oth.blocks;
-    if( V.size() != oth.V.size() ){
-//        if( oth.V.size() < 0 || oth.V.size() > 100 ){ cerr << "invalid in operator= in Bitset oth.V.size() = " << oth.V.size() << endl; exit(1); }
-        V.resize( (int)oth.V.size() );
+    if( size() != oth.size() ){
+        N = oth.N;
+//        if( oth.blocks() < 0 || oth.blocks() > 100 ){ cerr << "invalid in operator= in Bitset oth.blocks() = " << oth.blocks() << endl; exit(1); }
+//        V.resize( (int)oth.blocks() );
+        if( V != nullptr ) delete[] V;
+        V = new TYPE[blocks()];
     }
-    for( int i=0; i<V.size(); i++ ) V[i] = oth.V[i];
+    if( V == nullptr ) V = new TYPE[blocks()];
+    for( int i=0; i<blocks(); i++ ) V[i] = oth.V[i];
 //    V = oth.V;
 
-    N = oth.N;
+//    N = oth.N;
     lastElementModifier = oth.lastElementModifier;
 //    lastElementModifier = ZEROS;
 //    for( long long i=0; i< ( IND_IN_BL(N)==0 ? BLOCK_SIZE : IND_IN_BL(N)  ); i++ ) lastElementModifier |= bits[i];
@@ -212,7 +232,8 @@ Bitset& Bitset::operator=(const Bitset& oth) {
     return *this;
 }
 
-Bitset& Bitset::set(int pos, bool value) {   
+Bitset& Bitset::set(int pos, bool value) {
+    assert(blocks() >= 1);
     if( pos >= size() ) return *this;
     
     if( value ) V[ BL_NUM(pos) ] |= bits[ IND_IN_BL(pos) ];
@@ -226,7 +247,7 @@ Bitset& Bitset::set(int pos, bool value) {
 }
 
 Bitset& Bitset::set(int beg, int end, bool value) {
-
+    assert(blocks() >= 1);
 //    cerr << "before this = " << endl << *this << endl;
     if( end >= size() ) end = max( beg, size()-1 );
     if( beg > end ) return *this;
@@ -236,23 +257,23 @@ Bitset& Bitset::set(int beg, int end, bool value) {
 
 //    cerr << "p = " << p << "   q = " << q << "   beg = " << beg << "    end = " << end <<  endl;
 
-//    TYPE A = V[p];
-    TYPE A = V.at(p);
-//    TYPE B = V[q];
-    TYPE B = V.at(q);
+    TYPE A = V[p];
+//    TYPE A = V.at(p);
+    TYPE B = V[q];
+//    TYPE B = V.at(q);
 //    if( value ) A |= zerosOnes[ IND_IN_BL(beg) ];
     if( value ) A |= zerosOnes.at( IND_IN_BL(beg) );
 //    else A &= (~zerosOnes[IND_IN_BL(beg)]);
     else A &= (~zerosOnes.at(IND_IN_BL(beg)) );
 
-//    V[p] = A;
-    V.at(p) = A;
+    V[p] = A;
+//    V.at(p) = A;
 
     for( int i=p+1; i<q; i++ ){
-//        if( value ) V[i] = ONES;
-        if( value ) V.at(i) = ONES;
-//        else V[i] = ZEROS;
-        else V.at(i) = ZEROS;
+        if( value ) V[i] = ONES;
+//        if( value ) V.at(i) = ONES;
+        else V[i] = ZEROS;
+//        else V.at(i) = ZEROS;
     }
 
 
@@ -271,18 +292,18 @@ Bitset& Bitset::set(int beg, int end, bool value) {
 
 
     if( p == q ){
-//        if( value ) V[p] &= B;
-        if( value ) V.at(p) &= B;
-//        else V[p] |= B;
-        else V.at(p) |= B;
+        if( value ) V[p] &= B;
+//        if( value ) V.at(p) &= B;
+        else V[p] |= B;
+//        else V.at(p) |= B;
     }
-//    else V[q] = B;
-    else V.at(q) = B;
+    else V[q] = B;
+//    else V.at(q) = B;
 
 //    cerr << "V[p]: " << endl << toBinary(V[p]) << endl;
 
-//    if( q == blocks-1 ) V[q] &= lastElementModifier;
-    if( q == blocks()-1 ) V.at(q) &= lastElementModifier;
+    if( q == blocks()-1 ) V[q] &= lastElementModifier;
+//    if( q == blocks()-1 ) V.at(q) &= lastElementModifier;
 
 //    cerr << "after this = " << endl << *this << endl;
     return *this;
@@ -297,6 +318,7 @@ Bitset & Bitset::flip(int pos) {
 }
 
 Bitset& Bitset::flip(int beg, int end) {
+    assert(blocks() >= 1);
     if( end >= size() ) end = max( beg, size()-1 );
     
     int p = BL_NUM(beg);
@@ -369,9 +391,13 @@ Bitset& Bitset::operator|=(const Bitset& oth) {
 }
 
 Bitset Bitset::operator~() {
+    assert(blocks() >= 1);
     Bitset b( *this );
-    for( auto &a : b.V ) a = ~a;
-    b.V.back() &= b.lastElementModifier;
+//    for( auto &a : b.V ) a = ~a;
+//    b.V.back() &= b.lastElementModifier;
+
+    for(int i=0; i<b.blocks(); i++) b.V[i] = ~b.V[i];
+    if( b.size() > 0 ) b.V[ b.blocks()-1 ] &= lastElementModifier;
 
     return b;
 }
@@ -379,9 +405,11 @@ Bitset Bitset::operator~() {
 int Bitset::count() const{
     int res = 0;
     if( sizeof(TYPE) == 4 ){ 
-        for( auto a : V ) res += __builtin_popcount(a);
+//        for( auto a : V ) res += __builtin_popcount(a);
+        for(int i=0; i<blocks(); i++) res += __builtin_popcount( V[i] );
     }else if( sizeof(TYPE) == 8 ){
-        for( auto a : V ) res += __builtin_popcountll(a);
+//        for( auto a : V ) res += __builtin_popcountll(a);
+        for(int i=0; i<blocks(); i++) res += __builtin_popcountll( V[i] );
     }
     return res;
 }
@@ -401,31 +429,29 @@ int Bitset::count(int a, int b) const {
 
 
         if (BL_NUM(a) == BL_NUM(b)) {
-//        TYPE t = V[ BL_NUM(a) ];
-            TYPE t = V.at(BL_NUM(a));
-//        t &= zerosOnes[ beg ];
-            t &= zerosOnes.at(beg);
-//        t &= ( IND_IN_BL(end+1) == 0 ? ONES : ~zerosOnes[ IND_IN_BL(end+1) ] );
-            t &= (IND_IN_BL(end + 1) == 0 ? ONES : ~zerosOnes.at(IND_IN_BL(end + 1)));
+            TYPE t = V[ BL_NUM(a) ];
+//            TYPE t = V.at(BL_NUM(a));
+            t &= zerosOnes[ beg ];
+//            t &= zerosOnes.at(beg);
+            t &= ( IND_IN_BL(end+1) == 0 ? ONES : ~zerosOnes[ IND_IN_BL(end+1) ] );
+//            t &= (IND_IN_BL(end + 1) == 0 ? ONES : ~zerosOnes.at(IND_IN_BL(end + 1)));
             if (sizeof(TYPE) == 4)res += __builtin_popcount(t);
             else if (sizeof(TYPE) == 8) res += __builtin_popcountll(t);
         } else {
             if (sizeof(TYPE) == 4)res += __builtin_popcount(V[p] & zerosOnes[beg]);
-//        else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ p ] & zerosOnes[beg]  );
-            else if (sizeof(TYPE) == 8) res += __builtin_popcountll(V.at(p) & zerosOnes.at(beg));
+            else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ p ] & zerosOnes[beg]  );
+//            else if (sizeof(TYPE) == 8) res += __builtin_popcountll(V.at(p) & zerosOnes.at(beg));
 
             for (int i = p + 1; i <= q - 1; i++) {
                 if (sizeof(TYPE) == 4)res += __builtin_popcount(V[i]);
-//            else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ i ]  );
-                else if (sizeof(TYPE) == 8) res += __builtin_popcountll(V.at(i));
+                else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ i ]  );
+//                else if (sizeof(TYPE) == 8) res += __builtin_popcountll(V.at(i));
             }
 
             if (sizeof(TYPE) == 4)
                 res += __builtin_popcount(V[q] & (IND_IN_BL(end + 1) == 0 ? ONES : ~zerosOnes[IND_IN_BL(end + 1)]));
-//        else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ q ] & ( IND_IN_BL(end+1) == 0 ? ONES : ~zerosOnes[ IND_IN_BL(end+1) ] ) );
-            else if (sizeof(TYPE) == 8)
-                res += __builtin_popcountll(
-                        V.at(q) & (IND_IN_BL(end + 1) == 0 ? ONES : ~zerosOnes.at(IND_IN_BL(end + 1))));
+            else if( sizeof(TYPE) == 8 ) res += __builtin_popcountll( V[ q ] & ( IND_IN_BL(end+1) == 0 ? ONES : ~zerosOnes[ IND_IN_BL(end+1) ] ) );
+//            else if (sizeof(TYPE) == 8)res += __builtin_popcountll(V.at(q) & (IND_IN_BL(end + 1) == 0 ? ONES : ~zerosOnes.at(IND_IN_BL(end + 1))));
         }
         return res;
     }
@@ -443,15 +469,17 @@ int Bitset::size() const{
 }
 
 bool Bitset::any() {
-    for( auto a : V ){
-        if( a != ZEROS ) return true;
+//    for( auto a : V ){
+    for( int i=0; i<blocks();i++ ){
+        if( V[i] != ZEROS ) return true;
     }
     return false;
 }
 
 bool Bitset::all() {
-    for( auto a : V ){
-        if( a != ONES ) return false;
+//    for( auto a : V ){
+    for( int i=0; i<blocks();i++ ){
+        if( V[i] != ONES ) return false;
     }
     return true;
 }
@@ -460,7 +488,9 @@ bool Bitset::all() {
 int Bitset::hash() const{
     long long P = 20000000001;
     long long res = 0;
-    for( auto a : V ){
+//    for( auto a : V ){
+    for( int i=0; i<blocks();i++ ){
+        auto a = V[i];
         res *= P;
         res += ( a % P );
         if( res > P ) res %= P;
@@ -486,7 +516,9 @@ VI Bitset::getAllSetBits()const {
 
 void Bitset::clear() {
 //    V.clear();
-    VT().swap(V);
+//    VT().swap(V);
+    if( V != nullptr ) delete[] V;
+    V = nullptr;
 }
 
 int Bitset::lower_bound(int pos) {
@@ -538,6 +570,7 @@ string Bitset::toString() {
 }
 
 bool Bitset::operator<(const Bitset& oth) {
+    assert(blocks() >= 1);
     int p = blocks()-1;
     int q = oth.blocks()-1;
     
@@ -562,11 +595,14 @@ ostream& operator<<( ostream & str, Bitset & b ){
 }
 
 void Bitset::negate() {
-    for( auto &a : V ){
-        auto b = a;
-        a = ~b;
+    assert(blocks() >= 1);
+//    for( auto &a : V ){
+    for( int i=0; i<blocks(); i++){
+        auto b = V[i];
+        V[i] = ~b;
     }
-    V.back() &= lastElementModifier;
+//    V.back() &= lastElementModifier;
+    if(blocks()) V[ blocks()-1 ] &= lastElementModifier;
 }
 
 

@@ -43,12 +43,11 @@ InputReader::InputReader() {
     NsInRead = VVI( Params::THREADS, VI(1000,0) );
 }
 
-InputReader::InputReader(const InputReader& orig) {
-}
+//InputReader::InputReader(const InputReader& orig) {
+//}
 
-InputReader::~InputReader() {
-    
-}
+//InputReader::~InputReader() {
+//}
 
 
 void InputReader::readInput() {
@@ -209,12 +208,14 @@ void InputReader::readReads() {
     string s;
 
 
-    bool READ_MULTITHREAD = ( (Params::INPUT_FILE_TYPE == Params::MY_INPUT) ? false : true );
+//    bool READ_MULTITHREAD = ( (Params::INPUT_FILE_TYPE == Params::MY_INPUT) ? false : true );
+    bool READ_MULTITHREAD = true;
 
 
     if(READ_MULTITHREAD){
         vector< vector<Read*> > parallelReads( Params::THREADS );
         vector<std::thread> parallelJobs;
+        parallelJobs.reserve( Params::THREADS );
         for( int i=1; i<Params::THREADS; i++ ){
            parallelJobs.push_back(thread( [=, &parallelReads] { readParallelJob(parallelReads, i); } ) );
         }
@@ -368,7 +369,7 @@ void InputReader::readParallelJob( vector< vector<Read *> > &reads, int thread_i
             reverse( s.begin(), s.end() );
             s = getComplimentaryString(s);
 
-            Read* r;
+            Read* r = nullptr;
             if( Params::REMOVE_READS_WITH_N && containsN ) r = nullptr;
             else{
                 int threshold = Params::MIN_OVERLAP_AREA;

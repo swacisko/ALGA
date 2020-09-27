@@ -317,7 +317,7 @@ void Params::initializeParams(int argc, char **argv) {
                     inStream.open( inStreamFilePath1 );
                     cin.rdbuf( inStream.rdbuf() );
 
-                    fileName;
+//                    fileName;
                     it = inStreamFilePath1.rfind('/');
                     if( it == string::npos ) fileName = inStreamFilePath1;
                     else fileName = inStreamFilePath1.substr( it+1 );

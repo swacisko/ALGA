@@ -18,19 +18,19 @@
 
 #include "DataStructures/Read.h"
 
-Read::Read(int id, string sequence) : id(id)/*, containsNBp(false), minPeriod(sequence.size())*/ {
+Read::Read(int id, string seq) : id(id),  sequence( Bitset( (int)(seq.size()) << 1 ) )/*, containsNBp(false), minPeriod(sequence.size())*/ {
     /*if( Params::USE_LI && priorities.empty() ){
         priorities = VI(4);
         iota( priorities.begin(), priorities.end(),0 );
     }*/
 
-    createSequence(sequence);
+    createSequence(seq);
 //    if( sequence != "" ) minPeriod = min( (int)MyUtils::MinPeriod( sequence.c_str() ), (int)minPeriod) ;
 }
 
-Read::Read(const Read& orig) : id (orig.id) {
+Read::Read(const Read& orig) : id (orig.id), sequence(  orig.sequence) {
 //    sequence = new Bitset( orig.sequence );
-    sequence = Bitset( orig.sequence );
+//    sequence = Bitset( orig.sequence );
 }
 
 Read::~Read() {

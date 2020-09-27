@@ -20,3 +20,4 @@ file(GLOB SOURCES "src/*.cpp" "src/*/*.cpp" "src/*/*/*.cpp" "src/*/*/*/*.cpp" "s
 
 add_executable(ALGA ${SOURCES})
 
+target_link_libraries( ALGA stdc++fs )

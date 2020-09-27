@@ -12,6 +12,7 @@
  */
 
 #include<iostream>
+#include <experimental/filesystem>
 #include <AlignmentControllers/AlignmentControllerHybrid.h>
 #include <GraphSimplifiers/GraphSimplifier.h>
 #include <GraphCreators/GraphCreatorKmerBased.h>
@@ -136,6 +137,19 @@ int main(int argc, char** argv) {
 
     Params::initializeParams( argc, argv );
 
+    const bool debug_small_test = false;
+    if(debug_small_test ){
+        DEBUG( std::experimental::filesystem::current_path() );
+        Params::THREADS = 1;
+        Params::INPUT_FILE_TYPE = Params::FASTA;
+        Params::fileExtension = "fasta";
+        Params::TEST_NAME = "ALGA_read_test";
+        Params::inStreamFilePath1 = "test_reads_1.fasta";
+        Params::inStreamFilePath2 = "test_reads_2.fasta";
+        Params::inStream = ifstream(Params::inStreamFilePath1);
+        assert(Params::inStream.is_open());
+        cin.rdbuf(Params::inStream.rdbuf());
+    }
 
 
     TimeMeasurer::startMeasurement( TimeMeasurer::TOTAL_TIME );
@@ -520,48 +534,6 @@ int main(int argc, char** argv) {
             MyUtils::process_mem_usage();
         }
 
-
-
-   /* { // testing treewidth of connected components #TEST
-        VPII edges;
-        edges.reserve( 2*G->countEdges() );
-        for( int i=0; i<G->size(); i++ ){
-            int a = i;
-            for( PII p : (*G)[i] ){
-                int b = p.first;
-                edges.emplace_back( a,b );
-                edges.emplace_back( b,a );
-            }
-        }
-
-        sort( edges.begin(), edges.end() );
-        edges.resize( unique( edges.begin() , edges.end() ) - edges.begin() );
-
-        VI mapper(G->size(),-1);
-        int id_map = 0;
-        int prev = -1;
-        for(int i=0; i<edges.size(); i++){
-            int a = edges[i].first;
-            if( a != prev ){
-                mapper[a] = id_map;
-                id_map++;
-                prev = a;
-            }
-        }
-
-        auto mapped_edges = edges;
-        transform( edges.begin(), edges.end(), mapped_edges.begin(), [&mapper](PII p){ return PII(mapper[p.first], mapper[p.second]); }  );
-
-        string path = "mapped_graph.txt";
-        cerr << "Writing graph to file" << endl;
-        ofstream str(path);
-        str << id_map << " " << mapped_edges.size() / 2 << endl;
-        for( PII p : mapped_edges ) if( p.first < p.second ) str << p.first << " " << p.second << endl;
-        str.close();
-
-        cerr << "Graph written!" << endl;
-        exit(1);
-    } // end of testing treewidth module*/
 
 
 //    {

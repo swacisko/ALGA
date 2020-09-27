@@ -459,11 +459,15 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                                     if( offsetDiff < 0 ) continue; // this is here to prevent checking short edges that were added earlier
                                     if( A == B ) continue; // if A == B then there will be no edge (A,B) and thus i do not want to remove (A,C) from graph
 
+                                    auto bs = (*reads)[A]->getSequence();
+                                    bs <<= (offsetDiff<<1);
                                     bool removeEdge = /* offsetDiff > 0 &&*/  Read::getRightOffset( (*reads)[A], (*reads)[B], offsetDiff) >= 0
 //                                                                                && ach->canAlign((*reads)[A], (*reads)[B], offsetDiff); // the constraint offsetDiff > 0 may perhaps be avoided
-                                            &&  ( (*reads)[B]->getSequence().mismatch( (*reads)[A]->getSequence() << (offsetDiff<<1) ) >=  (*reads)[A]->size() - offsetDiff   );
+//                                            &&  ( (*reads)[B]->getSequence().mismatch( (*reads)[A]->getSequence() << (offsetDiff<<1) ) >=  (int)(*reads)[A]->size() - offsetDiff   );
+                                            &&  ( (*reads)[B]->getSequence().mismatch( bs ) >=  (int)(*reads)[A]->size() - offsetDiff   );
                                             // this line above is the same condition as in ach->canAlign(), but done faster for no-error overlap
-
+;
+//                                            bool removeEdge = false;
                                     if ( removeEdge )  {
                                         toRemove.push_back( {C, A} );
                                     }

@@ -18,6 +18,7 @@
 #include<vector>
 #include<string>
 #include<algorithm>
+#include <cassert>
 
 #define BL_NUM(index) ( (index) >> BLOCK_OFFSET )
 // BL_NUM is the same as index / BLOCK_SIZE but faster
@@ -135,12 +136,14 @@ public:
     long long countBlocks(){return blocks();}
 private:
 
-    VT V;
-//    TYPE* V;
+//    VT V;
+    TYPE* V = nullptr;
     TYPE lastElementModifier; // it is used to ensure that all bits in last element that have index > N are set to 0 after every operation
     unsigned N; // size of given vector
 //    unsigned int N; // size of given vector
 //    long long blocks;
+
+
 
     int blocks() const{ return N == 0 ? 0 : BL_NUM(N-1) + 1; }
 

@@ -24,8 +24,8 @@ using namespace std;
 class InputReader {
 public:
     InputReader();
-    InputReader(const InputReader& orig);
-    virtual ~InputReader();
+//    InputReader(const InputReader& orig);
+//    virtual ~InputReader();
     
     void readInput();
     
