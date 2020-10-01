@@ -623,7 +623,7 @@ void Graph::sortEdgesByIncreasingOffsetJob(int a, int b, int thread_id) {
     for (int i = a; i <= b; i++) {
         sort(V[i].begin(), V[i].end(), [](auto &p, auto &q) {
             if (p.second != q.second) return p.second < q.second;
-            elsereturn p.first < q.first;
+            else return p.first < q.first;
         });
         if (thread_id == 0)
             MyUtils::writeProgress(i + 1, size() / Params::THREADS, progressCounter, "sorting edges by minimal offset",

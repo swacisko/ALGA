@@ -191,7 +191,7 @@ public:
 
         sort(neigh.begin(), neigh.end(), [](auto &&a, auto &&b) {
             if (a.second != b.second) return a.second < b.second;
-            elsereturn a.first < b.first;
+            else return a.first < b.first;
         });
 
 //        cerr << neigh[0].first << endl;
@@ -207,7 +207,7 @@ public:
             vector<pair<int, int>> neigh2 = GRAPH.getNeighbors(b);
             sort(neigh2.begin(), neigh2.end(), [](auto &&a, auto &&b) {
                 if (a.second != b.second) return a.second < b.second;
-                elsereturn a.first < b.first;
+                else return a.first < b.first;
             });
 
             for (int j = 0; j < neigh2.size(); j++) {
@@ -233,7 +233,7 @@ public:
         vector<pair<int, int>> neigh = GRAPH.getNeighbors(id);
         sort(neigh.begin(), neigh.end(), [](auto &&a, auto &&b) {
             if (a.second != b.second) return a.second < b.second;
-            elsereturn a.first < b.first;
+            else return a.first < b.first;
         });
 
         for (int i = 0; i < neigh.size(); i++) {
