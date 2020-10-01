@@ -31,7 +31,7 @@
 #include "IO/InputReader.h"
 #include "Global.h"
 #include "IO/ReadPreprocess.h"
-
+#include "DataStructures/KmerGCPS.h"
 #include "Corrector/ReadCorrector.h"
 
 #include "StatisticsGenerators/GenomeStatisticsCollector.h"
@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(PII[3]));
     DEBUG(sizeof(pair<unsigned, char>));
     DEBUG(sizeof(Kmer));
+    DEBUG(sizeof(KmerGCPS));
     DEBUG(sizeof(MyVec));
     DEBUG(sizeof(pair<short, char>));
     DEBUG(sizeof(Read));

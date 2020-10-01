@@ -9,6 +9,7 @@
 #include "GraphCreator.h"
 #include "DataStructures/Kmer.h"
 #include<deque>
+#include <DataStructures/KmerGCPS.h>
 
 /*
  * Cherry
@@ -25,6 +26,7 @@ public:
 
     static void test();
 
+//    static const unsigned MAX_HASH_KMERGCPS = 500'000'003;
 
 private:
 
@@ -33,12 +35,15 @@ private:
 
     int maxReadLength;
 
+
     /*
      * This is an array of prefixes of all reads. prefixKemrs[i] is the current prefix of read with id i
      */
-    vector<Kmer> prefixKmers;
+//    vector<Kmer> prefixKmers;
+    vector<KmerGCPS> prefixKmers;
 
-    vector<Kmer> suffixKmers;
+//    vector<Kmer> suffixKmers;
+    vector<KmerGCPS> suffixKmers;
 
     /**
      * This is used to keep only Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN edges with small overlap.
@@ -62,7 +67,8 @@ private:
     /*
      * This is the vector that keeps prefixes in buckets. prefixes from prefixKmers are kept in these buckets as pointers.
      */
-    vector<vector<Kmer *> > prefixKmersInBuckets;
+//    vector<vector<Kmer *> > prefixKmersInBuckets;
+    vector<vector<KmerGCPS *> > prefixKmersInBuckets;
     int prefixKmersBuckets; // this is the number of buckets.
 
     void calculateMaxReadLength();

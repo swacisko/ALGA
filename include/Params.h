@@ -38,7 +38,7 @@ public:
     virtual ~Params();
 
     static const int INF = 1000000001;
-    typedef long long KMER_HASH_TYPE;
+    typedef unsigned long long KMER_HASH_TYPE;
 
 
     static int KMER_LENGTH_BUCKET;
