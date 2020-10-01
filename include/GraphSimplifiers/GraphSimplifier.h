@@ -83,15 +83,12 @@ public:
 private:
     Graph *G;
     vector<Read *> *reads;
-//    VI *inDeg;
 
     /**
      * edgesToRemove[i] is the vector of edges that are to be removed that were added by i-th thread. So edgesToRemove.size() == Params::THREADS
      */
     VVPII edgesToRemove;
 
-//    VVI dst;
-//    VVI par;
     VVB was;
 
 

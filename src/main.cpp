@@ -96,18 +96,7 @@ void testConcurrency() {
     exit(1);
 }
 
-
-class BitsetTest {
-public:
-    unsigned *V;
-//    vector<unsigned> V;
-//    deque<int> V;
-    int lem;
-    unsigned N;
-//    char lem2;
-};
-
-class MyVec {
+class MemTestClass {
     char c;
     short t;
     char d;
@@ -120,7 +109,7 @@ int main(int argc, char **argv) {
 //    testConcurrency();
 
 //    Bitset::test();
-    DEBUG(sizeof(BitsetTest));
+    DEBUG(sizeof(MemTestClass));
     DEBUG(sizeof(std::mutex));
     DEBUG(sizeof(MILPII));
     DEBUG(sizeof(LPII));
@@ -130,7 +119,6 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(pair<unsigned, char>));
     DEBUG(sizeof(Kmer));
     DEBUG(sizeof(KmerGCPS));
-    DEBUG(sizeof(MyVec));
     DEBUG(sizeof(pair<short, char>));
     DEBUG(sizeof(Read));
     DEBUG(sizeof(Bitset));
@@ -886,7 +874,6 @@ int main(int argc, char **argv) {
         for (int i = 0; i < Global::READS.size(); i++) {
             if (Global::READS[i] != nullptr) Global::removeRead(i);
         }
-
 
     }
 

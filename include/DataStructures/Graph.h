@@ -154,6 +154,12 @@ public:
     Graph getReverseGraph();
 
     /**
+     * Creates just the neighborhoods list for the reverse graph.
+     * @return
+     */
+    VVPII getReverseGraphNeighborhoods();
+
+    /**
      * Function reverses the graph. Is result is the same as *this = this->getReverseGraph(), but uses less memory
      *
      */
@@ -307,7 +313,7 @@ private:
 
 
     /**
-     * contractedEdges[i] is a map that contains id of neighbo as key and list of nodes on the contracted edge from i to that neighbor.
+     * contractedEdges[i] is a map that contains id of a neighbor as key and list of nodes on the contracted edge from i to that neighbor.
      */
     VMILPII contractedEdges;
 

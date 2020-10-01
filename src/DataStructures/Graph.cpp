@@ -534,7 +534,7 @@ Graph Graph::getReverseGraph() {
     for (auto &p : parallelJobs) p.join();
     cerr << endl;
 
-    return GRev;
+    return std::move(GRev);
 }
 
 
@@ -734,10 +734,10 @@ void Graph::pruneGraph() {
 void Graph::reverseGraph() {
 
     VVPII rev(size());
-    VI *inDegrees = getInDegrees();
+    /*VI *inDegrees = getInDegrees();
     for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
     delete inDegrees;
-    inDegrees = nullptr;
+    inDegrees = nullptr;*/
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -783,6 +783,38 @@ void Graph::createContractedEdgesVector() {
 
     delete indeg;
     indeg = nullptr;
+}
+
+VVPII Graph::getReverseGraphNeighborhoods() {
+    VVPII rev(size());
+//    VI* indeg = getInDegrees();
+//    for( int i=0; i<size(); i++ ) rev[i].reserve( (*indeg)[i] + 1 );
+//    delete indeg; indeg = nullptr;
+
+    vector<std::future<void> > futures(Params::THREADS - 1);
+
+    auto worker = [=, &rev](int a, int b) {
+        for (int j = a; j <= b; j++) {
+            for (auto p : V[j]) {
+                int d = p.first;
+                int off = p.second;
+                lockNode(d);
+                rev[d].emplace_back(j, off);
+                unlockNode(d);
+            }
+        }
+    };
+
+    int W = (int) ceil((double) size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = i * W;
+        int b = min((i + 1) * W - 1, (int) size() - 1);
+        futures[i - 1] = std::async(std::launch::async, worker, a, b);
+    }
+    worker(0, W - 1);
+    for (auto &p : futures) p.get();
+
+    return std::move(rev);
 }
 
 
