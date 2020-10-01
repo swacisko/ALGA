@@ -19,23 +19,28 @@
 
 using namespace std;
 typedef long long LL;
-typedef pair<LL,LL> PLL;
+typedef pair<LL, LL> PLL;
 
 #include<ctime>
 
 class TimeMeasurer {
 public:
     TimeMeasurer();
-    TimeMeasurer(const TimeMeasurer& orig);
+
+    TimeMeasurer(const TimeMeasurer &orig);
+
     virtual ~TimeMeasurer();
-    
-    static void stopMeasurement( string option );
-    static void startMeasurement( string option );
+
+    static void stopMeasurement(string option);
+
+    static void startMeasurement(string option);
+
     static float getMeasurementTimeInSeconds(string option);
-    static map<string,float> getAllMeasurements(); // returns all measurements in second
+
+    static map<string, float> getAllMeasurements(); // returns all measurements in second
     static void writeAllMeasurements(); // writes all measurements
-    static void clearOption( string option ); // clears space in times for given option.
-    
+    static void clearOption(string option); // clears space in times for given option.
+
     static string INPUT_READER;
     static string GRAPH_SIMPLIFIER;
     static string GRAPH_CREATOR;
@@ -47,14 +52,12 @@ public:
     static string GRAPH_LCS_CHECK_AFTER_REMOVING_PARALLEL_PATHS;
     static string KMER_BUCKETS_SORTING;
 
-    
+
 private:
 
-    
-    
-    
-    static map<string,LL> times;
-    static map<string,LL> timesTotal; // total time of measurement for given parameter in clock() units (CLICKS_PER_SEC). Sum of times between startMEasurement() and stopMeasurement()
+
+    static map<string, LL> times;
+    static map<string, LL> timesTotal; // total time of measurement for given parameter in clock() units (CLICKS_PER_SEC). Sum of times between startMEasurement() and stopMeasurement()
 };
 
 #endif /* TIMEMEASURER_H */

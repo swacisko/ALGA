@@ -10,13 +10,13 @@
 #include <unordered_map>
 
 
-class ReadCorrector{
+class ReadCorrector {
 public:
     typedef LL BIG_TYPE;
     typedef int SMALL_TYPE;
-    typedef unordered_map< BIG_TYPE, unordered_map< SMALL_TYPE,int > > MAP_TYPE;
+    typedef unordered_map <BIG_TYPE, unordered_map<SMALL_TYPE, int>> MAP_TYPE;
 
-    ReadCorrector(vector<Read*> &reads, int sLength, int bLength);
+    ReadCorrector(vector<Read *> &reads, int sLength, int bLength);
 
     void correct();
 
@@ -24,7 +24,7 @@ public:
 
 private:
 
-    vector<Read*> *reads;
+    vector<Read *> *reads;
 
     int smallLength, bigLength;
 
@@ -34,7 +34,7 @@ private:
     bool reversedReads;
 
     static const int candidateThreshold = 2;
-    static const int FREQS_SIZE = (1<<20);
+    static const int FREQS_SIZE = (1 << 20);
     vector<mutex> mutexes;
 
 
@@ -52,12 +52,12 @@ private:
      */
     void createFrequenciesMap();
 
-    void addReadDataToMap( Read* r, vector<MAP_TYPE> & map );
+    void addReadDataToMap(Read *r, vector<MAP_TYPE> &map);
 
 
     void applyCorrection();
 
-    void applyCorrectionToRead( Read* r );
+    void applyCorrectionToRead(Read *r);
 
 
     /**
@@ -66,13 +66,13 @@ private:
      * @param pos
      * @return
      */
-    int accessReadPosition( Read* r, int pos );
+    int accessReadPosition(Read *r, int pos);
 
-    void setReadAtPosition(Read*r, int pos, int val);
+    void setReadAtPosition(Read *r, int pos, int val);
 
     void debugFrequencies();
 
-    string hashToString(LL val, int l );
+    string hashToString(LL val, int l);
 
 };
 

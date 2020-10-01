@@ -35,11 +35,11 @@ int MyUtils::parseInt(string s) {
 
 string MyUtils::getComplimentaryString(string s) {
     string res = s;
-    for( int i=0; i<s.size(); i++ ){
-        if( Params::getNukl(s[i]) == Params::A ) res[i] = 'T';
-        if( Params::getNukl(s[i]) == Params::C ) res[i] = 'G';
-        if( Params::getNukl(s[i]) == Params::G ) res[i] = 'C';
-        if( Params::getNukl(s[i]) == Params::T ) res[i] = 'A';
+    for (int i = 0; i < s.size(); i++) {
+        if (Params::getNukl(s[i]) == Params::A) res[i] = 'T';
+        if (Params::getNukl(s[i]) == Params::C) res[i] = 'G';
+        if (Params::getNukl(s[i]) == Params::G) res[i] = 'C';
+        if (Params::getNukl(s[i]) == Params::T) res[i] = 'A';
     }
 //    string res = "";
 //    for( int i=0; i<s.size(); i++ ){
@@ -53,24 +53,23 @@ string MyUtils::getComplimentaryString(string s) {
 }
 
 int MyUtils::getNearestLowerPrime(int N) {
-    int X = N-1;
+    int X = N - 1;
     bool prime = false;
-    while(!prime){
+    while (!prime) {
         prime = true;
 
-        if( X%2==0 ){
+        if (X % 2 == 0) {
             prime = false;
             X--;
-        }
-        else{
-            for( int i=3; i*i <= X; i+=2 ){
-                if( X % i == 0 ){
+        } else {
+            for (int i = 3; i * i <= X; i += 2) {
+                if (X % i == 0) {
                     prime = false;
                     break;
                 }
             }
 
-            if( !prime ) X--;
+            if (!prime) X--;
             else break;
         }
 
@@ -79,9 +78,8 @@ int MyUtils::getNearestLowerPrime(int N) {
 }
 
 
-void MyUtils::process_mem_usage(double vm_usage, double resident_set)
-{
-    vm_usage     = 0.0;
+void MyUtils::process_mem_usage(double vm_usage, double resident_set) {
+    vm_usage = 0.0;
     resident_set = 0.0;
 
     // the two fields we want

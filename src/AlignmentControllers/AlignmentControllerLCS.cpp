@@ -18,24 +18,26 @@
 #include "AlignmentControllers/AlignmentControllerLCS.h"
 
 AlignmentControllerLCS::AlignmentControllerLCS() {
-   // lcsdata = VVI( 200, VI(200,0) );
+    // lcsdata = VVI( 200, VI(200,0) );
 }
 
-AlignmentControllerLCS::AlignmentControllerLCS(const AlignmentControllerLCS& orig) : AlignmentController(orig) {
+AlignmentControllerLCS::AlignmentControllerLCS(const AlignmentControllerLCS &orig) : AlignmentController(orig) {
 }
 
 AlignmentControllerLCS::~AlignmentControllerLCS() {
 }
 
-bool AlignmentControllerLCS::canAlign(Read* r1, Read* r2, int offset) {
+bool AlignmentControllerLCS::canAlign(Read *r1, Read *r2, int offset) {
 //    cerr << "can align LCS" << endl;
-    if( 100 * offset > Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT * r1->size() /*min( r1->size(), r2->size() )*/  ) return false;
+    if (100 * offset >
+        Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT * r1->size() /*min( r1->size(), r2->size() )*/  )
+        return false;
 //    TimeMeasurer::startMeasurement(TimeMeasurer::ALIGNMENT_CONTROLLER_CAN_ALIGN_LCS);
 
-    int overlap_area = Read::calculateReadOverlap( r1,r2, offset );
-    if( overlap_area < Params::MIN_OVERLAP_AREA ) return false;
+    int overlap_area = Read::calculateReadOverlap(r1, r2, offset);
+    if (overlap_area < Params::MIN_OVERLAP_AREA) return false;
 
-    int overlap = calculateLCS(r1,r2,offset);
+    int overlap = calculateLCS(r1, r2, offset);
 
     // BELOW LINES ARE TO ENSURE THAT ENDS OF OVERLAP ARE THE SAME. THIS HOWEVER IS DUBIOUS APPLICATION IN LCS, BECAUSE
     // USING LCS WE WANT TO DETECT INDELS, SO ENDS WILL PROBABLY NOT BE THE SAME, EVEN IF OVERLAPS ARE ALMOST THE SAME (SAME BUT WITH INDEL)
@@ -45,19 +47,19 @@ bool AlignmentControllerLCS::canAlign(Read* r1, Read* r2, int offset) {
 //    }
 
 
-    
+
 //    int readOverlap = Read::calculateReadOverlap(r1,r2,offset);
-    int readOverlap = r1->calculateReadOverlap(r1,r2,offset);
+    int readOverlap = r1->calculateReadOverlap(r1, r2, offset);
 
 
 //    TimeMeasurer::stopMeasurement(TimeMeasurer::ALIGNMENT_CONTROLLER_CAN_ALIGN_LCS);
 
-    if( 100*overlap > Params::MINIMAL_OVERLAP_RATE_FOR_LCS * readOverlap )return true;
+    if (100 * overlap > Params::MINIMAL_OVERLAP_RATE_FOR_LCS * readOverlap)return true;
     else return false;
 }
 
-int AlignmentControllerLCS::calculateLCS(Read* r1, Read* r2, int offset) {
-    int M = max( r1->size(), r2->size() );
+int AlignmentControllerLCS::calculateLCS(Read *r1, Read *r2, int offset) {
+    int M = max(r1->size(), r2->size());
 
 
 //    if( M > lcsdata.size() ){
@@ -65,37 +67,36 @@ int AlignmentControllerLCS::calculateLCS(Read* r1, Read* r2, int offset) {
 //        lcsdata = VVI( 2*M+5, VI(2*M+5,0) );
 //    }
 
-    vector< unordered_map<int,int> > lcsdata(2*M+5);
-
+    vector<unordered_map<int, int> > lcsdata(2 * M + 5);
 
 
     int E = Params::MAX_ERROR_RATE_FOR_LCS;
 
-    int pBeg = max(0,offset-E);
+    int pBeg = max(0, offset - E);
 
-    for( int p = pBeg; p < r1->size(); p++ ){
+    for (int p = pBeg; p < r1->size(); p++) {
 
-        int qBeg = max( 0, p-offset-E );
-        int qEnd = min( r2->size()-1, p-offset+E );
+        int qBeg = max(0, p - offset - E);
+        int qEnd = min(r2->size() - 1, p - offset + E);
 
-        if( p == pBeg && p > 0 ){
-            for( int q = max(0,qBeg-1 ); q <= qEnd; q++ ){
-                lcsdata[p-1][q] = 0;
-             //   if( q > 0 ) lcsdata[p-1][q-1] = 0;
+        if (p == pBeg && p > 0) {
+            for (int q = max(0, qBeg - 1); q <= qEnd; q++) {
+                lcsdata[p - 1][q] = 0;
+                //   if( q > 0 ) lcsdata[p-1][q-1] = 0;
             }
         }
-        for( int q = max(0,qBeg-1); q <= min( r2->size()-1, qEnd+1 ); q++ ){
+        for (int q = max(0, qBeg - 1); q <= min(r2->size() - 1, qEnd + 1); q++) {
             lcsdata[p][q] = 0; // here i clear the data - it may contain some calculations from previous calculateLCS function invokes.
-          //  if( q > 0 ) lcsdata[p][q-1] = 0;
+            //  if( q > 0 ) lcsdata[p][q-1] = 0;
         }
 
-        for( int q = qBeg; q <= qEnd; q++ ){
-            if( (*r1)[p] == (*r2)[q] ){
-                if( p > 0 && q > 0 ) lcsdata[p][q] = lcsdata[p-1][q-1] + 1;
+        for (int q = qBeg; q <= qEnd; q++) {
+            if ((*r1)[p] == (*r2)[q]) {
+                if (p > 0 && q > 0) lcsdata[p][q] = lcsdata[p - 1][q - 1] + 1;
                 else lcsdata[p][q] = 1;
-            }else{
-                if( p > 0 && lcsdata[p][q] < lcsdata[p-1][q] ) lcsdata[p][q] = lcsdata[p-1][q];
-                if( q > 0 && lcsdata[p][q] < lcsdata[p][q-1] ) lcsdata[p][q] = lcsdata[p][q-1];
+            } else {
+                if (p > 0 && lcsdata[p][q] < lcsdata[p - 1][q]) lcsdata[p][q] = lcsdata[p - 1][q];
+                if (q > 0 && lcsdata[p][q] < lcsdata[p][q - 1]) lcsdata[p][q] = lcsdata[p][q - 1];
             }
 
         }
@@ -103,21 +104,21 @@ int AlignmentControllerLCS::calculateLCS(Read* r1, Read* r2, int offset) {
 
 
 //    int p = r1->size()-1;
-        int p = min( r1->size()-1, r2->size()-1+offset );
+    int p = min(r1->size() - 1, r2->size() - 1 + offset);
 
 //    int qBeg = maxVal( 0, p-offset-E );
- //   int qEnd = minVal( r2->size()-1, p-offset+E );
- //   int q = minVal( r2->size()-1, qEnd+1 );
-    int q = min( r2->size()-1, p - offset+E );
+    //   int qEnd = minVal( r2->size()-1, p-offset+E );
+    //   int q = minVal( r2->size()-1, qEnd+1 );
+    int q = min(r2->size() - 1, p - offset + E);
 
 
 
 
- //   return lcsdata[p][q]; // this can be done to return only the length of the lcs.
+    //   return lcsdata[p][q]; // this can be done to return only the length of the lcs.
 
 
 
- //*** SECTION BELOW IS TO EXTRACT EXACT POSITION OF LCS
+    //*** SECTION BELOW IS TO EXTRACT EXACT POSITION OF LCS
 //    foundLCS.clear();
 //    foundLCS = VVI(2);
 //
@@ -142,8 +143,8 @@ int AlignmentControllerLCS::calculateLCS(Read* r1, Read* r2, int offset) {
 
 
 
-    p = min( r1->size()-1, r2->size()-1+offset );
-    q = min( r2->size()-1, p - offset+E );
+    p = min(r1->size() - 1, r2->size() - 1 + offset);
+    q = min(r2->size() - 1, p - offset + E);
 
     return lcsdata[p][q];
 }

@@ -15,11 +15,13 @@ class AlignmentControllerLowErrorRate : public AlignmentController {
 
 public:
     AlignmentControllerLowErrorRate();
-    ~AlignmentControllerLowErrorRate(){}
+
+    ~AlignmentControllerLowErrorRate() {}
 
     bool canAlign(Read *r1, Read *r2, int offset) override;
 
     static void test();
+
 private:
 
     Bitset b1;

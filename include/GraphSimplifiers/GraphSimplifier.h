@@ -24,15 +24,17 @@ typedef vector<VB> VVB;
 class GraphSimplifier {
 public:
     GraphSimplifier(Graph &G, vector<Read *> &reads);
-    GraphSimplifier(const GraphSimplifier& orig);
+
+    GraphSimplifier(const GraphSimplifier &orig);
+
     virtual ~GraphSimplifier();
+
     void clear();
-    
+
     /*
      Function removes from graph G every edge (a,c) such that there exist edges (a,b) and (b,c) with property W[a][b] + W[b][c] <= W[a][c]
      */
     void cutNonAndWeaklyMetricTriangles();
-
 
 
     /**
@@ -40,8 +42,10 @@ public:
      */
     int mergeLength0Edges();
 
-    void simplifyGraphOld(); // function performs several operations (algorithms) to prune read graph of unneccessary edges.
-    void simplifyGraph(); // function performs several operations (algorithms) to prune read graph of unneccessary edges.
+    void
+    simplifyGraphOld(); // function performs several operations (algorithms) to prune read graph of unneccessary edges.
+    void
+    simplifyGraph(); // function performs several operations (algorithms) to prune read graph of unneccessary edges.
 
     /*
         removes short paths that run paralelly. e.g a->b->c and a->d->c are parallel, but will not be removed in removeMetricTriangles. This may be used instead of cutNonAndWeaklyMetricTriangles
@@ -55,7 +59,6 @@ public:
      * @return true if there was at least one contracion done. False if no contraction was done
      */
     bool contractPathNodes();
-
 
 
     /**
@@ -78,8 +81,8 @@ public:
     static void test();
 
 private:
-    Graph * G;
-    vector<Read*> * reads;
+    Graph *G;
+    vector<Read *> *reads;
 //    VI *inDeg;
 
     /**
@@ -91,7 +94,6 @@ private:
 //    VVI par;
     VVB was;
 
-    
 
     void tryToRemoveShortPathsMST(int beg, int maxOffset, int thread_id);
 
@@ -102,7 +104,6 @@ private:
      * Such a path will be removed if it has total length <= maxOffset.
      */
     int removeDanglingBranches(int maxOffset);
-
 
 
     /*
@@ -134,7 +135,7 @@ private:
      * @param b
      * @param thread_id
      */
-    void removeNonAndWeaklyMetricTrianglesJobRemoveEdges( int a, int b, int thread_id );
+    void removeNonAndWeaklyMetricTrianglesJobRemoveEdges(int a, int b, int thread_id);
 
     void removeShortParallelPathsJob(int a, int b, int maxOffset, int thread_id);
 

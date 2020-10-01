@@ -15,7 +15,7 @@
  */
 class GraphCreatorPrefSuf : public GraphCreator {
 public:
-    GraphCreatorPrefSuf( vector<Read*> *reads, Graph *G );
+    GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G);
 
     virtual ~GraphCreatorPrefSuf();
 
@@ -27,7 +27,6 @@ public:
 
 
 private:
-
 
 
     void writeState();
@@ -47,11 +46,9 @@ private:
      */
 //    VVPII smallOverlapEdges;
     static const int SOES = 3;
-    typedef pair<unsigned,unsigned>* SOES_TYPE;
+    typedef pair<unsigned, unsigned> *SOES_TYPE;
 //    vector< SOES_TYPE > smallOverlapEdges;
-    vector< SOES_TYPE > smallOverlapEdges;
-
-
+    vector<SOES_TYPE> smallOverlapEdges;
 
 
     void removeKmersFromBucketsJob(int a, int b, int thread_id);
@@ -65,18 +62,21 @@ private:
     /*
      * This is the vector that keeps prefixes in buckets. prefixes from prefixKmers are kept in these buckets as pointers.
      */
-    vector< vector< Kmer* > > prefixKmersInBuckets;
+    vector<vector<Kmer *> > prefixKmersInBuckets;
     int prefixKmersBuckets; // this is the number of buckets.
 
     void calculateMaxReadLength();
 
     void createInitialState();
+
     int currentPrefSufLength;
     Params::KMER_HASH_TYPE prefHashFactor; // this is the hashFactor to create prefix hashes.
 
 
-    bool updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor); // function updates hash of prefix of read with given id (Moves one position to the right). Returns tru if hash was updated or false if hash is already the length of the read
-    bool updateSuffixHash(int id, int currentPrefSufLength); // function updates hash of suffix of read with given id (moves one position to the left). Returns tru if hash was updated or false if hash is already the length of the read
+    bool updatePrefixHash(int id, int currentPrefSufLength,
+                          Params::KMER_HASH_TYPE prefHashFactor); // function updates hash of prefix of read with given id (Moves one position to the right). Returns tru if hash was updated or false if hash is already the length of the read
+    bool updateSuffixHash(int id,
+                          int currentPrefSufLength); // function updates hash of suffix of read with given id (moves one position to the left). Returns tru if hash was updated or false if hash is already the length of the read
 
 
 
@@ -84,11 +84,11 @@ private:
     void nextPrefSufIteration();
 
 
-    void updatePrexihHashJob( int a, int b, int thread_id );
+    void updatePrexihHashJob(int a, int b, int thread_id);
 
-    void nextPrefSufIterationJobAddEdges( int a, int b, int thread_id );
+    void nextPrefSufIterationJobAddEdges(int a, int b, int thread_id);
 
-    void createInitialStateJob( int a, int b, int thread_id );
+    void createInitialStateJob(int a, int b, int thread_id);
 
     void moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id);
 

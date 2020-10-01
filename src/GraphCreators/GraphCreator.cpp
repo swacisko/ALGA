@@ -8,8 +8,8 @@
 #include "GraphCreators/GraphCreator.h"
 
 GraphCreator::GraphCreator(vector<Read *> *reads, Graph *G) : reads(reads), G(G) {
-    alignFrom = VB(G->size(),true);
-    alignTo = VB(G->size(),true);
+    alignFrom = VB(G->size(), true);
+    alignTo = VB(G->size(), true);
 }
 
 GraphCreator::~GraphCreator() {

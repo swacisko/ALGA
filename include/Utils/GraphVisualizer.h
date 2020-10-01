@@ -24,7 +24,7 @@ public:
      * 3. Edges will have weight equal to the length of the contracted path they represent.
      *
      */
-    void writeInGraphvizFormat( Graph * G, vector<Contig*> & contigs );
+    void writeInGraphvizFormat(Graph *G, vector<Contig *> &contigs);
 
 
 private:
@@ -33,18 +33,21 @@ private:
     ofstream out;
 
     static const int C = 33;
-    string colors[C] = { "blue", "maroon", "green", "orange", "red", "brown", "beige", "cyan", "gold", "darkgreen", "darkorchid", "goldenrod4", "gray",
-                        "aquamarine", "pink", "deeppink", "coral", "cornflowerblue", "indigo", "sienna", "turquoise", "salmon", "coral3", "forestgreen", "greenyellow",
-                        "hotpink", "magenta1", "mediumblue", "plum", /*"snow",*/ "yellow3", "wheat", "turquoise", "crimson" };
+    string colors[C] = {"blue", "maroon", "green", "orange", "red", "brown", "beige", "cyan", "gold", "darkgreen",
+                        "darkorchid", "goldenrod4", "gray",
+                        "aquamarine", "pink", "deeppink", "coral", "cornflowerblue", "indigo", "sienna", "turquoise",
+                        "salmon", "coral3", "forestgreen", "greenyellow",
+                        "hotpink", "magenta1", "mediumblue", "plum", /*"snow",*/ "yellow3", "wheat", "turquoise",
+                        "crimson"};
 
 
-    void createRelevantNodes( Graph * G, vector<Contig*> & contigs );
+    void createRelevantNodes(Graph *G, vector<Contig *> &contigs);
 
-    void visualizeGraph( Graph * G, vector<Contig*> & contigs );
+    void visualizeGraph(Graph *G, vector<Contig *> &contigs);
 
-    void visualizeContigs( vector<Contig*> & contigs );
+    void visualizeContigs(vector<Contig *> &contigs);
 
-    void visualizeContig( Contig* ctg, string color );
+    void visualizeContig(Contig *ctg, string color);
 
 
     bool ADD_REVCOMP_CONTIGS;

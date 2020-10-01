@@ -13,18 +13,19 @@ class OutputWriterNew {
 
 public:
 
-    OutputWriterNew( Graph * G, vector<Contig*> contigs );
+    OutputWriterNew(Graph *G, vector<Contig *> contigs);
 
-    void writeContigsNoFilter(vector<Contig*> contigs);
+    void writeContigsNoFilter(vector<Contig *> contigs);
 
     void writeContigs();
-    void writeContig( string & s, int charsPerLine );
+
+    void writeContig(string &s, int charsPerLine);
 
     /**
      * Function responsible for filtering contigs.
      * If this function returns true, then given contig will be written to output. Otherwise a contig will not be written to output.
      */
-    bool filterContig( Contig* ctg );
+    bool filterContig(Contig *ctg);
 
     VI getContigsLengths();
 
@@ -32,11 +33,11 @@ public:
      * Function filters and returns only those contigs that are to be written to output.
      * @return
      */
-    vector<Contig*> filterContigs();
+    vector<Contig *> filterContigs();
 
 private:
-    Graph * G;
-    vector<Contig*> contigs;
+    Graph *G;
+    vector<Contig *> contigs;
 
     /**
      * This variable stores information about reads that were already processed in contigs. This is used to decrease duplication ratio.

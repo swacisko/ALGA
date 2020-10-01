@@ -13,16 +13,16 @@
  */
 class GraphCreatorPairwiseKmerBranch : public GraphCreatorKmerBased {
 public:
-    GraphCreatorPairwiseKmerBranch( vector<Read*> *read, Graph * G );
+    GraphCreatorPairwiseKmerBranch(vector<Read *> *read, Graph *G);
 
-    GraphCreatorPairwiseKmerBranch* clone() override { return new GraphCreatorPairwiseKmerBranch(reads,G); };
+    GraphCreatorPairwiseKmerBranch *clone() override { return new GraphCreatorPairwiseKmerBranch(reads, G); };
 
 protected:
-    void createAlignmentsForKmers(vector<Kmer> &kmers, int p, int q, int thread_id=0) override;
+    void createAlignmentsForKmers(vector<Kmer> &kmers, int p, int q, int thread_id = 0) override;
 
 private:
 
-    AlignmentController * ach;
+    AlignmentController *ach;
 
     vector<Bitset> branchMarkers;
     VI neighbors;

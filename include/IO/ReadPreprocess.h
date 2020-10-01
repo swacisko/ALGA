@@ -8,7 +8,7 @@
 #include "Global.h"
 
 
-class ReadPreprocess{
+class ReadPreprocess {
 public:
     /**
      *
@@ -20,7 +20,7 @@ public:
      *
      * @return vector containing pointers to Global::READS, but ordered lexicographically.
      */
-    vector<Read*> getSortedReads();
+    vector<Read *> getSortedReads();
 
     /**
      *

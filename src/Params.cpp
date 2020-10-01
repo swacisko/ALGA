@@ -21,13 +21,13 @@
 Params::Params() {
 }
 
-Params::Params(const Params& orig) {
+Params::Params(const Params &orig) {
 }
 
 Params::~Params() {
 }
 
-void Params::writeParams(){
+void Params::writeParams() {
     cerr << endl << "PARAMS:" << endl;
 
     cerr << "LI_KMER_LENGTH: " << LI_KMER_LENGTH << endl;
@@ -36,7 +36,7 @@ void Params::writeParams(){
 
     cerr << "KMER_LENGTH_BUCKETS: " << KMER_LENGTH_BUCKET << endl;
 
-    cerr << "MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT: " << MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT<< endl;
+    cerr << "MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT: " << MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT << endl;
     cerr << "MAX_ERROR_RATE_FOR_LCS: " << MAX_ERROR_RATE_FOR_LCS << endl;
 
     cerr << "USE_LCS_LOW_ERROR_FILTER: " << USE_LCS_LOW_ERROR_FILTER << endl;
@@ -51,11 +51,11 @@ void Params::writeParams(){
     cerr << "MAX_OFFSET_DANGLING_BRANCHES: " << MAX_OFFSET_DANGLING_BRANCHES << endl;
 
 
-
     cerr << "ADD_COMP_REV_READS: " << ADD_COMP_REV_READS << endl;
     cerr << "ADD_PAIRED_READS: " << ADD_PAIRED_READS << endl;
-    cerr << "INPUT_TYPE: " << ( INPUT_FILE_TYPE == MY_INPUT ? "MY_INPUT" : ( INPUT_FILE_TYPE == FASTA ? "FASTA" : "FASTQ" ) ) << endl;
-    cerr << "(LL)MAX_HASH_CONSIDERED: " << (LL)MAX_HASH_CONSIDERED << endl;
+    cerr << "INPUT_TYPE: "
+         << (INPUT_FILE_TYPE == MY_INPUT ? "MY_INPUT" : (INPUT_FILE_TYPE == FASTA ? "FASTA" : "FASTQ")) << endl;
+    cerr << "(LL)MAX_HASH_CONSIDERED: " << (LL) MAX_HASH_CONSIDERED << endl;
     cerr << "CONTIG_MIN_OUTPUT_LENGTH: " << CONTIG_MIN_OUTPUT_LENGTH << endl;
     cerr << "CONTIG_CREATOR_SHORT_CYCLE_LENGTH: " << CONTIG_CREATOR_SHORT_CYCLE_LENGTH << endl;
 
@@ -82,7 +82,6 @@ void Params::writeParams(){
     cerr << "TRAVERSE_TYPE: " << TRAVERSE_TYPE << endl;
 
 
-
     cerr << "TEST_NAME: " << TEST_NAME << endl;
     cerr << "RUN_DATE: " << RUN_DATE << endl;
 
@@ -97,7 +96,8 @@ void Params::writeParams(){
     cerr << "PREF_READS_ALL_PREFIX_READS: " << PREF_READS_ALL_PREFIX_READS << endl;
     cerr << "PREF_READS_NONE: " << PREF_READS_NONE << endl;
     cerr << "REMOVE_PREF_READS_TYPE: " << REMOVE_PREF_READS_TYPE << endl;
-    cerr << "ALGORITHM_IN_USE: " << (ALGORITHM_IN_USE == PREF_SUF_GRAPH_CREATION ? "PS-no errors admitted" : "PKB-erros admitted") << endl;
+    cerr << "ALGORITHM_IN_USE: "
+         << (ALGORITHM_IN_USE == PREF_SUF_GRAPH_CREATION ? "PS-no errors admitted" : "PKB-erros admitted") << endl;
     cerr << "THREADS: " << THREADS << endl;
 
     cerr << endl;
@@ -109,28 +109,28 @@ void Params::writeParams(){
 
 int Params::getNuklNumber(Params::NUKL_TYPE nucl) {
     int nuclValue = 4;
-    switch( nucl ){
-        case Params::A:{
+    switch (nucl) {
+        case Params::A: {
             nuclValue = 0;
             break;
         }
-        case Params::C:{
+        case Params::C: {
             nuclValue = 1;
             break;
         }
-        case Params::G:{
+        case Params::G: {
             nuclValue = 2;
             break;
         }
-        case Params::T:{
+        case Params::T: {
             nuclValue = 3;
             break;
         }
-        case Params::N:{
+        case Params::N: {
             nuclValue = 15;
             break;
         }
-        default:{
+        default: {
             cerr << "in getNuklNumber nucl = " << nucl << " - no such option, crashing..." << endl;
             cerr << char(nucl) << endl;
             exit(1);
@@ -143,21 +143,21 @@ int Params::getNuklNumber(Params::NUKL_TYPE nucl) {
 }
 
 int Params::getNukl(char a) {
-    if( a == 'A' ) return A;
-    else if(a == 'C') return C;
-    else if(a == 'G') return G;
-    else if(a == 'T') return T;
+    if (a == 'A') return A;
+    else if (a == 'C') return C;
+    else if (a == 'G') return G;
+    else if (a == 'T') return T;
     else return N;
 }
 
-string Params::getNuklAsString(int nukl){
+string Params::getNuklAsString(int nukl) {
     string s = "";
-    if( nukl == Params::A ) s += 'A';
-    else if( nukl == Params::C ) s += 'C';
-    else if( nukl == Params::G ) s += 'G';
-    else if( nukl == Params::T ) s += 'T';
-    else if( nukl == N ) s += 'N';
-    else{
+    if (nukl == Params::A) s += 'A';
+    else if (nukl == Params::C) s += 'C';
+    else if (nukl == Params::G) s += 'G';
+    else if (nukl == Params::T) s += 'T';
+    else if (nukl == N) s += 'N';
+    else {
         cerr << "returning \"\" as astring for nukl " << nukl << " in getNuklAsString" << endl;
         exit(1);
         return s;
@@ -168,7 +168,7 @@ string Params::getNuklAsString(int nukl){
 
 
 void Params::initializeParams(int argc, char **argv) {
-    long long defaultMaxHash = ( 100'000'000ll * 100'000'000ll + 1 ); // 10^16 + 1
+    long long defaultMaxHash = (100'000'000ll * 100'000'000ll + 1); // 10^16 + 1
 
 
 
@@ -235,16 +235,16 @@ void Params::initializeParams(int argc, char **argv) {
     int option_index = 0;
 
     static struct option long_options[] = {
-        {file1.c_str(),                                                  required_argument,          0,  0 },
-        {file2.c_str(),                                                  required_argument,          0,  0 },
-        {threads.c_str(),                                               required_argument,          0,  0 },
-        {output.c_str(),                                                required_argument,          0,  0 },
-        {error_rate.c_str(),                                                required_argument,          0,  0 },
+            {file1.c_str(),         required_argument, 0, 0},
+            {file2.c_str(),         required_argument, 0, 0},
+            {threads.c_str(),       required_argument, 0, 0},
+            {output.c_str(),        required_argument, 0, 0},
+            {error_rate.c_str(),    required_argument, 0, 0},
 
 //        {alg.c_str(),                                                   required_argument,          0,  0 },
 //        {li_kmer_intervals.c_str(),                                     required_argument,          0,  0 },
 //        {li_kmer_length.c_str(),                                        required_argument,          0,  0 },
-        {redirect_cerr.c_str(),                                         required_argument,          0,  0 },
+            {redirect_cerr.c_str(), required_argument, 0, 0},
 //        {max_offset_considered_for_alignment.c_str(),                   required_argument,          0,  0 },
 //        {max_offset_parallel_paths.c_str(),                             required_argument,          0,  0 },
 //        {max_offset_dangling_branches.c_str(),                          required_argument,          0,  0 },
@@ -283,14 +283,14 @@ void Params::initializeParams(int argc, char **argv) {
 //        {min_offset_for_alignment.c_str(),                              required_argument,          0,  0 },
 //        {rpr.c_str(),                                                   required_argument,          0,  0 },
 //        {remove_pref_reads.c_str(),                                     required_argument,          0,  0 },
-        {serialize.c_str(),                                             required_argument,          0,  0 },
+            {serialize.c_str(),     required_argument, 0, 0},
 //        {rna.c_str(),                                                   required_argument,          0,  0 },
 //        {scale.c_str(),                                                 required_argument,          0,  0 },
 //        {tpn.c_str(),                                                required_argument,          0,  0 },
 //        {tpv.c_str(),                                                required_argument,          0,  0 },
 //        {er.c_str(),                                                required_argument,          0,  0 },
 //        {correct_reads.c_str(),                                                required_argument,          0,  0 },
-        {0,                         0,                 0,  0 }
+            {0, 0,                                     0, 0}
     };
 
 
@@ -306,135 +306,135 @@ void Params::initializeParams(int argc, char **argv) {
         if (c == -1) break;
         switch (c) {
             case 0:
-                option = string( optarg );
+                option = string(optarg);
                 option_name = string(long_options[option_index].name);
 //                cerr << "\toption = " << option << "    option_name = " << option_name << endl;
 
-                if( option_name == file1 ){
-                    inStreamFilePath1 = string( optarg );
+                if (option_name == file1) {
+                    inStreamFilePath1 = string(optarg);
 
                     cerr << "first inStreamFilePath1: " << inStreamFilePath1 << endl;
-                    inStream.open( inStreamFilePath1 );
-                    cin.rdbuf( inStream.rdbuf() );
+                    inStream.open(inStreamFilePath1);
+                    cin.rdbuf(inStream.rdbuf());
 
 //                    fileName;
                     it = inStreamFilePath1.rfind('/');
-                    if( it == string::npos ) fileName = inStreamFilePath1;
-                    else fileName = inStreamFilePath1.substr( it+1 );
+                    if (it == string::npos) fileName = inStreamFilePath1;
+                    else fileName = inStreamFilePath1.substr(it + 1);
 
 
                     fileExtension = "";
                     it = fileName.rfind('.');
-                    if( it == string::npos ) fileExtension = "";
-                    else fileExtension = fileName.substr(it+1);
+                    if (it == string::npos) fileExtension = "";
+                    else fileExtension = fileName.substr(it + 1);
 
 
-
-                    if( fileExtension == "fasta" ) INPUT_FILE_TYPE = FASTA;
-                    else if( fileExtension == "pfasta" ) INPUT_FILE_TYPE = PFASTA;
-                    else if( fileExtension == "fastq" ) INPUT_FILE_TYPE = FASTQ;
+                    if (fileExtension == "fasta") INPUT_FILE_TYPE = FASTA;
+                    else if (fileExtension == "pfasta") INPUT_FILE_TYPE = PFASTA;
+                    else if (fileExtension == "fastq") INPUT_FILE_TYPE = FASTQ;
                     else INPUT_FILE_TYPE = MY_INPUT;
 
                     fileNameNoExt = "";
-                    if( fileExtension == "" ) fileNameNoExt = fileName;
-                    else fileNameNoExt = fileName.substr( 0, fileName.size() - fileExtension.size()-1 );
+                    if (fileExtension == "") fileNameNoExt = fileName;
+                    else fileNameNoExt = fileName.substr(0, fileName.size() - fileExtension.size() - 1);
 
 
 //                    if( fileNameNoExt != "" ) fileNameNoExt.erase( fileNameNoExt.size()-1,1 );
                     TEST_NAME = "ALGA_" + fileNameNoExt;
 
                 }
-                if(option_name == error_rate || option_name == er ){
+                if (option_name == error_rate || option_name == er) {
                     double rate = stod(string(optarg));
-                   /* if( rate <= 0.01 ) ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
-                    else{
-                        ALGORITHM_IN_USE = PAIRWISE_KMER_BRANCH_GRAPH_CREATION;
-                        if( rate < 0.05 ){
-                            MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = 95;
-                        }else{
-                            MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (1-rate) * 100;
-                        }
-                    }*/
-                    if( rate <= 0.01 ) USE_GRAPH_CREATOR_SUPPLEMENT = 0;
+                    /* if( rate <= 0.01 ) ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
+                     else{
+                         ALGORITHM_IN_USE = PAIRWISE_KMER_BRANCH_GRAPH_CREATION;
+                         if( rate < 0.05 ){
+                             MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = 95;
+                         }else{
+                             MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (1-rate) * 100;
+                         }
+                     }*/
+                    if (rate <= 0.01) USE_GRAPH_CREATOR_SUPPLEMENT = 0;
                     else USE_GRAPH_CREATOR_SUPPLEMENT = 1;
                 }
-                if( option_name == output ){
+                if (option_name == output) {
                     outStreamFileName = string(optarg);
                 }
-                if( option_name == correct_reads ){
+                if (option_name == correct_reads) {
                     CORRECT_READS = stoi(string(optarg));
                 }
-                if( option_name == tpn ){
+                if (option_name == tpn) {
                     TPN = string(optarg);
                 }
-                if( option_name == tpv ){
-                    TPV =  string(optarg);
+                if (option_name == tpv) {
+                    TPV = string(optarg);
                 }
-                if( option_name == file2 ){
+                if (option_name == file2) {
                     inStreamFilePath2 = string(optarg);
                 }
-                if( option_name == rpr || option_name == remove_pref_reads ){
+                if (option_name == rpr || option_name == remove_pref_reads) {
                     string opt = string(optarg);
-                    if(opt == "all" || opt == "a" ) REMOVE_PREF_READS_TYPE = PREF_READS_ALL_PREFIX_READS;
-                    else if( opt == "duplicates" || opt == "d" ) REMOVE_PREF_READS_TYPE = PREF_READS_ONLY_DUPLICATES;
-                    else if( opt == "none" || opt == "n" ) REMOVE_PREF_READS_TYPE = PREF_READS_NONE;
+                    if (opt == "all" || opt == "a") REMOVE_PREF_READS_TYPE = PREF_READS_ALL_PREFIX_READS;
+                    else if (opt == "duplicates" || opt == "d") REMOVE_PREF_READS_TYPE = PREF_READS_ONLY_DUPLICATES;
+                    else if (opt == "none" || opt == "n") REMOVE_PREF_READS_TYPE = PREF_READS_NONE;
                 }
-                if( option_name == scale ){
+                if (option_name == scale) {
                     SCALE = stof(string(optarg));
                 }
-                if( option_name == alg ){
-                    if( string(optarg) == "PKB" ) ALGORITHM_IN_USE = PAIRWISE_KMER_BRANCH_GRAPH_CREATION;
-                    else if( string(optarg) == "PS" ) ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
+                if (option_name == alg) {
+                    if (string(optarg) == "PKB") ALGORITHM_IN_USE = PAIRWISE_KMER_BRANCH_GRAPH_CREATION;
+                    else if (string(optarg) == "PS") ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
                 }
-                if( option_name == rna ){
+                if (option_name == rna) {
                     RNA = stoi(string(optarg));
                 }
-                if( option_name == serialize ){
-                    SERIALIZE_GRAPH_AFTER_SIMPLIFIER = SERIALIZE_GRAPH_BEFORE_SIMPLIFIER = DESERIALIZE_GRAPH = stoi(string(optarg));
+                if (option_name == serialize) {
+                    SERIALIZE_GRAPH_AFTER_SIMPLIFIER = SERIALIZE_GRAPH_BEFORE_SIMPLIFIER = DESERIALIZE_GRAPH = stoi(
+                            string(optarg));
                 }
-                if( option_name == li_kmer_intervals ){
+                if (option_name == li_kmer_intervals) {
                     LI_KMER_INTERVALS = stoi(string(optarg));
                 }
-                if( option_name == li_kmer_length ){
+                if (option_name == li_kmer_length) {
                     LI_KMER_LENGTH = stoi(string(optarg));
                 }
-                if( option_name == redirect_cerr ){
+                if (option_name == redirect_cerr) {
                     REDIRECT_CERR = stoi(string(optarg));
                 }
-                if( option_name == max_offset_considered_for_alignment || option_name == mocfo ){
+                if (option_name == max_offset_considered_for_alignment || option_name == mocfo) {
                     MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = stoi(string(optarg));
                 }
-                if( option_name == max_offset_parallel_paths || option_name == mopp ){
+                if (option_name == max_offset_parallel_paths || option_name == mopp) {
                     MAX_OFFSET_PARALLEL_PATHS = stoi(string(optarg));
                 }
-                if( option_name == max_offset_dangling_branches || option_name == modb ){
+                if (option_name == max_offset_dangling_branches || option_name == modb) {
                     MAX_OFFSET_DANGLING_BRANCHES = stoi(string(optarg));
                 }
-                if( option_name == max_error_rate_for_lcs ){
+                if (option_name == max_error_rate_for_lcs) {
                     MAX_ERROR_RATE_FOR_LCS = stoi(string(optarg));
                 }
-                if( option_name == minimal_overlap_rate_for_lcs ){
+                if (option_name == minimal_overlap_rate_for_lcs) {
                     MINIMAL_OVERLAP_RATE_FOR_LCS = stoi(string(optarg));
                 }
-                if( option_name == contig_min_output_length ){
+                if (option_name == contig_min_output_length) {
                     CONTIG_MIN_OUTPUT_LENGTH = stoi(string(optarg));
                 }
-                if( option_name == minimal_overlap_for_lcs_low_error ){
+                if (option_name == minimal_overlap_for_lcs_low_error) {
                     MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = stoi(string(optarg));
                 }
-                if( option_name == use_lcs_low_error_filter ){
+                if (option_name == use_lcs_low_error_filter) {
                     USE_LCS_LOW_ERROR_FILTER = stoi(string(optarg));
                 }
-                if( option_name == use_acler_instead_of_aclcs || option_name == acler ){
+                if (option_name == use_acler_instead_of_aclcs || option_name == acler) {
                     USE_ACLER_INSTEAD_OF_ACLCS = stoi(string(optarg));
                 }
-                if( option_name == serialize_graph_before_simplifier ){
+                if (option_name == serialize_graph_before_simplifier) {
                     SERIALIZE_GRAPH_BEFORE_SIMPLIFIER = stoi(string(optarg));
                 }
-                if( option_name == serialize_graph_after_simplifier ){
-                    SERIALIZE_GRAPH_AFTER_SIMPLIFIER  = stoi(string(optarg));
+                if (option_name == serialize_graph_after_simplifier) {
+                    SERIALIZE_GRAPH_AFTER_SIMPLIFIER = stoi(string(optarg));
                 }
-                if( option_name == mfup ){
+                if (option_name == mfup) {
                     MOST_FREQUENTLY_USED_PARAMETER = stoi(string(optarg));
                     KMER_LENGTH_BUCKET = stoi(string(optarg));
                     LI_KMER_LENGTH = stoi(string(optarg));
@@ -444,45 +444,45 @@ void Params::initializeParams(int argc, char **argv) {
 
                     MIN_OVERLAP_AREA = stoi(string(optarg));
                 }
-                if( option_name == min_overlap_rate || option_name == mor ){
-                    MIN_OVERLAP_RATE = stoi( string(optarg) );
-                    MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (100 + stoi( string(optarg) )) >> 1;
-                    MINIMAL_OVERLAP_RATE_FOR_LCS = stoi( string(optarg) );
+                if (option_name == min_overlap_rate || option_name == mor) {
+                    MIN_OVERLAP_RATE = stoi(string(optarg));
+                    MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (100 + stoi(string(optarg))) >> 1;
+                    MINIMAL_OVERLAP_RATE_FOR_LCS = stoi(string(optarg));
                 }
-                if( option_name == deserialize_graph ){
+                if (option_name == deserialize_graph) {
                     DESERIALIZE_GRAPH = stoi(string(optarg));
                 }
-                if( option_name == write_statistics ){
+                if (option_name == write_statistics) {
                     WRITE_STATISTICS = stoi(string(optarg));
                 }
-                if(option_name == threads){
+                if (option_name == threads) {
                     THREADS = stoi(string(optarg));
                 }
-                if(option_name == new_reads_per_contig_percentage || option_name == nrpcp ){
+                if (option_name == new_reads_per_contig_percentage || option_name == nrpcp) {
                     NEW_READS_PER_CONTIG_PERCENTAGE = stoi(string(optarg));
                 }
-                if( option_name == alignment_controller_same_ends_length || option_name == acsel ){
+                if (option_name == alignment_controller_same_ends_length || option_name == acsel) {
                     ALIGNMENT_CONTROLLER_SAME_ENDS_LENGTH = stoi(string(optarg));
                 }
-                if( option_name == min_overlap_area || option_name == moa ){
-                    MIN_OVERLAP_AREA = stoi( string(optarg) );
+                if (option_name == min_overlap_area || option_name == moa) {
+                    MIN_OVERLAP_AREA = stoi(string(optarg));
                 }
-                if( option_name == rsoemo ){
+                if (option_name == rsoemo) {
                     REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP = stoi(string(optarg));
                 }
-                if( option_name == rsoentr ){
+                if (option_name == rsoentr) {
                     REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN = stoi(string(optarg));
                 }
-                if( option_name == read_end_trim ){
+                if (option_name == read_end_trim) {
                     READ_END_TRIM_LEFT = READ_END_TRIM_RIGHT = stoi(string(optarg));
                 }
-                if( option_name == read_end_trim_left || option_name == retl ){
+                if (option_name == read_end_trim_left || option_name == retl) {
                     READ_END_TRIM_LEFT = stoi(string(optarg));
                 }
-                if( option_name == read_end_trim_right || option_name == retr ){
+                if (option_name == read_end_trim_right || option_name == retr) {
                     READ_END_TRIM_RIGHT = stoi(string(optarg));
                 }
-                if( option_name == remove_reads_with_n ){
+                if (option_name == remove_reads_with_n) {
                     REMOVE_READS_WITH_N = stoi(string(optarg));
                 }
 
@@ -503,10 +503,6 @@ void Params::initializeParams(int argc, char **argv) {
                 printf("?? getopt returned character code 0%o ??\n", c);
         }
     }
-
-
-
-
 
 
     std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -554,7 +550,8 @@ void Params::initializeParams(int argc, char **argv) {
     outStreamFileName += TEST_NAME;*/
 
 
-    TEST_NAME += "_scale" + to_string((int)(100*SCALE));// + "_mfup" + to_string(MOST_FREQUENTLY_USED_PARAMETER) + "_rsoemo" + to_string(REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP);
+    TEST_NAME += "_scale" + to_string((int) (100 *
+                                             SCALE));// + "_mfup" + to_string(MOST_FREQUENTLY_USED_PARAMETER) + "_rsoemo" + to_string(REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP);
 
     cerr << "inStreamFilePath1 = " << inStreamFilePath1 << endl;
     cerr << "fileName = " << fileName << endl;
@@ -564,7 +561,7 @@ void Params::initializeParams(int argc, char **argv) {
 
 
     { // 'master' version
-        if( inStreamFilePath1 == "" ){
+        if (inStreamFilePath1 == "") {
             cerr << endl << "ERROR - PLEASE PROVIDE THE INPUT FILE using --file1 option!" << endl;
             cout << endl << "ERROR - PLEASE PROVIDE THE INPUT FILE using --file1 option!" << endl;
             exit(1);
@@ -586,10 +583,11 @@ void Params::initializeParams(int argc, char **argv) {
     }
 
 
-    if( REDIRECT_CERR ){
+    if (REDIRECT_CERR) {
         string tpn = "_tpn-" + TPN + "_tpv-" + TPV;
-        errStream.open( ( USE_DATE_IN_STREAM_FILE_NAMES ? date : "" ) + (outStreamFileName != "" ? outStreamFileName : TEST_NAME ) + ( TPN == "" ? "" : tpn ) +  ".log" );
-        cerr.rdbuf( errStream.rdbuf() );
+        errStream.open((USE_DATE_IN_STREAM_FILE_NAMES ? date : "") +
+                       (outStreamFileName != "" ? outStreamFileName : TEST_NAME) + (TPN == "" ? "" : tpn) + ".log");
+        cerr.rdbuf(errStream.rdbuf());
     }
 
 }
@@ -598,8 +596,8 @@ void Params::createOutputFileName() {
 
     string tpn = "_tpn-" + TPN + "_tpv-" + TPV;
 
-    if( outStreamFileName != "" ){
-        if( TPN != "" ) outStreamFileName += tpn;
+    if (outStreamFileName != "") {
+        if (TPN != "") outStreamFileName += tpn;
 
         /*if( REDIRECT_CERR ){
             errStream.close();
@@ -620,33 +618,35 @@ void Params::createOutputFileName() {
     date = MyUtils::replaceAll(date, "\n", "");
     RUN_DATE = date;
 
-    if( USE_DATE_IN_STREAM_FILE_NAMES ){
+    if (USE_DATE_IN_STREAM_FILE_NAMES) {
         outStreamFileName += "_" + date;
     }
 
-    if( TPN != "" ) TEST_NAME += tpn;
+    if (TPN != "") TEST_NAME += tpn;
 
 //    TEST_NAME += "_scale" + to_string((int)(100*SCALE));
-    if( ALGORITHM_IN_USE == PREF_SUF_GRAPH_CREATION ){
-        TEST_NAME += "_alg" + to_string( ALGORITHM_IN_USE ) + "_l" + ( MIN_OVERLAP_PREF_SUF == -1 ? "def" : to_string( MIN_OVERLAP_PREF_SUF ) );
+    if (ALGORITHM_IN_USE == PREF_SUF_GRAPH_CREATION) {
+        TEST_NAME += "_alg" + to_string(ALGORITHM_IN_USE) + "_l" +
+                     (MIN_OVERLAP_PREF_SUF == -1 ? "def" : to_string(MIN_OVERLAP_PREF_SUF));
         TEST_NAME += "_rpr" + to_string(REMOVE_PREF_READS_TYPE);
-        TEST_NAME += "_rsoe" + ( REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP == -1 ? "def" : to_string( REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ) )
-                     + "-" + to_string( Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN );
+        TEST_NAME += "_rsoe" + (REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP == -1 ? "def" : to_string(
+                REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP))
+                     + "-" + to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN);
 
-    }
-    else{
-        TEST_NAME += "_alg" + to_string( ALGORITHM_IN_USE );
+    } else {
+        TEST_NAME += "_alg" + to_string(ALGORITHM_IN_USE);
         TEST_NAME += "_rpr" + to_string(REMOVE_PREF_READS_TYPE);
-        TEST_NAME += "_LI-l" + to_string( LI_KMER_LENGTH ) + "-int" +to_string( LI_KMER_INTERVALS );
+        TEST_NAME += "_LI-l" + to_string(LI_KMER_LENGTH) + "-int" + to_string(LI_KMER_INTERVALS);
 
-        TEST_NAME += "_rsoe" + ( REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP == -1 ? "def" : to_string( REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP ) )
-                     + "-" + to_string( Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN );
+        TEST_NAME += "_rsoe" + (REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP == -1 ? "def" : to_string(
+                REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP))
+                     + "-" + to_string(Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN);
 
-        if( USE_ACLER_INSTEAD_OF_ACLCS ) TEST_NAME += "_acler";
+        if (USE_ACLER_INSTEAD_OF_ACLCS) TEST_NAME += "_acler";
 
         TEST_NAME += "_mocfo" + to_string(MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT);
-        TEST_NAME += "_mor" + to_string( MIN_OVERLAP_RATE );
-        TEST_NAME += "_moa" + to_string( MIN_OVERLAP_AREA );
+        TEST_NAME += "_mor" + to_string(MIN_OVERLAP_RATE);
+        TEST_NAME += "_moa" + to_string(MIN_OVERLAP_AREA);
 
         TEST_NAME += "_acsel" + to_string(ALIGNMENT_CONTROLLER_SAME_ENDS_LENGTH);
     }
@@ -655,11 +655,11 @@ void Params::createOutputFileName() {
 //    if( ADD_COMP_REV_READS ) TEST_NAME += "_acrr";
 //    if( ADD_PAIRED_READS ) TEST_NAME += "_apr";
 
-    TEST_NAME += "_ret" + to_string(READ_END_TRIM_LEFT) + "-" + to_string(READ_END_TRIM_RIGHT); // + "_mofa" + to_string(MIN_OFFSET_FOR_ALIGNMENT);
+    TEST_NAME += "_ret" + to_string(READ_END_TRIM_LEFT) + "-" +
+                 to_string(READ_END_TRIM_RIGHT); // + "_mofa" + to_string(MIN_OFFSET_FOR_ALIGNMENT);
 
 
     outStreamFileName += TEST_NAME;
-
 
 
     cerr << "TEST_NAME = " << TEST_NAME << endl;
@@ -678,12 +678,11 @@ float Params::SCALE = 0.55;
 int Params::KMER_LENGTH_BUCKET = MOST_FREQUENTLY_USED_PARAMETER;
 
 
-
 int Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = 70;
 
 
 int Params::MAX_OFFSET_PARALLEL_PATHS = 250;
-int Params::MAX_OFFSET_DANGLING_BRANCHES =  250;
+int Params::MAX_OFFSET_DANGLING_BRANCHES = 250;
 
 
 int Params::WRITE_STATISTICS = 0;
@@ -696,7 +695,7 @@ int Params::MIN_OVERLAP_RATE = 95;
 int Params::MINIMAL_OVERLAP_RATE_FOR_LCS = MIN_OVERLAP_RATE;
 int Params::MAX_ERROR_RATE_FOR_LCS = 2;
 
-int Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (100+MIN_OVERLAP_RATE)>>1;
+int Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (100 + MIN_OVERLAP_RATE) >> 1;
 int Params::USE_LCS_LOW_ERROR_FILTER = 1;
 int Params::USE_ACLER_INSTEAD_OF_ACLCS = 1;
 
@@ -715,13 +714,10 @@ int Params::PREF_SUF_GRAPH_CREATION = 5;
 int Params::ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
 
 
-
-Params::KMER_HASH_TYPE Params::MAX_HASH_CONSIDERED = ( ( 100000000ll * 100000000ll + 1 ) );
-
+Params::KMER_HASH_TYPE Params::MAX_HASH_CONSIDERED = ((100000000ll * 100000000ll + 1));
 
 
 int Params::TRAVERSE_TYPE = /*TRAVERSE_GREEDY;*/    TRAVERSE_SHALLOW;
-
 
 
 int Params::REMOVE_SHORT_PARALLEL_PATHS_MST_FAST = 1;
@@ -771,8 +767,6 @@ int Params::USE_DATE_IN_STREAM_FILE_NAMES = 0;
 string Params::RUN_DATE = "NO_DATE";
 
 int Params::RNA = 0;
-
-
 
 
 ifstream Params::inStream;

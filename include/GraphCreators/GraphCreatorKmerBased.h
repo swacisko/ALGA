@@ -18,16 +18,16 @@
 #include<map>
 
 
-
 typedef long long LL;
-
 
 
 class GraphCreatorKmerBased : public GraphCreator {
 
 public:
 
-    GraphCreatorKmerBased(vector<Read*> *reads, Graph *G) : GraphCreator(reads,G) { alignmentController = new AlignmentControllerHybrid(); }
+    GraphCreatorKmerBased(vector<Read *> *reads, Graph *G) : GraphCreator(reads,
+                                                                          G) { alignmentController = new AlignmentControllerHybrid(); }
+
     virtual ~GraphCreatorKmerBased();
 
     /*
@@ -36,16 +36,20 @@ public:
      */
     virtual void startAlignmentGraphCreation() override;
 
-    static int calculateReadOverlap( Read *r1, Read *r2, int offset ){ return min( r1->size(), r2->size() + offset ) - offset;  }
+    static int calculateReadOverlap(Read *r1, Read *r2, int offset) {
+        return min(r1->size(), r2->size() + offset) - offset;
+    }
 
 
-    virtual void createAlignmentsForKmers( vector<Kmer> & kmers, int p, int q, int thread_id = 0 ) = 0; // given kmers with the same hash, i create graph alignment connections for those kmers that are indexed between p and q inclusive
+    virtual void createAlignmentsForKmers(vector<Kmer> &kmers, int p, int q,
+                                          int thread_id = 0) = 0; // given kmers with the same hash, i create graph alignment connections for those kmers that are indexed between p and q inclusive
     void testSerialization();
 
-    virtual GraphCreatorKmerBased * clone() = 0;
+    virtual GraphCreatorKmerBased *clone() = 0;
+
 protected:
 
-    AlignmentController * alignmentController;
+    AlignmentController *alignmentController;
 
     /*
      * Returns kmers for given bucket (here a bucket is a part of all kmers that will be created. It is used to save space by processing kmers with hashes only from given bucket.
@@ -53,7 +57,8 @@ protected:
      */
     vector<vector<Kmer>> getKmersForBucket(int bucket);
 
-    void getKmersForBucketJob(int a, int b, int thread_id, int bucket, vector<vector<vector<Kmer> > > &bucketKmersInThreads);
+    void
+    getKmersForBucketJob(int a, int b, int thread_id, int bucket, vector<vector<vector<Kmer> > > &bucketKmersInThreads);
 
     /**
      * Helper function to parallelly invoke createAlignmentForKmers function.
@@ -69,34 +74,34 @@ protected:
     /*
      * Serializes kmers to disk into buckets separate files.
      */
-    void serializeKmers( int buckets );
+    void serializeKmers(int buckets);
 
     /*
      * deserializes kmers from given bucket
      */
     vector<Kmer> deserializeKmers(int bucket);
 
-    string getSerializationFilenameForBucket( int bucket );/*{
+    string getSerializationFilenameForBucket(int bucket);/*{
                                             string s = Params::TEST_NAME + "_bucket" + to_string(bucket+1);
                                             if( !Read::priorities.empty() ){ s += "_prior"; for( auto a : Read::priorities ) s += to_string(a); }
                                             s += ".kmers.bin";  return s; }*/
     void removeSerializationFiles(int buckets);
+
     bool isAlreadySerialized();
 
-    void sortBucketsJob( vector< vector<Kmer> > & kmers, int a, int b, int thread_id );
+    void sortBucketsJob(vector<vector<Kmer> > &kmers, int a, int b, int thread_id);
 
 private:
 
 
-
-    void moveKmersToOneVectorJob(int a, int b, int thread_id, vector< vector< vector<Kmer> > > & kmers);
+    void moveKmersToOneVectorJob(int a, int b, int thread_id, vector<vector<vector<Kmer> > > &kmers);
 
 
 
 //    GraphCreatorPairwiseKmer *pairwiseKmerCreator;
 
     //  map<LL,LL> sameKmersSizes;
- //   StatisticsGeneratorBigData statGen;
+    //   StatisticsGeneratorBigData statGen;
 
 
 

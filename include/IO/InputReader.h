@@ -19,6 +19,7 @@
 #include "StatisticsGenerators/StatisticsGenerator.h"
 #include "DataStructures/Read.h"
 #include "Global.h"
+
 using namespace std;
 
 class InputReader {
@@ -26,14 +27,15 @@ public:
     InputReader();
 //    InputReader(const InputReader& orig);
 //    virtual ~InputReader();
-    
+
     void readInput();
-    
+
     string readOneRead1(istream &str);
 
 
 private:
     void readReads();
+
     bool readPairedReads(); // reads all files from file with name *2 (this is a file that contains all paired reads.
 
     VI STRreads;
@@ -42,7 +44,7 @@ private:
     VVI NsInRead;
 
 
-    void readParallelJob(vector< vector<Read *> > &reads, int thread_id);
+    void readParallelJob(vector<vector<Read *> > &reads, int thread_id);
 
 };
 

@@ -34,47 +34,48 @@ void Contig::modifySequence(string &s) {
 string Contig::correctSnipsInContig() {
 
     string s = "";
-    vector< pair< Read*, int > > correctors;
-    correctors.emplace_back( containedReads[0].first, 0 );
+    vector<pair<Read *, int> > correctors;
+    correctors.emplace_back(containedReads[0].first, 0);
     VI mostFrequent(4);
 
-    containedReads.emplace_back( new Read( -1,s ), containedReads.back().first->size() ); // here i add any read as a sentry to the end of contained reads. it will be removed later.
+    containedReads.emplace_back(new Read(-1, s),
+                                containedReads.back().first->size()); // here i add any read as a sentry to the end of contained reads. it will be removed later.
 
     vector<short> freqs;
-    for( int i=1; i < containedReads.size(); i++ ){
+    for (int i = 1; i < containedReads.size(); i++) {
         int offset = containedReads[i].second;
 
 
 //        cerr << "next read: " << *containedReads[i].first << endl;
 
-        while(offset > 0 ){
+        while (offset > 0) {
             offset--;
 
-            fill( mostFrequent.begin(), mostFrequent.end(),0 );
-            for( int k = correctors.size()-1; k>=0; k-- ){
+            fill(mostFrequent.begin(), mostFrequent.end(), 0);
+            for (int k = correctors.size() - 1; k >= 0; k--) {
 
-                Read * r = correctors[k].first;
+                Read *r = correctors[k].first;
                 int ind = correctors[k].second;
 
-                if( ind >= r->size() ){
-                    swap( correctors[k], correctors.back() );
+                if (ind >= r->size()) {
+                    swap(correctors[k], correctors.back());
                     correctors.pop_back();
                     continue;
                 }
 
                 correctors[k].second++;
-                mostFrequent[ (*r)[ind] ]++;
+                mostFrequent[(*r)[ind]]++;
             }
 
-            auto it = max_element( mostFrequent.begin(), mostFrequent.end() );
+            auto it = max_element(mostFrequent.begin(), mostFrequent.end());
             freqs.push_back(*it);
 
 //            cerr << "\tappending " << Params::getNuklAsString( it - mostFrequent.begin() ) << " to s" << endl;
-            s += Params::getNuklAsString( it - mostFrequent.begin() );
+            s += Params::getNuklAsString(it - mostFrequent.begin());
 
         }
 
-        if( i < containedReads.size() - 1 ) correctors.emplace_back( containedReads[i].first,0 );
+        if (i < containedReads.size() - 1) correctors.emplace_back(containedReads[i].first, 0);
 
     }
 
@@ -82,11 +83,11 @@ string Contig::correctSnipsInContig() {
 
 
     int THR = 3;
-    int p = 0, q = freqs.size()-1;
-    while( p <= q && freqs[p] <= THR ) p++;
-    while( p <= q && freqs[q] <= THR ) q--;
+    int p = 0, q = freqs.size() - 1;
+    while (p <= q && freqs[p] <= THR) p++;
+    while (p <= q && freqs[q] <= THR) q--;
 
-    s = s.substr( p, q-p+1 );
+    s = s.substr(p, q - p + 1);
 
 
 
@@ -116,10 +117,10 @@ string Contig::correctSnipsInContig() {
 
 void Contig::writeContainedReads() {
     int offset = 0;
-    for( int i=0; i<containedReads.size(); i++ ){
-        if(i>0){
+    for (int i = 0; i < containedReads.size(); i++) {
+        if (i > 0) {
             offset += containedReads[i].second;
-            for(int k=0; k<offset; k++ ) cerr << " ";
+            for (int k = 0; k < offset; k++) cerr << " ";
         }
         cerr << *containedReads[i].first << endl;
     }
@@ -128,21 +129,21 @@ void Contig::writeContainedReads() {
 void Contig::test() {
 
     string A = "ACGGGGTGTGTGTGTAACC";
-    string B =    "GGGAGTGTGTGTAACCGGTCC";
-    string C =      "GAGTGTGTGTAACCCGTCC";
-    string D =      "GAGTGTGTGTAACCGGTCCAAA";
+    string B = "GGGAGTGTGTGTAACCGGTCC";
+    string C = "GAGTGTGTGTAACCCGTCC";
+    string D = "GAGTGTGTGTAACCGGTCCAAA";
 //    string res =  "GGGAGTGTGTGTAACCGGTCC";
 
     string s = "AAAAAAAAAAAAAAAAAAa";
 
-    vector< pair<Read*,int> > containedReads;
+    vector<pair<Read *, int> > containedReads;
     int id = 0;
-    containedReads.push_back( { new Read(id++,A), 0 } );
-    containedReads.push_back( { new Read(id++,B), 3 } );
-    containedReads.push_back( { new Read(id++,C), 2 } );
-    containedReads.push_back( { new Read(id++,D), 0 } );
+    containedReads.push_back({new Read(id++, A), 0});
+    containedReads.push_back({new Read(id++, B), 3});
+    containedReads.push_back({new Read(id++, C), 2});
+    containedReads.push_back({new Read(id++, D), 0});
 
-    Contig * ctg = new Contig( id++, s, containedReads );
+    Contig *ctg = new Contig(id++, s, containedReads);
 
     cerr << "before correcting SNPs:" << endl << *ctg << endl;
     ctg->correctSnipsInContig();

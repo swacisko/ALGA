@@ -18,7 +18,7 @@
 StatisticsGenerator::StatisticsGenerator() {
 }
 
-StatisticsGenerator::StatisticsGenerator(const StatisticsGenerator& orig) {
+StatisticsGenerator::StatisticsGenerator(const StatisticsGenerator &orig) {
 }
 
 StatisticsGenerator::~StatisticsGenerator() {

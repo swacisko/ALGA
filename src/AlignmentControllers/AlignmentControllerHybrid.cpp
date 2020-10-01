@@ -24,7 +24,8 @@ AlignmentControllerHybrid::AlignmentControllerHybrid() {
     lowErrorChecks = 0;
 }
 
-AlignmentControllerHybrid::AlignmentControllerHybrid(const AlignmentControllerHybrid& orig) : AlignmentController(orig) {
+AlignmentControllerHybrid::AlignmentControllerHybrid(const AlignmentControllerHybrid &orig) : AlignmentController(
+        orig) {
     lcsController = new AlignmentControllerLCS();
     lerController = new AlignmentControllerLowErrorRate();
 
@@ -42,17 +43,19 @@ AlignmentControllerHybrid::~AlignmentControllerHybrid() {
     lerController = 0;
 }
 
-bool AlignmentControllerHybrid::canAlign(Read* r1, Read* r2, int offset) {
+bool AlignmentControllerHybrid::canAlign(Read *r1, Read *r2, int offset) {
 
     try {
-        if (100 * offset > Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT * r1->size() /*min( r1->size(), r2->size() )*/  )return false;
+        if (100 * offset >
+            Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT * r1->size() /*min( r1->size(), r2->size() )*/  )
+            return false;
 
-        if( offset < Params::MIN_OFFSET_FOR_ALIGNMENT ) return false;
+        if (offset < Params::MIN_OFFSET_FOR_ALIGNMENT) return false;
 
-        int overlap = Read::calculateReadOverlap( r1,r2, offset );
-        if( overlap < Params::MIN_OVERLAP_AREA ) return false;
+        int overlap = Read::calculateReadOverlap(r1, r2, offset);
+        if (overlap < Params::MIN_OVERLAP_AREA) return false;
 
-        if( Read::getRightOffset( r1,r2, offset ) < 0 ) return false;
+        if (Read::getRightOffset(r1, r2, offset) < 0) return false;
 
 
         totalReadAlignments++;
@@ -62,17 +65,17 @@ bool AlignmentControllerHybrid::canAlign(Read* r1, Read* r2, int offset) {
             lowErrorChecks++;
 
 
-            if ( lerController->canAlign(r1, r2, offset) ) {
+            if (lerController->canAlign(r1, r2, offset)) {
                 lowErrorAlignmentsApproved++;
                 return true;
             } else if (Params::USE_ACLER_INSTEAD_OF_ACLCS) return false;
         }
 
         lcsReadAlignments++;
-            return lcsController->canAlign(r1, r2, offset);
+        return lcsController->canAlign(r1, r2, offset);
 
     }
-    catch(int e){
+    catch (int e) {
         cerr << "exception caught in ACH" << endl;
         exit(1);
     }

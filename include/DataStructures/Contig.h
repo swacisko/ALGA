@@ -11,13 +11,15 @@
 class Contig : public Read {
 public:
     Contig(int id, string s, vector<pair<Read *, int>> &containedReads);
+
     ~Contig();
 
-    vector< pair<Read*,int> > &getContainedReads();
+    vector<pair<Read *, int> > &getContainedReads();
+
     void setContainedReads(const vector<pair<Read *, int>> &containedReads);
 
 //    int getIdOfCompRevRead(){ return -1; };
-    int getIdOfPairedRead(){ return -1; };
+    int getIdOfPairedRead() { return -1; };
 
     /**
      * This function is used to correct SNPs that can occur when creating string brutally. Here we consider all reads that create this contig and
@@ -33,18 +35,19 @@ public:
      *
      * @return true if this contig ends in a fork, false otherwise
      */
-    bool endsInFork(){ return ends_in_fork; }
+    bool endsInFork() { return ends_in_fork; }
 
-    void setEndsInFork( bool val ){ ends_in_fork = val; }
+    void setEndsInFork(bool val) { ends_in_fork = val; }
 
     static int ID_COUNT;
 
     static void test();
+
     /**
      * Modifies this contigs sequence to given sequence
      * @param s
      */
-    void modifySequence( string & s );
+    void modifySequence(string &s);
 
 
 private:
@@ -57,8 +60,7 @@ private:
     /**
      * containedReads[i] contains i-th read contained in this contig and offset from (i-1)-th read to this read.
      */
-    vector< pair<Read*,int> > containedReads;
-
+    vector<pair<Read *, int> > containedReads;
 
 
 };

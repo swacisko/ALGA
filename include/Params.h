@@ -17,7 +17,7 @@
 #include "DataStructures/Bitset.h"
 //#include "DataStructures/BigNum.h"
 #include<fstream>
- // cannot include Global
+// cannot include Global
 #include<cmath>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,9 +30,11 @@ typedef vector<LL> VLL;
 
 class Params {
 public:
-    
+
     Params();
-    Params(const Params& orig);
+
+    Params(const Params &orig);
+
     virtual ~Params();
 
     static const int INF = 1000000001;
@@ -139,7 +141,7 @@ public:
     /*
      * This is the threshold for accepting a pair of reads with at least MIN_PAIRWISE_KMER_OVERLAP % of total number of its kmers as overlapping. It will be used in GraphCreatorPairwiseKmer.
      */
-  //  static const int MIN_PAIRWISE_KMER_OVERLAP = 5;
+    //  static const int MIN_PAIRWISE_KMER_OVERLAP = 5;
 
     /*
      * This is the upper bound for a value of a hash. If a hash is long and would take larger values, they will be taken modulo this number
@@ -213,7 +215,7 @@ public:
     static int SERIALIZE_GRAPH_AFTER_SIMPLIFIER; // graph will be serialized after simplifier
     static int DESERIALIZE_GRAPH; // if true then alignment graph will be deserialized if available.
     static int WRITE_IN_GRASSHOPPER_FORMAT;
-  //  static const int USE_ALREADY_SERIALIZED = 0;
+    //  static const int USE_ALREADY_SERIALIZED = 0;
     static int REMOVE_SERIALIZED_FILES_AFTER_USE; // removes serialized bucket with kmers after using them
     static string TEST_NAME;
     static string RUN_DATE;
@@ -276,18 +278,23 @@ public:
     static const NUKL_TYPE T = 3;
     static const int N = 15;
 
-    static string getNuklAsString( int nukl );
+    static string getNuklAsString(int nukl);
 
-    static int getNukl( char a ); // for given character returns int corresponding to the nucleotide
-    static int getNuklNumber( NUKL_TYPE nucl); // see definition - it will be clear.
+    static int getNukl(char a); // for given character returns int corresponding to the nucleotide
+    static int getNuklNumber(NUKL_TYPE nucl); // see definition - it will be clear.
 
     static void writeParams();
-    static void initializeParams( int argc, char** argv );
+
+    static void initializeParams(int argc, char **argv);
 
     static void createOutputFileName();
-    
 
-    static void closeStreams(){ inStream.close(); outStream.close(); errStream.close(); }
+
+    static void closeStreams() {
+        inStream.close();
+        outStream.close();
+        errStream.close();
+    }
 
     static ifstream inStream;
     static ofstream outStream;
@@ -299,7 +306,6 @@ public:
     static string outStreamFileName;
 
 private:
-
 
 
 };

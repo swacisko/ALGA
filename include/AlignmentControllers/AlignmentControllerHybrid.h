@@ -21,24 +21,25 @@
 
 class AlignmentControllerHybrid : public AlignmentController {
 public:
-    AlignmentControllerHybrid( );
-    AlignmentControllerHybrid(const AlignmentControllerHybrid& orig);
+    AlignmentControllerHybrid();
+
+    AlignmentControllerHybrid(const AlignmentControllerHybrid &orig);
+
     virtual ~AlignmentControllerHybrid();
-    
-    bool canAlign(Read* r1, Read* r2, int offset ) override;
+
+    bool canAlign(Read *r1, Read *r2, int offset) override;
+
     long long totalReadAlignments;
     long long lcsReadAlignments;
     long long bitmapAlignments;
     long long lowErrorAlignmentsApproved;
     long long lowErrorChecks;
-    
+
 private:
     AlignmentControllerLCS *lcsController;
     AlignmentControllerLowErrorRate *lerController;
 
 
-
-    
 };
 
 #endif /* ALIGNMENTCONTROLLERHYBRID_H */

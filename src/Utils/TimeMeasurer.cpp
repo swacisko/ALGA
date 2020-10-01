@@ -17,7 +17,7 @@
 TimeMeasurer::TimeMeasurer() {
 }
 
-TimeMeasurer::TimeMeasurer(const TimeMeasurer& orig) {
+TimeMeasurer::TimeMeasurer(const TimeMeasurer &orig) {
 }
 
 TimeMeasurer::~TimeMeasurer() {
@@ -26,9 +26,9 @@ TimeMeasurer::~TimeMeasurer() {
 void TimeMeasurer::stopMeasurement(string option) {
 //    if( Params::WRITE_STATISTICS == false ) return;
 
-    if( times.find(option) == times.end() ) times[option] = clock();
-    else{
-        timesTotal[option] += ( clock() - times[option] );
+    if (times.find(option) == times.end()) times[option] = clock();
+    else {
+        timesTotal[option] += (clock() - times[option]);
         clearOption(option);
     }
 }
@@ -40,13 +40,13 @@ void TimeMeasurer::startMeasurement(string option) {
 }
 
 float TimeMeasurer::getMeasurementTimeInSeconds(string option) {
-    if( timesTotal.find(option) == timesTotal.end() ) return -1;
-    else return ( ( (double)timesTotal[option] / (double)CLOCKS_PER_SEC ) );
+    if (timesTotal.find(option) == timesTotal.end()) return -1;
+    else return (((double) timesTotal[option] / (double) CLOCKS_PER_SEC));
 }
 
 map<string, float> TimeMeasurer::getAllMeasurements() {
-    map<string,float> res;
-    for( auto a : timesTotal ){
+    map<string, float> res;
+    for (auto a : timesTotal) {
         res[a.first] = getMeasurementTimeInSeconds(a.first);
     }
     return res;
@@ -59,7 +59,7 @@ void TimeMeasurer::writeAllMeasurements() {
     auto a = getAllMeasurements();
     cerr << fixed;
     cerr.precision(3);
-    for( auto b : a ){
+    for (auto b : a) {
         cerr << b.first << " -> " << b.second << " seconds" << endl;
     }
 }
@@ -68,8 +68,8 @@ void TimeMeasurer::clearOption(string option) {
     times.erase(option);
 }
 
-map<string,LL> TimeMeasurer::times;
-map<string,LL> TimeMeasurer::timesTotal;
+map<string, LL> TimeMeasurer::times;
+map<string, LL> TimeMeasurer::timesTotal;
 string TimeMeasurer::INPUT_READER = "InputReader";
 string TimeMeasurer::GRAPH_SIMPLIFIER = "GraphSimplifier";
 string TimeMeasurer::GRAPH_CREATOR = "GraphCreator";

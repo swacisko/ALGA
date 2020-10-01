@@ -28,16 +28,18 @@ typedef long long LL;
 class GenomeStatisticsCollector {
 public:
     GenomeStatisticsCollector();
-    GenomeStatisticsCollector(const GenomeStatisticsCollector& orig);
+
+    GenomeStatisticsCollector(const GenomeStatisticsCollector &orig);
+
     virtual ~GenomeStatisticsCollector();
 
-    static void addData( string option, double value );
+    static void addData(string option, double value);
+
     static void writeTestStatistics();
 
 
-
 private:
-    static map<string,double> stats;
+    static map<string, double> stats;
 };
 
 #endif /* GENOMESTATISTICSCOLLECTOR_H */

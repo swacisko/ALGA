@@ -31,18 +31,18 @@ GraphSimplifier::GraphSimplifier(Graph &G, vector<Read *> &reads) {
     this->reads = &reads;
 //    dst = VVI( Params::THREADS, VI(G.size(),-1) );
 //    par = VVI( Params::THREADS, VI(this->G->size(), -1) );
-    was = VVB( Params::THREADS, VB(this->G->size(),false) );
-    edgesToRemove = VVPII( Params::THREADS );
+    was = VVB(Params::THREADS, VB(this->G->size(), false));
+    edgesToRemove = VVPII(Params::THREADS);
 }
 
-GraphSimplifier::GraphSimplifier(const GraphSimplifier& orig) {
+GraphSimplifier::GraphSimplifier(const GraphSimplifier &orig) {
 }
 
 GraphSimplifier::~GraphSimplifier() {
     clear();
 }
 
-void GraphSimplifier::clear(){
+void GraphSimplifier::clear() {
 //    VVI().swap(dst);
 //    VVI().swap(par);
     VVB().swap(was);
@@ -50,30 +50,32 @@ void GraphSimplifier::clear(){
 }
 
 void GraphSimplifier::simplifyGraph() {
-    TimeMeasurer::startMeasurement( TimeMeasurer::GRAPH_SIMPLIFIER );
-    cerr << endl << "**************************************************************************** BEGINNING OF GRAPH SIMPLIFIER" << endl;
+    TimeMeasurer::startMeasurement(TimeMeasurer::GRAPH_SIMPLIFIER);
+    cerr << endl
+         << "**************************************************************************** BEGINNING OF GRAPH SIMPLIFIER"
+         << endl;
 
 
-        int REMOVE_ITERATIONS = 1;
+    int REMOVE_ITERATIONS = 1;
 
-        for (int i = 0; i < REMOVE_ITERATIONS; i++) {
-            cerr << "******************************************* ITERATION " << i+1 << endl;
+    for (int i = 0; i < REMOVE_ITERATIONS; i++) {
+        cerr << "******************************************* ITERATION " << i + 1 << endl;
 
-            cerr << endl << "****** BEFORE CUTTING METRIC TRIANGLES" << endl;
-
-
-            cutNonAndWeaklyMetricTriangles();
-
-            cerr << endl << "****** AFTER CUTTING METRIC TRIANGLES, BEFORE CONTRACTING PATHS" << endl;
-
-            bool contractionDone = contractPathNodes();
-
-            // this here is to iterate as long as any contraction is done
-            if( i == REMOVE_ITERATIONS-1 && contractionDone ) REMOVE_ITERATIONS++;
-        }
+        cerr << endl << "****** BEFORE CUTTING METRIC TRIANGLES" << endl;
 
 
-        TimeMeasurer::stopMeasurement(TimeMeasurer::GRAPH_SIMPLIFIER);
+        cutNonAndWeaklyMetricTriangles();
+
+        cerr << endl << "****** AFTER CUTTING METRIC TRIANGLES, BEFORE CONTRACTING PATHS" << endl;
+
+        bool contractionDone = contractPathNodes();
+
+        // this here is to iterate as long as any contraction is done
+        if (i == REMOVE_ITERATIONS - 1 && contractionDone) REMOVE_ITERATIONS++;
+    }
+
+
+    TimeMeasurer::stopMeasurement(TimeMeasurer::GRAPH_SIMPLIFIER);
 
 //        removeEdgePairedEndSeparators();
 //
@@ -98,17 +100,18 @@ void GraphSimplifier::simplifyGraph() {
 
 
 //        if( removeEdgePairedEndSeparators() ) simplifyGraph();
-        cerr << endl << "**************************************************************************** END OF GRAPH SIMPLIFIER" << endl;
+    cerr << endl
+         << "**************************************************************************** END OF GRAPH SIMPLIFIER"
+         << endl;
 
 }
 
 
-
-
 void GraphSimplifier::simplifyGraphOld() {
-    TimeMeasurer::startMeasurement( TimeMeasurer::GRAPH_SIMPLIFIER );
-    cerr << endl << "**************************************************************************** BEGINNING OF GRAPH SIMPLIFIER" << endl;
-
+    TimeMeasurer::startMeasurement(TimeMeasurer::GRAPH_SIMPLIFIER);
+    cerr << endl
+         << "**************************************************************************** BEGINNING OF GRAPH SIMPLIFIER"
+         << endl;
 
 
     int min_overlap = Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP;
@@ -119,138 +122,138 @@ void GraphSimplifier::simplifyGraphOld() {
     removeSmallOverlapEdges(min_overlap, number_to_retain);
 
 
-
     G->pruneGraph();
 
     G->sortEdgesByIncreasingOffset();
 
 
 /*        if( Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION || Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_ALL_PREFIX_READS ) while( mergeLength0Edges() ) {} // merge until impossible to merge more*/
-        while( mergeLength0Edges() ) {}
+    while (mergeLength0Edges()) {}
 
 
-        G->sortEdgesByIncreasingOffset();
+    G->sortEdgesByIncreasingOffset();
 
-        cutNonAndWeaklyMetricTriangles();
-        Global::removeIsolatedReads();
+    cutNonAndWeaklyMetricTriangles();
+    Global::removeIsolatedReads();
 
 
-       /* for( int i=0; i<G->size(); i++ ){
-            for( auto b : (*G)[i] ){
-                for( auto c : (*G)[b.first] ){
-                    int w = G->findWeight(i,c.first);
-                    if( w != -1 && w != b.second + c.second ){
+    /* for( int i=0; i<G->size(); i++ ){
+         for( auto b : (*G)[i] ){
+             for( auto c : (*G)[b.first] ){
+                 int w = G->findWeight(i,c.first);
+                 if( w != -1 && w != b.second + c.second ){
 
-                        cerr << "path " << i << " -> " << b.first << " -> " << c.first << endl;
+                     cerr << "path " << i << " -> " << b.first << " -> " << c.first << endl;
 //                        cerr << *(*reads)[i] << endl;
 //                        cerr << *(*reads)[b.first] << endl;
 //                        cerr << *(*reads)[c.first] << endl;
 
 
-                        cerr << "w(" << i << " -> " << b.first << "): " << b.second << endl;
-                        cerr << "w(" << b.first << " -> " << c.first << "): " << c.second << endl;
-                        cerr << "w(" << i << " -> " << c.first << "): " << w << endl;
+                     cerr << "w(" << i << " -> " << b.first << "): " << b.second << endl;
+                     cerr << "w(" << b.first << " -> " << c.first << "): " << c.second << endl;
+                     cerr << "w(" << i << " -> " << c.first << "): " << w << endl;
 
-                        cerr << *(*reads)[i] << endl;
-                        for( int t = 0; t < b.second; t++ ) cerr << " ";
-                        cerr << *(*reads)[b.first] << endl << endl;
+                     cerr << *(*reads)[i] << endl;
+                     for( int t = 0; t < b.second; t++ ) cerr << " ";
+                     cerr << *(*reads)[b.first] << endl << endl;
 
-                        cerr << *(*reads)[b.first] << endl;
-                        for( int t = 0; t < c.second; t++ ) cerr << " ";
-                        cerr << *(*reads)[c.first] << endl << endl;
+                     cerr << *(*reads)[b.first] << endl;
+                     for( int t = 0; t < c.second; t++ ) cerr << " ";
+                     cerr << *(*reads)[c.first] << endl << endl;
 
-                        cerr << *(*reads)[i] << endl;
-                        for( int t = 0; t < w; t++ ) cerr << " ";
-                        cerr << *(*reads)[c.first] << endl << endl;
+                     cerr << *(*reads)[i] << endl;
+                     for( int t = 0; t < w; t++ ) cerr << " ";
+                     cerr << *(*reads)[c.first] << endl << endl;
 
-                        cerr << *(*reads)[i] << endl;
-                        for( int t = 0; t < b.second; t++ ) cerr << " ";
-                        cerr << *(*reads)[b.first] << endl;
-                        for( int t = 0; t < b.second + c.second; t++ ) cerr << " ";
-                        cerr << *(*reads)[c.first] << endl;
-                        for( int t = 0; t < w; t++ ) cerr << " ";
-                        cerr << *(*reads)[c.first] << endl << endl;
+                     cerr << *(*reads)[i] << endl;
+                     for( int t = 0; t < b.second; t++ ) cerr << " ";
+                     cerr << *(*reads)[b.first] << endl;
+                     for( int t = 0; t < b.second + c.second; t++ ) cerr << " ";
+                     cerr << *(*reads)[c.first] << endl;
+                     for( int t = 0; t < w; t++ ) cerr << " ";
+                     cerr << *(*reads)[c.first] << endl << endl;
 
-                        cerr << "****************************************************" << endl << endl;
-                    }
-                }
-            }
+                     cerr << "****************************************************" << endl << endl;
+                 }
+             }
+         }
 
-        }
+     }
 
-        exit(1);
+     exit(1);
 */
 
 
-        for( int i=0; i<Params::THREADS; i++ ) VPII().swap( edgesToRemove[i] );
+    for (int i = 0; i < Params::THREADS; i++) VPII().swap(edgesToRemove[i]);
 
 
+    G->pruneGraph();
 
-        G->pruneGraph();
-
-        int REMOVE_ITERATIONS = 1;
-
-
-        Global::calculateAvgReadLength();
+    int REMOVE_ITERATIONS = 1;
 
 
-        removeShortParallelPaths((int) ((double) (Params::MAX_OFFSET_PARALLEL_PATHS * Global::AVG_READ_LENGTH) /
+    Global::calculateAvgReadLength();
+
+
+    removeShortParallelPaths((int) ((double) (Params::MAX_OFFSET_PARALLEL_PATHS * Global::AVG_READ_LENGTH) /
                                     (float) 100)); // this should remove all the triangles as well. All parallel paths with length no more than 1/4 readlength will be removed
 
 
 
 
-        Global::removeIsolatedReads();
+    Global::removeIsolatedReads();
 
-        G->retainOnlySmallestOffset();
-
-
-        for (int i = 0; i < REMOVE_ITERATIONS; i++) {
-            cerr << endl << endl
-                 << "******************************************************************** GraphSimplifier REMOVE_ITERATION = " << (i + 1) << endl;
-
-            cerr << "\rGraphSimplifier removing dangling branches             " << flush;
-
-            int removed = 0;
-            removed += removeDanglingBranches(
-                    (int) (Params::MAX_OFFSET_DANGLING_BRANCHES * Global::AVG_READ_LENGTH / (float) 100));
-
-            cerr << "\rGraphSimplifier removing upper dangling branches             " << flush;
-            removed += removeDanglingUpperBranches(
-                    (int) (Params::MAX_OFFSET_DANGLING_BRANCHES * Global::AVG_READ_LENGTH / (float) 100));
+    G->retainOnlySmallestOffset();
 
 
+    for (int i = 0; i < REMOVE_ITERATIONS; i++) {
+        cerr << endl << endl
+             << "******************************************************************** GraphSimplifier REMOVE_ITERATION = "
+             << (i + 1) << endl;
+
+        cerr << "\rGraphSimplifier removing dangling branches             " << flush;
+
+        int removed = 0;
+        removed += removeDanglingBranches(
+                (int) (Params::MAX_OFFSET_DANGLING_BRANCHES * Global::AVG_READ_LENGTH / (float) 100));
+
+        cerr << "\rGraphSimplifier removing upper dangling branches             " << flush;
+        removed += removeDanglingUpperBranches(
+                (int) (Params::MAX_OFFSET_DANGLING_BRANCHES * Global::AVG_READ_LENGTH / (float) 100));
 
 
-            /*cerr << "removing edges with larger offsets" << endl;
-            G->sortEdgesByIncreasingOffset();
-            int THR = 15;
-            int rem = 0;
-            for( int i=0; i<G->size(); i++ ){
-                for( int j=(int)(*G)[i].size()-1; j>=0; j-- ){
-                    if( (*G)[i][j].second > (*G)[i][0].second + THR ){
-                        (*G)[i].pop_back();
-                        rem++;
-                    }else{
-                        break;
-                    }
+
+
+        /*cerr << "removing edges with larger offsets" << endl;
+        G->sortEdgesByIncreasingOffset();
+        int THR = 15;
+        int rem = 0;
+        for( int i=0; i<G->size(); i++ ){
+            for( int j=(int)(*G)[i].size()-1; j>=0; j-- ){
+                if( (*G)[i][j].second > (*G)[i][0].second + THR ){
+                    (*G)[i].pop_back();
+                    rem++;
+                }else{
+                    break;
                 }
             }
-            cerr << "There were " << rem << " edges removed that had offset greater by at least " << THR << " than the smallest offset from this node" << endl;
-            G->sortEdgesByIncreasingOffset();*/
-
-
-
-
-
-
-            if( i == REMOVE_ITERATIONS-1 && removed > 0 ) REMOVE_ITERATIONS++;
-
-            if( i >= 15 && removed <= 30 ) break; // just to prevent very long loops that sometimes occur in the graph and make absolutely no influence on the quality of the results.
-
         }
+        cerr << "There were " << rem << " edges removed that had offset greater by at least " << THR << " than the smallest offset from this node" << endl;
+        G->sortEdgesByIncreasingOffset();*/
 
-        Global::removeIsolatedReads();
+
+
+
+
+
+        if (i == REMOVE_ITERATIONS - 1 && removed > 0) REMOVE_ITERATIONS++;
+
+        if (i >= 15 && removed <= 30)
+            break; // just to prevent very long loops that sometimes occur in the graph and make absolutely no influence on the quality of the results.
+
+    }
+
+    Global::removeIsolatedReads();
 
 
 
@@ -308,67 +311,68 @@ void GraphSimplifier::simplifyGraphOld() {
     TimeMeasurer::stopMeasurement(TimeMeasurer::GRAPH_SIMPLIFIER);
 
 
-        cerr << endl
-             << "**************************************************************************** END OF GRAPH SIMPLIFIER"
-             << endl;
+    cerr << endl
+         << "**************************************************************************** END OF GRAPH SIMPLIFIER"
+         << endl;
 
 }
 
 void GraphSimplifier::cutNonAndWeaklyMetricTriangles() {
 //    vector< pair<int,int> > toRemove;
 
-    TimeMeasurer::startMeasurement( "GraphSimplifier_cutNonAndWeaklyMetricTriangles" );
+    TimeMeasurer::startMeasurement("GraphSimplifier_cutNonAndWeaklyMetricTriangles");
 
-    for(auto & p : edgesToRemove) p.clear();
+    for (auto &p : edgesToRemove) p.clear();
     vector<std::thread> parallelJobs;
-    parallelJobs.reserve( Params::THREADS );
+    parallelJobs.reserve(Params::THREADS);
 
-    int W = (int) ceil( (double) G->size() / Params::THREADS );
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = min( i*W, G->size()-1 );
-        int b = min( (i+1)*W-1, G->size()-1 );
+    int W = (int) ceil((double) G->size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = min(i * W, G->size() - 1);
+        int b = min((i + 1) * W - 1, G->size() - 1);
 
-        parallelJobs.push_back( thread( [=] { removeNonAndWeaklyMetricTrianglesJobAddToRemove(a, b, i); } ) );
+        parallelJobs.push_back(thread([=] { removeNonAndWeaklyMetricTrianglesJobAddToRemove(a, b, i); }));
     }
 
     removeNonAndWeaklyMetricTrianglesJobAddToRemove(0, W - 1, 0);
 
-    for( auto & p : parallelJobs ) p.join();
+    for (auto &p : parallelJobs) p.join();
 
 
-
-    int totalEdgesToRemove = 0; for(auto & p : edgesToRemove) totalEdgesToRemove += p.size();
+    int totalEdgesToRemove = 0;
+    for (auto &p : edgesToRemove) totalEdgesToRemove += p.size();
     cerr << endl << "There are " << totalEdgesToRemove << " edges to remove in cutNonAndWeaklyMetricTriangles" << endl;
 
     parallelJobs.clear();
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = min( i*W, G->size()-1 );
-        int b = min( (i+1)*W-1, G->size()-1 );
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = min(i * W, G->size() - 1);
+        int b = min((i + 1) * W - 1, G->size() - 1);
 
-        parallelJobs.push_back( thread( [=] { removeNonAndWeaklyMetricTrianglesJobRemoveEdges(a, b, i); } ) );
+        parallelJobs.push_back(thread([=] { removeNonAndWeaklyMetricTrianglesJobRemoveEdges(a, b, i); }));
     }
 
     removeNonAndWeaklyMetricTrianglesJobRemoveEdges(0, W - 1, 0);
 
-    for( auto & p : parallelJobs ) p.join();
+    for (auto &p : parallelJobs) p.join();
 
 
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_cutNonAndWeaklyMetricTriangles" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_cutNonAndWeaklyMetricTriangles");
 
 }
 
 void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobRemoveEdges(int a, int b, int thread_id) {
     int processed = 0;
     int progressCounter = 0;
-    for( auto a : edgesToRemove[thread_id] ){
-        G->removeDirectedEdge( a.first, a.second );
-        if( thread_id == 0 ) MyUtils::writeProgress( ++processed,edgesToRemove[thread_id].size(), progressCounter, "cutting triangles progress", 1 );
+    for (auto a : edgesToRemove[thread_id]) {
+        G->removeDirectedEdge(a.first, a.second);
+        if (thread_id == 0)
+            MyUtils::writeProgress(++processed, edgesToRemove[thread_id].size(), progressCounter,
+                                   "cutting triangles progress", 1);
     }
 
-    VPII().swap( edgesToRemove[thread_id] );
+    VPII().swap(edgesToRemove[thread_id]);
 //    edgesToRemove[thread_id].clear();
 }
-
 
 
 void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobAddToRemove(int a, int b, int thread_id) {
@@ -377,40 +381,40 @@ void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobAddToRemove(int a, int
     int nonAndWeaklyMetricTriangles = 0;
     int progressCounter = 0;
 
-    unordered_map<int,int> dst;
+    unordered_map<int, int> dst;
 
-    for( int i=a; i<=b; i++ ){
+    for (int i = a; i <= b; i++) {
 
-        for( int k=0; k< (*G)[i].size(); k++ ){
+        for (int k = 0; k < (*G)[i].size(); k++) {
             int a = (*G)[i][k].first;
 
-            for( int j=0; j< (*G)[a].size(); j++ ){
+            for (int j = 0; j < (*G)[a].size(); j++) {
                 int b = (*G)[a][j].first;
 
 //                if( dst[thread_id][b] == -1 ) dst[thread_id][b] = G->getWeight(i,k) + G->getWeight(a,j);
 //                else dst[thread_id][b] = min( dst[thread_id][b], G->getWeight(i,k) + G->getWeight(a,j) );
 
-                if( dst.count(b) == 0 ) dst[b] = G->getWeight(i,k) + G->getWeight(a,j);
-                else dst[b] = min( dst[b], G->getWeight(i,k) + G->getWeight(a,j) );
+                if (dst.count(b) == 0) dst[b] = G->getWeight(i, k) + G->getWeight(a, j);
+                else dst[b] = min(dst[b], G->getWeight(i, k) + G->getWeight(a, j));
 
             }
         }
 
 
-        for( int k=0; k<(*G)[i].size(); k++ ){
+        for (int k = 0; k < (*G)[i].size(); k++) {
 
             int b = (*G)[i][k].first;
 
-            if( G->getWeight(i,k) > Params::MAX_OFFSET_PARALLEL_PATHS ){
+            if (G->getWeight(i, k) > Params::MAX_OFFSET_PARALLEL_PATHS) {
                 continue; /* i do not remove long paths, even if they are in nonmetric triangle*/
             }
 
 //            if( dst[thread_id][b] != -1 && ( dst[thread_id][b] <= G->getWeight(i,k) ) ){
-            if( dst.count(b) /*&& ( dst[b] <= G->getWeight(i,k) )*/ ){
-                edgesToRemove[thread_id].emplace_back(i,b);
+            if (dst.count(b) /*&& ( dst[b] <= G->getWeight(i,k) )*/ ) {
+                edgesToRemove[thread_id].emplace_back(i, b);
                 nonAndWeaklyMetricTriangles++;
 //            }else if( dst[thread_id][b] != -1 /*&& Params::REMOVE_TRULY_METRIC_TRIANGLES*/ ){
-            }else if( dst.count(b) != 0 /*&& Params::REMOVE_TRULY_METRIC_TRIANGLES*/ ){
+            } else if (dst.count(b) != 0 /*&& Params::REMOVE_TRULY_METRIC_TRIANGLES*/ ) {
                 trulyMetricTriangles++;
             }
         }
@@ -424,86 +428,92 @@ void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobAddToRemove(int a, int
 //        }
         dst.clear();
 
-        if( thread_id == 0 ) MyUtils::writeProgress( i+1, G->size() / Params::THREADS, progressCounter, "adding triangle-edges to cut progress", 1 );
+        if (thread_id == 0)
+            MyUtils::writeProgress(i + 1, G->size() / Params::THREADS, progressCounter,
+                                   "adding triangle-edges to cut progress", 1);
     }
 
-    if( thread_id == 0 ) cerr << "\tNonAndWeaklyMetric triangles cut in thread " << thread_id << ":  " << nonAndWeaklyMetricTriangles << " w eakly metric triangles cut, " << trulyMetricTriangles << " truly metric triangles present" << endl;
+    if (thread_id == 0)
+        cerr << "\tNonAndWeaklyMetric triangles cut in thread " << thread_id << ":  " << nonAndWeaklyMetricTriangles
+             << " w eakly metric triangles cut, " << trulyMetricTriangles << " truly metric triangles present" << endl;
 }
 
 
-
-
-
 void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
-    TimeMeasurer::startMeasurement( "GraphSimplifier_removeShortParallelPaths" );
+    TimeMeasurer::startMeasurement("GraphSimplifier_removeShortParallelPaths");
 
 
     vector<std::thread> parallelJobs;
-    parallelJobs.reserve( Params::THREADS );
+    parallelJobs.reserve(Params::THREADS);
 
-    for( int i=1; i<Params::THREADS; i++ ){
-        parallelJobs.push_back( thread( [=] { removeShortParallelPathsJob(0, G->size() - 1, maxOffset, i); } ) ); // i should pass the whole scope,, thread job is done based on fau.Find value
+    for (int i = 1; i < Params::THREADS; i++) {
+        parallelJobs.push_back(thread([=] {
+            removeShortParallelPathsJob(0, G->size() - 1, maxOffset, i);
+        })); // i should pass the whole scope,, thread job is done based on fau.Find value
     }
 
     removeShortParallelPathsJob(0, G->size() - 1, maxOffset, 0);
 
-    for( auto & p : parallelJobs ) p.join();
+    for (auto &p : parallelJobs) p.join();
 
 
-    for( int i=0; i<G->size(); i++ ) (*G)[i].shrink_to_fit();
+    for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
 
 
     cerr << "\tShortParallelPaths removed" << endl;
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_removeShortParallelPaths" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_removeShortParallelPaths");
 }
 
 void GraphSimplifier::removeShortParallelPathsJob(int a, int b, int maxOffset, int thread_id) {
     int progressCounter = 0;
     int pathsConsidered = 0;
-    for( int i=a; i<=b; i++ ){
-        if(  Params::REMOVE_SHORT_PARALLEL_PATHS_MST_FAST == true        &&         i % Params::THREADS == thread_id ){ // THIS VERSION HERE IS FOR 'PERFECT' PARALLEL removeParallelPathsMST methodwith G->lockNode() in use.
+    for (int i = a; i <= b; i++) {
+        if (Params::REMOVE_SHORT_PARALLEL_PATHS_MST_FAST == true && i % Params::THREADS ==
+                                                                    thread_id) { // THIS VERSION HERE IS FOR 'PERFECT' PARALLEL removeParallelPathsMST methodwith G->lockNode() in use.
 
-            if( (*G)[i].size() >= 2 /*|| (*inDeg)[i] >= 2 */){
+            if ((*G)[i].size() >= 2 /*|| (*inDeg)[i] >= 2 */) {
                 tryToRemoveShortPathsMST(i, maxOffset, thread_id);
                 pathsConsidered++;
             }
 
-            if( thread_id == 0 ) MyUtils::writeProgress(i-a+1, b-a+1, progressCounter, "removeShortParallelPaths progress in thread 0", 10);
+            if (thread_id == 0)
+                MyUtils::writeProgress(i - a + 1, b - a + 1, progressCounter,
+                                       "removeShortParallelPaths progress in thread 0", 10);
 
         }
     }
 
-    /*if( thread_id == 0 )*/ cerr << "There were " << pathsConsidered << " paths considered in removeShortParallelPaths in thread " << thread_id << endl;
+    /*if( thread_id == 0 )*/ cerr << "There were " << pathsConsidered
+                                  << " paths considered in removeShortParallelPaths in thread " << thread_id << endl;
 }
-
 
 
 void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int thread_id) {
 
 
-    vector< pair< pair<int,int>,int > > edges;  // each entry is an edge of the form ( (a,b), offset )
-    VI neigh(1,beg);
+    vector<pair<pair<int, int>, int> > edges;  // each entry is an edge of the form ( (a,b), offset )
+    VI neigh(1, beg);
 
 
-    unordered_map<int,int> dst,par;
+    unordered_map<int, int> dst, par;
 
 //    dst[thread_id][beg] = 0;
     dst[beg] = 0;
-    for( int i=0; i<neigh.size(); i++ ){
+    for (int i = 0; i < neigh.size(); i++) {
         int a = neigh[i];
 
 //        if( was[thread_id][a] || dst[thread_id][a] > maxOffset ) continue;
-        if( was[thread_id][a] || dst[a] > maxOffset ) continue;
+        if (was[thread_id][a] || dst[a] > maxOffset) continue;
 
         was[thread_id][a] = true;
 
         G->lockNode(a);
-        for( int k=0; k<(*G)[a].size(); k++ ){
+        for (int k = 0; k < (*G)[a].size(); k++) {
             int b = (*G)[a][k].first;
-            int offset = G->getWeight(a,k);
+            int offset = G->getWeight(a, k);
 
 //            if( dst[thread_id][b] != -1 && dst[thread_id][b] < dst[thread_id][a] + offset ) continue;
-            if( dst.count(b) > 0 && dst[b] < dst[a] + offset ) continue;
+            if (dst.count(b) > 0 && dst[b] < dst[a] + offset) continue;
 
 
             /*if( b == beg ){ // this here is to avoid disjoining graph when we try to remove parallel paths in areas such as Short Tandem Repeats
@@ -531,84 +541,82 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
             dst[b] = dst[a] + offset;
 //            dst[b] = min( dst[b], dst[a] + offset );
 
-            edges.push_back( { {a,b},offset } );
+            edges.push_back({{a, b}, offset});
             neigh.push_back(b);
 
         }
         G->unlockNode(a);
     }
 
-    for( auto &a : edges ){
+    for (auto &a : edges) {
         G->lockNode(a.first.first);
-        G->removeDirectedEdge( a.first.first, a.first.second ); // removing the edge from the graph   // SLOW VERSION
+        G->removeDirectedEdge(a.first.first, a.first.second); // removing the edge from the graph   // SLOW VERSION
         G->unlockNode(a.first.first);
     }
 
 
+    sort(edges.begin(), edges.end(), [](auto a, auto b) {
+        if (a.second != b.second) return a.second < b.second;
+        else return a.first < b.first;
+    }); // sorted by MINIMAL OFFSET for directed version of MST.
 
-    sort( edges.begin(), edges.end(), []( auto a, auto b ){ if( a.second != b.second ) return a.second < b.second;
-                                                            else return a.first < b.first; } ); // sorted by MINIMAL OFFSET for directed version of MST.
 
 
 
+    for (auto &a : neigh) was[thread_id][a] = false; // equivalent to was.clear()
 
-    for( auto &a : neigh ) was[thread_id][a] = false; // equivalent to was.clear()
+    for (auto &a : edges) { // HERE I ADD EDGES ACCORDING TO MST METHOD. A NODE CANNOT BE AN END OF MORE THAN ONE EDGE (from edges) AFTER THIS.
+        if (was[thread_id][a.first.second]) continue;
 
-    for( auto &a : edges ){ // HERE I ADD EDGES ACCORDING TO MST METHOD. A NODE CANNOT BE AN END OF MORE THAN ONE EDGE (from edges) AFTER THIS.
-        if( was[thread_id][a.first.second] ) continue;
-
-        G->lockNode( a.first.first );
-        G->pushDirectedEdge(  a.first.first, a.first.second, a.second  );  // FAST VERSION
-        G->unlockNode( a.first.first );
+        G->lockNode(a.first.first);
+        G->pushDirectedEdge(a.first.first, a.first.second, a.second);  // FAST VERSION
+        G->unlockNode(a.first.first);
 
 //        par[thread_id][a.first.second] = a.first.first;
         par[a.first.second] = a.first.first;
 
-        was[thread_id][a.first.second ] = true;
+        was[thread_id][a.first.second] = true;
     }
 
 
 //    for( auto &a : edges ) par[thread_id][ a.first.second ] = -1; // equivalent to par.clear();
-     par.clear();
+    par.clear();
 
-    for(auto &a : edges) was[thread_id][ a.first.second ] = false; // equivalent to was.clear()
+    for (auto &a : edges) was[thread_id][a.first.second] = false; // equivalent to was.clear()
 
 //    for( int i=0; i<neigh.size(); i++ ){ // equivalent to dst.clear();
 //        int a = neigh[i];
 //        dst[thread_id][a] = -1;
 //    }
-     dst.clear();
+    dst.clear();
 
     neigh.clear();
 }
 
 
-
-
 int GraphSimplifier::removeDanglingBranches(int maxOffset) {
-    TimeMeasurer::startMeasurement( "GraphSimplifier_removeDanglingBranches" );
+    TimeMeasurer::startMeasurement("GraphSimplifier_removeDanglingBranches");
 
 
+    VVPII edgesToRemove(Params::THREADS);
 
-    VVPII edgesToRemove( Params::THREADS );
+    vector<std::future<int> > futures(Params::THREADS - 1);
 
-    vector< std::future<int> > futures(Params::THREADS-1);
+    int W = (int) ceil((double) G->size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = i * W;
+        int b = min((i + 1) * W - 1, (int) G->size() - 1);
 
-    int W = (int) ceil( (double)G->size() / Params::THREADS);
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = i*W;
-        int b = min( (i+1)*W-1, (int)G->size()-1 );
-
-        futures[i-1] = std::async(std::launch::async, [=, &edgesToRemove ](int a, int b, int i){
+        futures[i - 1] = std::async(std::launch::async, [=, &edgesToRemove](int a, int b, int i) {
             int branchesRemoved = 0;
-            for( int j=a; j<=b; j++ ){
-                if( (*G)[j].size() >= 2 ){
-                    branchesRemoved += removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[i], i );
+            for (int j = a; j <= b; j++) {
+                if ((*G)[j].size() >= 2) {
+                    branchesRemoved += removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[i], i);
                 }
             }
 
             return branchesRemoved;
-        }, a,b,i );
+        }, a, b, i);
 
 //        futures[i-1] = std::async( std::launch::async, [=,&edgesToRemove](int a, int b, int i){
 //            int branchesRemoved = 0;
@@ -620,43 +628,44 @@ int GraphSimplifier::removeDanglingBranches(int maxOffset) {
     }
 
 
-    for( int j=0; j<=W-1; j++ ){
-        if( (*G)[j].size() >= 2 ){
-            removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[0], 0 );
+    for (int j = 0; j <= W - 1; j++) {
+        if ((*G)[j].size() >= 2) {
+            removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[0], 0);
         }
     }
 
-    for( auto & p : futures ) p.get();
+    for (auto &p : futures) p.get();
 
 
     VPII toRemove;
-    for( auto & v : edgesToRemove ){
-        toRemove.insert( toRemove.end(), v.begin(), v.end() );
+    for (auto &v : edgesToRemove) {
+        toRemove.insert(toRemove.end(), v.begin(), v.end());
         VPII().swap(v);
     }
 
-    sort( toRemove.begin(), toRemove.end() );
-    toRemove.resize( unique( toRemove.begin(), toRemove.end() ) - toRemove.begin() );
+    sort(toRemove.begin(), toRemove.end());
+    toRemove.resize(unique(toRemove.begin(), toRemove.end()) - toRemove.begin());
 
     int branchesRemoved = 0;
     int progressCounter = 0;
-    for( auto e : toRemove ){
+    for (auto e : toRemove) {
         branchesRemoved++;
-        if( G->removeDirectedEdge( e.first, e.second ) == false ){
+        if (G->removeDirectedEdge(e.first, e.second) == false) {
             cerr << "Trying to remove an edge that is not present in the graph! In removeDanglingBranches()" << endl;
         }
-        MyUtils::writeProgress(progressCounter+1,G->size(),progressCounter, "RemoveDanglingBranches, removing edges" ,1);
+        MyUtils::writeProgress(progressCounter + 1, G->size(), progressCounter,
+                               "RemoveDanglingBranches, removing edges", 1);
     }
     toRemove.clear();
 
 
     cerr << "\tdangling branches removed, " << branchesRemoved << " branches removed" << endl;
 
-    GenomeStatisticsCollector::addData( "dangling branches removed: ", branchesRemoved );
+    GenomeStatisticsCollector::addData("dangling branches removed: ", branchesRemoved);
 
-    for( int i=0; i<G->size(); i++ ) (*G)[i].shrink_to_fit();
+    for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
 
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_removeDanglingBranches" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_removeDanglingBranches");
     return branchesRemoved;
 
 }
@@ -666,31 +675,31 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
 
     int branchesRemoved = 0;
 
-    vector< pair<int,int> > branchEnds;
+    vector<pair<int, int> > branchEnds;
 
     int infiniteLoopCheck = 0;
     VI neigh;
 
-    unordered_map<int,int> dst,par;
+    unordered_map<int, int> dst, par;
 
 //    par[thread_id][beg] = beg;
     par[beg] = beg;
-    for( int i=0; i < (*G)[beg].size(); i++ ){
+    for (int i = 0; i < (*G)[beg].size(); i++) {
         int v = (*G)[beg][i].first;
 //        par[thread_id][ v ] = beg;
-        par[ v ] = beg;
+        par[v] = beg;
 
         was[thread_id][v] = true;
         neigh.push_back(v);
 
-        int offset = G->getWeight(beg,i);
+        int offset = G->getWeight(beg, i);
 
         infiniteLoopCheck = 0;
 
-        while( (*G)[v].size() == 1  ){ // if v has only 1 son and was not visited yet
+        while ((*G)[v].size() == 1) { // if v has only 1 son and was not visited yet
 
             int son = (*G)[v][0].first;
-            if( was[thread_id][son] ) break;
+            if (was[thread_id][son]) break;
 
             was[thread_id][son] = true;
             neigh.push_back(son);
@@ -698,52 +707,52 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
 //            par[thread_id][son] = v;
             par[son] = v;
 
-            offset += G->getWeight(v,0);
+            offset += G->getWeight(v, 0);
 
-            if( offset < 0 ){
+            if (offset < 0) {
                 cerr << "offset < 0 in removing dangling braches" << endl;
                 exit(1);
             }
 
             v = son;
 
-            if( offset > maxOffset ) break;
+            if (offset > maxOffset) break;
 
-            if( infiniteLoopCheck++ > 1000000000 ){
+            if (infiniteLoopCheck++ > 1000000000) {
                 cerr << "infinite loop in point 1" << endl;
                 break;
             }
         }
 
-        if( (*G)[v].size() == 0 && offset <= maxOffset ) branchEnds.push_back( { offset,v } );
+        if ((*G)[v].size() == 0 && offset <= maxOffset) branchEnds.push_back({offset, v});
 
     }
 
-    sort( branchEnds.begin(), branchEnds.end() );
+    sort(branchEnds.begin(), branchEnds.end());
 
     int div = 0;
-    if( branchEnds.size() == (*G)[beg].size() ) div = 1;
-    for( int i=0; i<(int)branchEnds.size()-div; i++ ){
+    if (branchEnds.size() == (*G)[beg].size()) div = 1;
+    for (int i = 0; i < (int) branchEnds.size() - div; i++) {
         int v = branchEnds[i].second;
 
         infiniteLoopCheck = 0;
-        while( v != beg ){
+        while (v != beg) {
 
             branchesRemoved++;
 //            edgesToRemove.push_back( { par[thread_id][v], v } );
-            edgesToRemove.push_back( { par[v], v } );
+            edgesToRemove.push_back({par[v], v});
 
 //            v = par[thread_id][v];
             v = par[v];
 
-            if( infiniteLoopCheck++ > 1000000000 ){
+            if (infiniteLoopCheck++ > 1000000000) {
                 cerr << "infinite loop in point 2" << endl;
                 break;
             }
         }
     }
 
-    for(int a : neigh){
+    for (int a : neigh) {
         was[thread_id][a] = false;
 //        par[thread_id][a] = -1;
     }
@@ -760,14 +769,13 @@ int GraphSimplifier::removeDanglingUpperBranches(int maxOffset) {
 
     G->pruneGraph();
 
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_removeDanglingUpperBranches" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_removeDanglingUpperBranches");
     return branchesRemoved;
 }
 
 
-
 bool GraphSimplifier::contractPathNodes() {
-    TimeMeasurer::startMeasurement( "GraphSimplifier_contractPathNodes" );
+    TimeMeasurer::startMeasurement("GraphSimplifier_contractPathNodes");
 
     Graph GRev = G->getReverseGraph();
 
@@ -775,8 +783,8 @@ bool GraphSimplifier::contractPathNodes() {
     MyUtils::process_mem_usage();
 
     deque<int> pathNodes;
-    for( int i=0; i<G->size(); i++ ){
-        if( (*G)[i].size() == 1 && GRev[i].size() == 1 ) pathNodes.push_back(i);
+    for (int i = 0; i < G->size(); i++) {
+        if ((*G)[i].size() == 1 && GRev[i].size() == 1) pathNodes.push_back(i);
     }
 
 
@@ -787,35 +795,36 @@ bool GraphSimplifier::contractPathNodes() {
 //        int b = pathNodes[i];
 
     unsigned cnt = 0;
-    while( !pathNodes.empty() ){
+    while (!pathNodes.empty()) {
         int b = pathNodes.front();
         pathNodes.pop_front();
 
-        if( (*G)[b].size() == 0 ) continue;
+        if ((*G)[b].size() == 0) continue;
 
         int a = GRev[b][0].first;
         int c = (*G)[b][0].first;
 
-        if( a == c ) continue;
+        if (a == c) continue;
 
 
-        if( G->contractPath( a,b,c ) ){
+        if (G->contractPath(a, b, c)) {
             anyContractionDone = true;
             contractionsDone++;
-            GRev.removeDirectedEdge( b,a );
-            GRev.removeDirectedEdge( c,b );
-            GRev.addDirectedEdge( c,a, G->findWeight(a,c) );
+            GRev.removeDirectedEdge(b, a);
+            GRev.removeDirectedEdge(c, b);
+            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
         }
 
-        if( (*G)[a].size() == 1 && GRev[a].size() == 1 ){
+        if ((*G)[a].size() == 1 && GRev[a].size() == 1) {
             pathNodes.push_back(a);
         }
-        if( (*G)[c].size() == 1 && GRev[c].size() == 1 ){
+        if ((*G)[c].size() == 1 && GRev[c].size() == 1) {
             pathNodes.push_back(c);
         }
 
         cnt++;
-        MyUtils::writeProgress(cnt,G->size(), progressCounter, "contracting paths progress",1); // just roughly accurate
+        MyUtils::writeProgress(cnt, G->size(), progressCounter, "contracting paths progress",
+                               1); // just roughly accurate
     }
     cerr << endl;
     cerr << "There were " << contractionsDone << " contractions" << endl;
@@ -823,15 +832,13 @@ bool GraphSimplifier::contractPathNodes() {
     cerr << "Memory usage in contractPathNodes() after contracting nodes" << endl;
     MyUtils::process_mem_usage();
 
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_contractPathNodes" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_contractPathNodes");
     return anyContractionDone;
 }
 
 
-
-
-int GraphSimplifier::mergeLength0Edges(){
-    TimeMeasurer::startMeasurement( "GraphSimplifier_mergeLength0Edges" );
+int GraphSimplifier::mergeLength0Edges() {
+    TimeMeasurer::startMeasurement("GraphSimplifier_mergeLength0Edges");
     Graph GRev = G->getReverseGraph();
 
     cerr << "Memory in mergeLength0Edges, after creating reverse graph" << endl;
@@ -839,21 +846,23 @@ int GraphSimplifier::mergeLength0Edges(){
 
     int nodesMerged = 0;
     int progressCounter = 0;
-    for( int i=0; i<G->size(); i++ ){
+    for (int i = 0; i < G->size(); i++) {
         int a = i;
 
 //        if( (*reads)[a] == nullptr ) continue;
 
-        for(auto p : (*G)[i] ){
+        for (auto p : (*G)[i]) {
             int b = p.first;
 
 //            if( (*reads)[b] == nullptr ) continue;
 
-            if(p.second == 0 && G->containsEdgeShorterOrEqual( b,a,0 ) && /* THIS version here removes only nodes that have edge with offset 0 that forms a cycle of length 0 */
-//                ( Global::READS[a]->size() < Global::READS[b]->size() || ( Global::READS[a]->size() == Global::READS[b]->size() && a < b )  ) ){
-                ( Global::READS[a]->size() > Global::READS[b]->size() || ( Global::READS[a]->size() == Global::READS[b]->size() && a < b )  ) ){
+            if (p.second == 0 && G->containsEdgeShorterOrEqual(b, a, 0) &&
+                /* THIS version here removes only nodes that have edge with offset 0 that forms a cycle of length 0 */
+                //                ( Global::READS[a]->size() < Global::READS[b]->size() || ( Global::READS[a]->size() == Global::READS[b]->size() && a < b )  ) ){
+                (Global::READS[a]->size() > Global::READS[b]->size() ||
+                 (Global::READS[a]->size() == Global::READS[b]->size() && a < b))) {
 
-                mergeNodes(a,b,GRev,0);
+                mergeNodes(a, b, GRev, 0);
 
 //                cerr << "merging nodes:" << endl << *(*reads)[a] << endl << *(*reads)[b] << endl;
 
@@ -861,52 +870,54 @@ int GraphSimplifier::mergeLength0Edges(){
                 break;
             }
         }
-        MyUtils::writeProgress(i+1,G->size(),progressCounter, "mergeLEngth0Edges progress",1);
+        MyUtils::writeProgress(i + 1, G->size(), progressCounter, "mergeLEngth0Edges progress", 1);
     }
 
     cerr << "\tthere were " << nodesMerged << " nodes merged" << endl;
-    TimeMeasurer::stopMeasurement( "GraphSimplifier_mergeLength0Edges" );
+    TimeMeasurer::stopMeasurement("GraphSimplifier_mergeLength0Edges");
 
     return nodesMerged;
 }
 
 void GraphSimplifier::mergeNodes(int a, int b, Graph &GRev, int offsetAB) {
 
-        for( PII x : (*G)[a] ) GRev.removeDirectedEdge( x.first,a );
+    for (PII x : (*G)[a]) GRev.removeDirectedEdge(x.first, a);
 
-        G->mergeVertices(a,b, offsetAB );
+    G->mergeVertices(a, b, offsetAB);
 
-        for( int j = 0; j < GRev[a].size(); j++ ){
-            int d = GRev[a][j].first;
-            int w = GRev.getWeight(a,j);
+    for (int j = 0; j < GRev[a].size(); j++) {
+        int d = GRev[a][j].first;
+        int w = GRev.getWeight(a, j);
 
-            G->addDirectedEdge( d, b, w + offsetAB );
+        G->addDirectedEdge(d, b, w + offsetAB);
 
-            GRev.addDirectedEdge( b,d, w + offsetAB );
+        GRev.addDirectedEdge(b, d, w + offsetAB);
 
-            G->removeDirectedEdge( d,a );
-        }
+        G->removeDirectedEdge(d, a);
+    }
 
-        G->clearNode(a);
+    G->clearNode(a);
 
-        GRev.clearNode(a);
+    GRev.clearNode(a);
 }
 
 void GraphSimplifier::removeSmallOverlapEdges(int min_overlap_to_retain, int number_of_long_edges_to_retain) {
     vector<std::thread> parallelJobs;
-    parallelJobs.reserve( Params::THREADS );
+    parallelJobs.reserve(Params::THREADS);
 
-    int W = (int) ceil( (double) G->size() / Params::THREADS );
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = min( i*W, G->size()-1 );
-        int b = min( (i+1)*W-1, G->size()-1 );
+    int W = (int) ceil((double) G->size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = min(i * W, G->size() - 1);
+        int b = min((i + 1) * W - 1, G->size() - 1);
 
-        parallelJobs.push_back( thread( [=] { removeSmallOverlapEdgesJob(a, b, min_overlap_to_retain, number_of_long_edges_to_retain, i); } ) );
+        parallelJobs.push_back(thread([=] {
+            removeSmallOverlapEdgesJob(a, b, min_overlap_to_retain, number_of_long_edges_to_retain, i);
+        }));
     }
 
     removeSmallOverlapEdgesJob(0, W - 1, min_overlap_to_retain, number_of_long_edges_to_retain, 0);
 
-    for( auto & p : parallelJobs ) p.join();
+    for (auto &p : parallelJobs) p.join();
 }
 
 void GraphSimplifier::removeSmallOverlapEdgesJob(int a, int b, int min_overlap_to_retain,
@@ -916,25 +927,25 @@ void GraphSimplifier::removeSmallOverlapEdgesJob(int a, int b, int min_overlap_t
     int progressCounter = 0;
     int removedEdges = 0;
 
-    for(int i=a;  i<=b; i++){
+    for (int i = a; i <= b; i++) {
         toRemove.clear();
         zb.clear();
-        Read* r1 = Global::READS[i];
+        Read *r1 = Global::READS[i];
 
-        for( auto &p : (*G)[i] ){
-            Read* r2 = Global::READS[ p.first ];
-            int overlap = Read::calculateReadOverlap( r1,r2, p.second );
-            if( overlap < min_overlap_to_retain ) toRemove.push_back( { overlap, p.first} );
+        for (auto &p : (*G)[i]) {
+            Read *r2 = Global::READS[p.first];
+            int overlap = Read::calculateReadOverlap(r1, r2, p.second);
+            if (overlap < min_overlap_to_retain) toRemove.push_back({overlap, p.first});
         }
 
-        sort( toRemove.begin(), toRemove.end() );
-        for( int r = 0; r < number_of_long_edges_to_retain && !toRemove.empty(); r++ ) toRemove.pop_back();
+        sort(toRemove.begin(), toRemove.end());
+        for (int r = 0; r < number_of_long_edges_to_retain && !toRemove.empty(); r++) toRemove.pop_back();
 
-        for(auto &p : toRemove) zb.insert( p.second );
-        for( int k=(*G)[i].size()-1; k>=0; k-- ){
+        for (auto &p : toRemove) zb.insert(p.second);
+        for (int k = (*G)[i].size() - 1; k >= 0; k--) {
             int d = (*G)[i][k].first;
-            if( zb.count(d) ){
-                swap( (*G)[i][k], (*G)[i].back() );
+            if (zb.count(d)) {
+                swap((*G)[i][k], (*G)[i].back());
                 (*G)[i].pop_back();
                 removedEdges++;
             }
@@ -942,11 +953,15 @@ void GraphSimplifier::removeSmallOverlapEdgesJob(int a, int b, int min_overlap_t
 
         (*G)[i].shrink_to_fit();
 
-        if( thread_id == 0 ) MyUtils::writeProgress( i-a+1, b-a+1, progressCounter, "removing all except for at most " + to_string(number_of_long_edges_to_retain)
-                                             + " edges with overlap  less than " + to_string(min_overlap_to_retain ) + " in thread 0",1 );
+        if (thread_id == 0)
+            MyUtils::writeProgress(i - a + 1, b - a + 1, progressCounter,
+                                   "removing all except for at most " + to_string(number_of_long_edges_to_retain)
+                                   + " edges with overlap  less than " + to_string(min_overlap_to_retain) +
+                                   " in thread 0", 1);
     }
 
-    if( thread_id == 0 ) cerr << endl << "There were " << removedEdges << " edges removed in thread " << thread_id << endl;
+    if (thread_id == 0)
+        cerr << endl << "There were " << removedEdges << " edges removed in thread " << thread_id << endl;
 }
 
 bool GraphSimplifier::removeEdgePairedEndSeparators() {
@@ -959,66 +974,66 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
 
     const int MAX_DST = 500;
 
-    function< void(VVPII&,bool,int,int,unordered_set<int>&, unordered_map<int,int> &was) > neighborhoodMarker = [=,&MAX_DST, &neighborhoodMarker]
-            ( VVPII& g, bool reversed, int v, int dst, unordered_set<int> & neigh, unordered_map<int,int> was ){
+    function<void(VVPII &, bool, int, int, unordered_set<int> &,
+                  unordered_map<int, int> &was)> neighborhoodMarker = [=, &MAX_DST, &neighborhoodMarker]
+            (VVPII &g, bool reversed, int v, int dst, unordered_set<int> &neigh, unordered_map<int, int> was) {
 
 
-        if( dst > MAX_DST ) return;
+        if (dst > MAX_DST) return;
 
 
-        if( was.count(v) && was[v] > dst ) return;
+        if (was.count(v) && was[v] > dst) return;
         was[v] = dst;
 
 
-        for( auto p : g[v] ){
+        for (auto p : g[v]) {
 
             LPII *edge;
             int tempDst = dst;
-            if( reversed ){
+            if (reversed) {
 
-                edge = &(G->getContractedEdgePath(p.first,v));
+                edge = &(G->getContractedEdgePath(p.first, v));
 
-                for( PII x : (*edge) ){
-                    if( tempDst > MAX_DST ) break;
+                for (PII x : (*edge)) {
+                    if (tempDst > MAX_DST) break;
 
-                    neigh.insert( x.first );
-                    tempDst += max(1,x.second);
+                    neigh.insert(x.first);
+                    tempDst += max(1, x.second);
+                }
+            } else {
+
+                edge = &G->getContractedEdgePath(v, p.first);
+                VPII edge2(edge->begin(), edge->end());
+
+                for (int j = (int) edge2.size() - 1; j >= 0 && tempDst < MAX_DST; j--) {
+                    neigh.insert(edge2[j].first);
+                    tempDst += max(1, edge2[j].second);
                 }
             }
-            else{
 
-                edge = &G->getContractedEdgePath(v,p.first);
-                VPII edge2( edge->begin(), edge->end() );
-
-                for( int j = (int)edge2.size()-1; j >=0 && tempDst < MAX_DST ; j-- ){
-                    neigh.insert( edge2[j].first );
-                    tempDst += max(1,edge2[j].second);
-                }
-            }
-
-            if( tempDst < MAX_DST ) neighborhoodMarker( g,reversed,p.first,tempDst,neigh,was );
+            if (tempDst < MAX_DST) neighborhoodMarker(g, reversed, p.first, tempDst, neigh, was);
         }
     };
 
 
     auto GV = G->getV();
-    auto helper = [=,&GRev, &GV, &neighborhoodMarker]( int a, int b ){
+    auto helper = [=, &GRev, &GV, &neighborhoodMarker](int a, int b) {
 
         unordered_set<int> neighB;
-        unordered_map<int,int> was;
-        neighborhoodMarker( GV,false,b,0,neighB,was );
+        unordered_map<int, int> was;
+        neighborhoodMarker(GV, false, b, 0, neighB, was);
 
         was.clear();
         unordered_set<int> neighArev;
-        neighborhoodMarker(GRev,true,a,0,neighArev,was);
+        neighborhoodMarker(GRev, true, a, 0, neighArev, was);
 
         int cnt = 0;
         const int THRESHOLD = 1;
 
-        for( auto x : neighB ){
-            if( neighArev.count( Read::getIdOfCompRevRead( Read::getIdOfPairedRead(x) ) ) ){
+        for (auto x : neighB) {
+            if (neighArev.count(Read::getIdOfCompRevRead(Read::getIdOfPairedRead(x)))) {
                 cnt++;
-                if( cnt >= THRESHOLD ) return false;
+                if (cnt >= THRESHOLD) return false;
 //                return false;
             }
         }
@@ -1030,21 +1045,21 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
     const int SMALL_EDGE_LENGTH = 1.5 * Global::calculateAvgReadLength();
     VPII toRemove;
 
-    auto helper2 = [=,&GRev,&SMALL_EDGE_LENGTH,&toRemove](int a, int b, int thread_id){
+    auto helper2 = [=, &GRev, &SMALL_EDGE_LENGTH, &toRemove](int a, int b, int thread_id) {
 
         int progressCounter = 0;
-        for( int i=a; i<=b; i++ ){
+        for (int i = a; i <= b; i++) {
 //        for( int i=thread_id; i<G->size(); i+=Params::THREADS ){
-            if( (*reads)[i] != nullptr ){
+            if ((*reads)[i] != nullptr) {
 
-                for( PII d : (*G)[i] ){
-                    if( d.second <= SMALL_EDGE_LENGTH ){
+                for (PII d : (*G)[i]) {
+                    if (d.second <= SMALL_EDGE_LENGTH) {
 //                    if( d.second <= SMALL_EDGE_LENGTH && GRev[i].size() > 0 && (*G)[i].size() > 0 && ( GRev[i].size() >= 2 || (*G)[i].size() >= 2 ) ){
 
-                        if( helper( i,d.first ) ){
+                        if (helper(i, d.first)) {
 
                             G->lockNode(0);
-                            toRemove.push_back( {i,d.first} );
+                            toRemove.push_back({i, d.first});
                             G->unlockNode(0);
 
                         }
@@ -1052,34 +1067,36 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
                 }
             }
 
-            if( thread_id == 0 ) MyUtils::writeProgress(i-a+1,b-a+1,progressCounter,"removing paired-end separators",1);
+            if (thread_id == 0)
+                MyUtils::writeProgress(i - a + 1, b - a + 1, progressCounter, "removing paired-end separators", 1);
         }
 
     };
 
 
     vector<std::thread> parallelJobs;
-    parallelJobs.reserve( Params::THREADS );
+    parallelJobs.reserve(Params::THREADS);
 
-    int W = (int) ceil( (double) G->size() / Params::THREADS );
-    for( int i=1; i<Params::THREADS; i++ ){
-        int a = min( i*W, G->size()-1 );
-        int b = min( (i+1)*W-1, G->size()-1 );
+    int W = (int) ceil((double) G->size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = min(i * W, G->size() - 1);
+        int b = min((i + 1) * W - 1, G->size() - 1);
 
-        parallelJobs.push_back( thread( [=] { helper2(a, b, i); } ) );
+        parallelJobs.push_back(thread([=] { helper2(a, b, i); }));
     }
 
     helper2(0, W - 1, 0);
 
-    for( auto & p : parallelJobs ) p.join();
+    for (auto &p : parallelJobs) p.join();
 
-    cerr << endl << endl << "There are " << toRemove.size() << " edges to remove due to no paired-end neighborhood" << endl << endl;
-    for( PII e : toRemove ){
+    cerr << endl << endl << "There are " << toRemove.size() << " edges to remove due to no paired-end neighborhood"
+         << endl << endl;
+    for (PII e : toRemove) {
         G->removeDirectedEdge(e.first, e.second);
     }
 
 
-    if( !toRemove.empty() ) return true;
+    if (!toRemove.empty()) return true;
     else return false;
 
 }

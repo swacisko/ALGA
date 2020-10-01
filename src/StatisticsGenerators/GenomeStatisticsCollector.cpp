@@ -26,7 +26,7 @@
 GenomeStatisticsCollector::GenomeStatisticsCollector() {
 }
 
-GenomeStatisticsCollector::GenomeStatisticsCollector(const GenomeStatisticsCollector& orig) {
+GenomeStatisticsCollector::GenomeStatisticsCollector(const GenomeStatisticsCollector &orig) {
 }
 
 GenomeStatisticsCollector::~GenomeStatisticsCollector() {
@@ -40,10 +40,10 @@ void GenomeStatisticsCollector::addData(string option, double value) {
 
 void GenomeStatisticsCollector::writeTestStatistics() {
     cerr << endl << "TEST SPECIFIC STATISTICS:" << endl;
-    for(auto a : stats){
+    for (auto a : stats) {
         cerr << a.first << " -> " << a.second << endl;
     }
 }
 
 
-map<string,double> GenomeStatisticsCollector::stats;
+map<string, double> GenomeStatisticsCollector::stats;

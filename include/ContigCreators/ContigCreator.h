@@ -13,17 +13,18 @@ class ContigCreator {
 
 public:
 
-    ContigCreator( Graph * G, vector<Read*> * reads );
+    ContigCreator(Graph *G, vector<Read *> *reads);
+
     virtual ~ContigCreator();
 
-    virtual vector<Contig*> getAllContigs() = 0;
+    virtual vector<Contig *> getAllContigs() = 0;
 
 
-    VLL getContigsLengths(){ return contigsLengths; }
+    VLL getContigsLengths() { return contigsLengths; }
 
 protected:
-    Graph * G;
-    vector<Read*> *reads;
+    Graph *G;
+    vector<Read *> *reads;
 
     VLL contigsLengths;
 };

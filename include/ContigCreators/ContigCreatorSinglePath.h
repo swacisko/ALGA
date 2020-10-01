@@ -13,21 +13,22 @@
 class ContigCreatorSinglePath : public ContigCreator {
 public:
 
-    ContigCreatorSinglePath(Graph *G, vector<Read *> &reads );
+    ContigCreatorSinglePath(Graph *G, vector<Read *> &reads);
 
 
-    vector<Contig*> getAllContigs() override;
+    vector<Contig *> getAllContigs() override;
 
     static void test();
 
 private:
-    vector<Contig*> getContigOmitShortCyclesFrom(int beg);
+    vector<Contig *> getContigOmitShortCyclesFrom(int beg);
 
 
-    void addContractedPathToString(int a, int b, string &s, vector<pair<Read*,int>> &readsInContig);
-    void addContractedPathToString(int a, LPII &path, string &s, vector<pair<Read*,int>> &readsInContig);
+    void addContractedPathToString(int a, int b, string &s, vector<pair<Read *, int>> &readsInContig);
 
-    void correctSNPsJob(int a, int b, int thread_id, vector<Contig*> & contigs);
+    void addContractedPathToString(int a, LPII &path, string &s, vector<pair<Read *, int>> &readsInContig);
+
+    void correctSNPsJob(int a, int b, int thread_id, vector<Contig *> &contigs);
 
     /**
      * Function returns a vector of possible candidates for the next vertex during graph traverse. It is of the form of pairs (nextId, offset)
@@ -46,7 +47,7 @@ private:
      * @param readsInContig
      * @return
      */
-    VPII getNextStepCandidatesByPairedReads( int predecessor, int p, vector<pair<Read *, int>> &readsInContig );
+    VPII getNextStepCandidatesByPairedReads(int predecessor, int p, vector<pair<Read *, int>> &readsInContig);
 
     /**
      *
@@ -71,7 +72,8 @@ private:
     void mapReadsToContigs();
 
 
-    bool canBeNextStepCandidateByPairedReads2( int predecessor, int p, int d, int of, vector<pair<Read *, int>> &readsInContig );
+    bool canBeNextStepCandidateByPairedReads2(int predecessor, int p, int d, int of,
+                                              vector<pair<Read *, int>> &readsInContig);
 
 
     //**************************//**************************//**************************//**************************
@@ -87,14 +89,14 @@ private:
      * @param a
      * @return id of a reliable predecessor of node a, or -1 if a has no reliable predecessors.
      */
-    int getReliablePredecessor( int a );
+    int getReliablePredecessor(int a);
 
     /**
      * The same as getReliablePredecessor, but we admit multiple predecessors possible.
      * @param a
      * @return
      */
-    VI getReliablePredecessors( int a );
+    VI getReliablePredecessors(int a);
 
     /**
      * Calculated number of pairs of reads (r1,r2) such that r1 and r are paired and r1 is on edge (d,a), r2 is on (a,b)
@@ -103,7 +105,7 @@ private:
      * @param b
      * @return
      */
-    int countPairedConnections( int d, int a, int b );
+    int countPairedConnections(int d, int a, int b);
 
     /**
      * reliablePredecessors[i] is the id of the reliable predecessor of i or -1 if i has no such predecessor

@@ -16,32 +16,36 @@ class StatisticsGeneratorBigData {
 
 public:
 
-    StatisticsGeneratorBigData(){
+    StatisticsGeneratorBigData() {
 
     }
 
-    template <class _T>
-    static void addData( string  s, _T val ){
+    template<class _T>
+    static void addData(string s, _T val) {
 //        if( Params::WRITE_STATISTICS == false ) return;
-        if( data.find(s) == data.end() ) data[s] = Stat();
+        if (data.find(s) == data.end()) data[s] = Stat();
 
         data[s].sum += val;
-        data[s].sumOfSquares += (double)val*(double)val;
+        data[s].sumOfSquares += (double) val * (double) val;
         data[s].numberOfElements++;
-        data[s].maxVal = max( data[s].maxVal, (double)val );
-        data[s].minVal = min( data[s].minVal,(double)val );
+        data[s].maxVal = max(data[s].maxVal, (double) val);
+        data[s].minVal = min(data[s].minVal, (double) val);
     }
 
-    static double getAverage(string s){ if( data[s].numberOfElements == 0 ) return 0; else return data[s].sum / data[s].numberOfElements; }
+    static double getAverage(string s) {
+        if (data[s].numberOfElements == 0) return 0;
+        else
+            return data[s].sum / data[s].numberOfElements;
+    }
 
-    static double getStandardDeviation( string  s ){
+    static double getStandardDeviation(string s) {
         double avg = getAverage(s);
 
-        double res = sqrt( data[s].sumOfSquares / data[s].numberOfElements - avg*avg );
+        double res = sqrt(data[s].sumOfSquares / data[s].numberOfElements - avg * avg);
         return res;
     }
 
-    static void writeAllStatistics(string  s){
+    static void writeAllStatistics(string s) {
         cerr << "number of elements:\t" << data[s].numberOfElements << endl;
         cerr << "sum: " << data[s].sum << endl;
         cerr << "sum of squares: " << data[s].sumOfSquares << endl;
@@ -51,10 +55,10 @@ public:
         cerr << "standard deviation: " << getStandardDeviation(s) << endl;
     }
 
-    static void writeAllStatistics(){
-        for( auto a : data ){
+    static void writeAllStatistics() {
+        for (auto a : data) {
             cerr << a.first << ":" << endl;
-            writeAllStatistics( a.first );
+            writeAllStatistics(a.first);
             cerr << endl;
         }
     }
@@ -68,9 +72,9 @@ public:
 
 private:
 
-    class Stat{
+    class Stat {
     public:
-        Stat(){
+        Stat() {
             maxVal = 1000000000; // 10^9
             maxVal *= -maxVal; // 10^18
             minVal = -maxVal;
@@ -85,7 +89,7 @@ private:
     };
 
 
-    static map<string,Stat> data;
+    static map<string, Stat> data;
 
 
 };
