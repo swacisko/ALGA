@@ -50,6 +50,7 @@ void GraphCreatorKmerBased::startAlignmentGraphCreation() {
         TimeMeasurer::startMeasurement(TimeMeasurer::KMER_BUCKETS_SORTING);
 
         vector<std::thread> parallelJobs;
+        parallelJobs.reserve( Params::THREADS );
 
 
         int W = (int) ceil( (double) kmers.size() / Params::THREADS);
@@ -140,6 +141,7 @@ vector<vector<Kmer>> GraphCreatorKmerBased::getKmersForBucket(int bucket) {
     vector< vector< vector<Kmer> > > bucketKmersInThreads( Params::THREADS, vector<vector<Kmer>>(BUCKETS_SORT) );
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double)reads->size() / Params::THREADS);
     for( int i=1; i<Params::THREADS; i++ ){

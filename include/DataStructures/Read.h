@@ -27,7 +27,11 @@ class Read {
 public:
     Read(int id, string sequence);
     Read(const Read& orig);
-    virtual ~Read();
+
+//protected:
+//    virtual ~Read();
+    ~Read();
+public:
     
     void clear();
     int size();

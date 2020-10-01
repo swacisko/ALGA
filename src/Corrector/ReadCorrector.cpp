@@ -205,6 +205,7 @@ void ReadCorrector::applyCorrection() {
     };
 
     vector<thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
     int W = (int) ceil( (double) reads->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
         int a = min( i*W, (int)reads->size()-1 );

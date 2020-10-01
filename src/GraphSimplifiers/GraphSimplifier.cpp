@@ -321,6 +321,7 @@ void GraphSimplifier::cutNonAndWeaklyMetricTriangles() {
 
     for(auto & p : edgesToRemove) p.clear();
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double) G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
@@ -438,6 +439,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     for( int i=1; i<Params::THREADS; i++ ){
         parallelJobs.push_back( thread( [=] { removeShortParallelPathsJob(0, G->size() - 1, maxOffset, i); } ) ); // i should pass the whole scope,, thread job is done based on fau.Find value
@@ -892,6 +894,7 @@ void GraphSimplifier::mergeNodes(int a, int b, Graph &GRev, int offsetAB) {
 
 void GraphSimplifier::removeSmallOverlapEdges(int min_overlap_to_retain, int number_of_long_edges_to_retain) {
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double) G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
@@ -1056,6 +1059,7 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double) G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){

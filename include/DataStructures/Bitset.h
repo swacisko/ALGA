@@ -46,7 +46,7 @@ public:
     static VT zerosOnes; // onesZeros[i] is the number that has i least significant bits set to 0, the rest are 1.
     
     
-    Bitset(unsigned int size= 0); // creates a bitset with N bits accessible
+    Bitset(unsigned int size= 0); // creates a bitset with [size] bits accessible
     Bitset(const Bitset& orig);
     ~Bitset();
     
@@ -86,7 +86,7 @@ public:
     bool operator==( const Bitset & oth );
     bool operator!=( const Bitset & oth );
     
-    int hash() const; // returns value of this bitset (treater as number) modulo 10^9 + 1
+    int hash() const; // returns value of this bitset (treated as number) modulo 10^9 + 1
     
     bool any();
     bool all();

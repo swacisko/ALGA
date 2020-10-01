@@ -224,8 +224,8 @@ public:
     void writeContractedPath( int a, int b );
 
     void lockNode(int id){
-//        (*mutexes)[id].lock();
-        while(!(*mutexes)[id >> LOG2_MUTEX_SCALE].try_lock() ); // active waiting
+        (*mutexes)[id >> LOG2_MUTEX_SCALE].lock();
+//        while(!(*mutexes)[id >> LOG2_MUTEX_SCALE].try_lock() ); // active waiting
     }
     void unlockNode(int id){
         (*mutexes)[id >> LOG2_MUTEX_SCALE].unlock();

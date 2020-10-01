@@ -57,11 +57,11 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
     for( int i=0; i<G->size(); i++ ){
         MyUtils::writeProgress( i+1 + inDeg->size(), inDeg->size() + G->size(), progressCounter, "creating contigs",1 );
 
-        if( (*G)[i].size() >= 2  && (*inDeg)[i] > 0   ){
+        /*if( (*G)[i].size() >= 2  && (*inDeg)[i] > 0   ){
             vector<Contig*> ctg = getContigOmitShortCyclesFrom(i);
             contigs.insert( contigs.end(), ctg.begin(), ctg.end() );
         }
-        else if( (*G)[i].size() >= 1   && (*inDeg)[i] > 0   ){
+        else */if( (*G)[i].size() >= 1   && (*inDeg)[i] > 0   ){
             vector<Contig*> ctg = getContigOmitShortCyclesFrom(i);
             contigs.insert( contigs.end(), ctg.begin(), ctg.end() );
         }
@@ -71,6 +71,7 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve(Params::THREADS);
 
     int W = (int) ceil( (double)contigs.size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
@@ -353,6 +354,8 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
+
     int W = (int) ceil( (double)G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
         int a = i*W;

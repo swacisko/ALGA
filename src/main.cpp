@@ -67,6 +67,7 @@ void testConcurrency(){
     int R = 10'000;
     for( int r=0; r<R; r++ ) {
         vector<std::thread> parallelJobs;
+        parallelJobs.reserve( Params::THREADS );
 
         int W = (int) ceil((double) N / T);
         for (int i = 1; i < T; i++) {
@@ -130,6 +131,8 @@ int main(int argc, char** argv) {
     DEBUG( sizeof(Kmer) );
     DEBUG( sizeof(MyVec) );
     DEBUG( sizeof(pair<short, char>) );
+    DEBUG( sizeof(Read) );
+    DEBUG( sizeof(Bitset) );
 
 //    exit(1);
 
@@ -168,6 +171,7 @@ int main(int argc, char** argv) {
     }
     TimeMeasurer::stopMeasurement( TimeMeasurer::INPUT_READER );
     cerr << "input read" << endl;
+    MyUtils::process_mem_usage();
 
     vector<Read*> *READS = &Global::READS;
 
@@ -245,7 +249,6 @@ int main(int argc, char** argv) {
         if(write_and_read) str.open( Params::TEST_NAME + "remaining_reads.fasta" );
         Global::pairedReadOffset.clear();
 
-//        vector<Read*> newReads;
         unsigned back_index = 0;
 
         auto swap_reads = [&back_index]( int i ){
@@ -256,26 +259,19 @@ int main(int argc, char** argv) {
 
 
         for( unsigned i=0; i<Global::READS.size(); i+=2 ){
-//            assert(Global::READS[20] != nullptr && Global::READS[22] != nullptr);
 
             if( Global::READS[i] != nullptr ){
                 ++id;
-//                cerr << "increasing id" << endl;
-//                DEBUG(i);
-//                DEBUG(id);
 
                 assert( Global::READS[i+1] != nullptr ); // this should not happen - either both read r and its reverse complimentary are present, or neither.
 
                 if(write_and_read) str << "read_" << id << "\n";
                 if(write_and_read) str << Global::READS[i]->getSequenceAsString() << "\n";
-//                Global::removeRead(i);
+
 
                 if( (i%4) == 0  ){
 
                     if( i+2 < Global::READS.size() && Global::READS[i+2] != nullptr ){
-//                        cerr << "Adding read and paired read" << endl;
-//                        DEBUG( (*Global::READS[i]) );
-//                        DEBUG( (*Global::READS[i+2]) );
 
                         Global::pairedReadOffset.push_back(1); // for i-th read
                         Global::pairedReadOffset.push_back(1); // for reverse complimentary read
@@ -288,24 +284,18 @@ int main(int argc, char** argv) {
                         if(!write_and_read) swap_reads(i+2);
 
                     }else{
-//                        cerr << "\tAdding only read" << endl;
-//                        DEBUG( (*Global::READS[i]) );
                         Global::pairedReadOffset.push_back(0);
                         Global::pairedReadOffset.push_back(0); // for reverse complimentary read
 
                         if(!write_and_read) swap_reads(i);
                     }
                 }else if( Global::READS[i-2] == nullptr ){
-//                    cerr << "\t\tAdding only paired read" << endl;
-//                        DEBUG( (*Global::READS[i]) );
                     Global::pairedReadOffset.push_back(0); // for this read - its paired read was removed
                     Global::pairedReadOffset.push_back(0); // for reverse complimentary read
 
                     if(!write_and_read) swap_reads(i);
                 }
-
             }
-
 
             if( write_and_read && (i%4) == 2 ){
                 Global::removeRead(i-2);
@@ -452,13 +442,10 @@ int main(int argc, char** argv) {
             }
         }
 
-//        Params::MIN_OVERLAP_AREA = 50;
         Params::MIN_OVERLAP_AREA = Global::calculateAvgReadLength() - ( Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 10 :       0 ); // the latter is for GCPS
 
         Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT =  ( Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 10 :        1 );    // the latter is for GCPS
         Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR =  ( Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 95 :          99 );   // the latter is for GCPS
-
-//        Params::MIN_OFFSET_FOR_ALIGNMENT = 1;
 
         Params::LI_KMER_INTERVALS = 6;
         Params::LI_KMER_LENGTH = 35;
@@ -883,6 +870,22 @@ int main(int argc, char** argv) {
         cerr << endl << "CONTIG-LENGTHS STATISTICS:" << endl;
         StatisticsGenerator::writeAllStatistics( writer.getContigsLengths() );
 
+
+    // clearing dynamically allocated memory
+    {
+        for (Contig *c : contigs) {
+            if (c != nullptr) {
+                delete c;
+                c = nullptr;
+            }
+        }
+
+        for (int i = 0; i < Global::READS.size(); i++) {
+            if (Global::READS[i] != nullptr) Global::removeRead(i);
+        }
+
+
+    }
 
     return 0;
 

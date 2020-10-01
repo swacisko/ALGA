@@ -8,7 +8,7 @@
 #include <Utils/TimeMeasurer.h>
 #include <thread>
 #include <AlignmentControllers/AlignmentControllerHybrid.h>
-#include <unordered_map>
+//#include <unordered_map>
 #include <functional>
 
 
@@ -83,7 +83,7 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
 
     clear();
-    if( reads->size() > 1e6 ) Global::removeIsolatedReads();
+//    if( reads->size() > 1e6 ) Global::removeIsolatedReads();
 
     G->reverseGraph();
 
@@ -122,9 +122,8 @@ void GraphCreatorPrefSuf::createInitialState() {
         else suffixKmers.push_back( dummyKmer );
     }
 
-//    prefixKmersBuckets = G->size();
-//    prefixKmersBuckets = MyUtils::getNearestLowerPrime(G->size() ); // #TEST
-    prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3 ) ); // #TEST
+//    prefixKmersBuckets = MyUtils::getNearestLowerPrime(G->size() );
+    prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3 ) );
 
     DEBUG(G->size());
     DEBUG(prefixKmersBuckets);
@@ -134,13 +133,15 @@ void GraphCreatorPrefSuf::createInitialState() {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double) G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){
         int a = min( i*W, G->size()-1 );
         int b = min( (i+1)*W-1, G->size()-1 );
 
-        parallelJobs.push_back( thread( [=] { createInitialStateJob(a, b, i); } ) );
+//        parallelJobs.push_back( thread( [=] { createInitialStateJob(a, b, i); } ) );
+        parallelJobs.emplace_back( [=] { createInitialStateJob(a, b, i); } );
     }
 
     createInitialStateJob(0, W - 1, 0);
@@ -222,12 +223,14 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve(Params::THREADS);
 
     int W = (int) ceil( (double) G->size() / Params::THREADS );
     for( int i=1; i<Params::THREADS; i++ ){ // UPDATING PREFIXES
         int a = min( i*W, G->size()-1 );
         int b = min( (i+1)*W-1, G->size()-1 );
-        parallelJobs.push_back( thread( [=] { updatePrexihHashJob(a,b,i); } ) );
+//        parallelJobs.push_back( thread( [=] { updatePrexihHashJob(a,b,i); } ) );
+        parallelJobs.emplace_back( [=] { updatePrexihHashJob(a,b,i); } );
     }
     updatePrexihHashJob(0,W-1,0);
     for( auto & p : parallelJobs ) p.join();
@@ -239,7 +242,8 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
     for( int i=1; i<Params::THREADS; i++ ){ // PLACING KMERS INTO BUCKETS
         int a = min( i*W, prefixKmersBuckets-1 );
         int b = min( (i+1)*W-1, prefixKmersBuckets-1 );
-        parallelJobs.push_back( thread( [=] { removeKmersFromBucketsJob(a,b,i); } ) );
+//        parallelJobs.push_back( thread( [=] { removeKmersFromBucketsJob(a,b,i); } ) );
+        parallelJobs.emplace_back(  [=]{ removeKmersFromBucketsJob(a,b,i);} );
     }
     removeKmersFromBucketsJob(0,W-1,0);
     for( auto & p : parallelJobs ) p.join();
@@ -251,7 +255,8 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
     for( int i=1; i<Params::THREADS; i++ ){ // PLACING KMERS INTO BUCKETS
         int a = min( i*W, G->size()-1 );
         int b = min( (i+1)*W-1, G->size()-1 );
-        parallelJobs.push_back( thread( [=] { putKmersIntoBucketsJob(a,b,i); } ) );
+//        parallelJobs.push_back( thread( [=] { putKmersIntoBucketsJob(a,b,i); } ) );
+        parallelJobs.emplace_back(  [=] { putKmersIntoBucketsJob(a,b,i); } );
     }
     putKmersIntoBucketsJob(0,W-1,0);
     for( auto & p : parallelJobs ) p.join();
@@ -267,7 +272,8 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         for( int i=1; i<Params::THREADS; i++ ){ // PLACING KMERS INTO BUCKETS
             int a = min( i*W, G->size()-1 );
             int b = min( (i+1)*W-1, G->size()-1 );
-            parallelJobs.push_back( thread( [=] { moveSmallOverlapEdgesToGraphJob(a,b,i); } ) );
+//            parallelJobs.push_back( thread( [=] { moveSmallOverlapEdgesToGraphJob(a,b,i); } ) );
+            parallelJobs.emplace_back(  [=] { moveSmallOverlapEdgesToGraphJob(a,b,i); } );
         }
         moveSmallOverlapEdgesToGraphJob(0,W-1,0);
         for( auto & p : parallelJobs ) p.join();
@@ -291,7 +297,8 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
     for( int i=1; i<Params::THREADS; i++ ){ // PLACING KMERS INTO BUCKETS
         int a = min( i*W, G->size()-1 );
         int b = min( (i+1)*W-1, G->size()-1 );
-        parallelJobs.push_back( thread( [=] { nextPrefSufIterationJobAddEdges(a,b,i); } ) );
+//        parallelJobs.push_back( thread( [=] { nextPrefSufIterationJobAddEdges(a,b,i); } ) );
+        parallelJobs.emplace_back( [=] { nextPrefSufIterationJobAddEdges(a,b,i); } );
     }
     nextPrefSufIterationJobAddEdges(0,W-1,0);
     for( auto & p : parallelJobs ) p.join();
@@ -343,6 +350,9 @@ void GraphCreatorPrefSuf::updatePrexihHashJob(int a, int b, int thread_id) {
 void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thread_id) {
     VPII toRemove;
 
+//    static long long kmersChecked = 0;
+//    static long long kmersHashEquals = 0;
+
     for( int i=a; i<=b; i++ ){
         bool sufUpdated = false;
         if( alignFrom[i] ) sufUpdated = updateSuffixHash(i, currentPrefSufLength);
@@ -351,17 +361,21 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
         if( sufUpdated ){
             Kmer * suff = &suffixKmers[i];
-            int suffId = suff->read->getId(); // should be suffId == i
+            const int suffId = suff->read->getId(); // should be suffId == i
 
-            int b = suff->hash % prefixKmersBuckets;
+            const int b = suff->hash % prefixKmersBuckets;
 
-            int offset = suff->read->size() - currentPrefSufLength;
+            const int offset = suff->read->size() - currentPrefSufLength;
 
 
             for( Kmer * pref : prefixKmersInBuckets[b] ){
 
+//                kmersChecked++;
+
                 int prefId = pref->read->getId();
                 if( pref->hash == suff->hash && prefId != suffId  ){
+
+//                    kmersHashEquals++;
 
                     if( Read::calculateReadOverlap( suff->read, pref->read, offset ) < currentPrefSufLength ) continue; // this line here prohibits included alignment
 
@@ -388,16 +402,20 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 //                            }
                         }else{
 
-                            int C = prefId;
-                            int B = suffId;
+                            const int C = prefId;
+                            const int B = suffId;
                             G->lockNode(C);
 
-                            if( offset > 0 ) { // this can be checked - maybe i should not consider if offset = 0
+                            auto neighborhood_list = (*G)[C];// #TEST
+                            G->unlockNode(C);// #TEST
 
-                                for (PII &p : (*G)[C]) {
-                                    int A = p.first;
+                            if( offset > 0) { // this can be checked - maybe i should not consider if offset = 0
 
-                                    int offsetDiff = p.second - offset;
+//                                for (PII &p : (*G)[C]) {
+                                for (PII &p : neighborhood_list) { // #TEST
+                                    const int A = p.first;
+
+                                    const int offsetDiff = p.second - offset;
 
                                     if( offsetDiff < 0 ) continue; // this is here to prevent checking short edges that were added earlier
                                     if( A == B ) continue; // if A == B then there will be no edge (A,B) and thus i do not want to remove (A,C) from graph
@@ -407,16 +425,18 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                                     bool removeEdge = /* offsetDiff > 0 &&*/  Read::getRightOffset( (*reads)[A], (*reads)[B], offsetDiff) >= 0
 //                                                                                && ach->canAlign((*reads)[A], (*reads)[B], offsetDiff); // the constraint offsetDiff > 0 may perhaps be avoided
 //                                            &&  ( (*reads)[B]->getSequence().mismatch( (*reads)[A]->getSequence() << (offsetDiff<<1) ) >=  (int)(*reads)[A]->size() - offsetDiff   );
-                                            &&  ( (*reads)[B]->getSequence().mismatch( bs ) >=  (int)(*reads)[A]->size() - offsetDiff   );
                                             // this line above is the same condition as in ach->canAlign(), but done faster for no-error overlap
-;
-//                                            bool removeEdge = false;
+                                            &&  ( (*reads)[B]->getSequence().mismatch( bs ) >=  (int)(*reads)[A]->size() - offsetDiff   );
+
+
+
                                     if ( removeEdge )  {
                                         toRemove.push_back( {C, A} );
                                     }
                                 }
                             }
 
+                            G->lockNode(C); // #TEST
                             for( auto &p : toRemove ){
                                 G->removeDirectedEdge( p.first, p.second );
                             }
@@ -425,10 +445,6 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                             G->unlockNode(C);
 
-
-//                            G->lockNode(B);
-//                            if( outdegOverThreshold[B] < 250 ) outdegOverThreshold[B]++;
-//                            G->unlockNode(B);
                         }
 
                 }
@@ -436,6 +452,9 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
         }else alignFrom[i] = false;
 
     }
+
+//    DEBUG(kmersChecked);
+//    DEBUG(kmersHashEquals);
 
 }
 

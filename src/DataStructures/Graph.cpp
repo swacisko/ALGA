@@ -351,6 +351,7 @@ bool Graph::operator==(Graph &oth) {
 
 void Graph::retainOnlySmallestOffset() {
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double)size() / Params::THREADS);
     for( int i=1; i<Params::THREADS; i++ ){
@@ -413,7 +414,6 @@ bool Graph::contractPath(int a, int b, int c) {
         return false;
     }
 
-//    if( containsEdge(a,c) ) return true; // #TEST !! CAUTION!, just for test
 
     bool existsLongEdgeAC = containsEdgeLongerOrEqual(a,c, EDGE_LENGTH_THRESHOLD);
     if( existsLongEdgeAC ){
@@ -523,6 +523,7 @@ Graph Graph::getReverseGraph() {
     Graph GRev( size() );
 
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double)size() / Params::THREADS);
     for( int i=1; i<Params::THREADS; i++ ){
@@ -603,6 +604,7 @@ bool Graph::operator<(Graph &oth) {
 
 void Graph::sortEdgesByIncreasingOffset() {
     vector<std::thread> parallelJobs;
+    parallelJobs.reserve( Params::THREADS );
 
     int W = (int) ceil( (double)size() / Params::THREADS);
     for( int i=1; i<Params::THREADS; i++ ){
@@ -658,6 +660,14 @@ void Graph::clear() {
     }
     contractedEdges.clear();
     if(mutexes != nullptr ){ delete mutexes; mutexes = nullptr;}
+
+    for( auto* ptr : contractedEdgeDummy){
+        if(ptr != nullptr){
+            delete ptr;
+        }
+    }
+
+    vector<LPII*>().swap(contractedEdgeDummy);
 }
 
 LL Graph::countEdges() {
@@ -690,7 +700,6 @@ LL Graph::countEdgesJob(int a, int b, int thread_id) {
 
 
 void Graph::pruneGraph() {
-//    cerr << "in pruneGraph()" << endl;
 
     vector< std::future<void> > futures(Params::THREADS-1);
 
@@ -716,8 +725,6 @@ void Graph::pruneGraph() {
 }
 
 void Graph::reverseGraph() {
-//    V = getReverseGraph().V;
-
 
     VVPII rev(size());
     VI *inDegrees = getInDegrees();
@@ -750,9 +757,7 @@ void Graph::reverseGraph() {
     worker(0,W-1);
     for( auto & p : futures ) p.get();
 
-
     swap(V,rev);
-
 }
 
 void Graph::createContractedEdgesVector() {
