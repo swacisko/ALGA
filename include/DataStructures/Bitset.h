@@ -43,12 +43,18 @@ public:
     static VT bits; // bits[i] is the power 2^i. Bits[63] is -1 since this is 100000...
     static const TYPE ZEROS = (TYPE) 0;
     static const TYPE ONES = (~ZEROS);
-    static const int INF = ~0;
+    static const unsigned int INF = -1;
     static VT zerosOnes; // onesZeros[i] is the number that has i least significant bits set to 0, the rest are 1.
 
 
     Bitset(unsigned int size = 0); // creates a bitset with [size] bits accessible
     Bitset(const Bitset &orig);
+
+    /**
+     * Creates a bitset class for given set of bits.
+     * @param bits
+     */
+    Bitset(vector<bool> &bits);
 
     ~Bitset();
 
@@ -121,7 +127,7 @@ public:
 
     int lower_bound(
             int pos); // returns smallest index i >= pos such that i-th bit is 1. Works in O( d / BLOCK_SIZE ) where d is the distance between pos and first set bit after pos.
-    int upper_bound(int pos);; // returns smallest index i > pos such that i-th bit is 1.
+    unsigned int upper_bound(unsigned int pos);; // returns smallest index i > pos such that i-th bit is 1.
 
 
     VI getAllSetBits() const; // returns indexes of all bits that are 1. Works in O( (N/BLOCK_SIZE)  + #setBits )

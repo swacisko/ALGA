@@ -46,56 +46,6 @@ void initilizeStaticData() {
     Bitset::initializeStaticBlock();
 }
 
-
-void testConcurrency() {
-
-
-    int N = 60;
-    vector<Kmer> kmers(N);
-
-    int T = 6;
-
-    auto fun = [&kmers](int a, int b, int thr) {
-        for (int i = a; i <= b; i++) {
-            kmers[i].length++;
-            kmers[i].hash++;
-            kmers[i].indInRead *= 3;
-            kmers[i].indInRead %= 1'000'001;
-        }
-    };
-
-    int R = 10'000;
-    for (int r = 0; r < R; r++) {
-        vector<std::thread> parallelJobs;
-        parallelJobs.reserve(Params::THREADS);
-
-        int W = (int) ceil((double) N / T);
-        for (int i = 1; i < T; i++) {
-            int a = i * W;
-            int b = min((i + 1) * W - 1, (int) N - 1);
-
-            parallelJobs.push_back(thread([=] { fun(a, b, i); }));
-        }
-
-        fun(0, W - 1, 0);
-
-        for (auto &p : parallelJobs) p.join();
-    }
-
-    auto kmersConcurrent = kmers;
-    kmers = vector<Kmer>(N);
-    for (int r = 0; r < R; r++) fun(0, N - 1, 0);
-
-    for (int i = 0; i < N; i++) {
-        assert(kmers[i].length == kmersConcurrent[i].length);
-        assert(kmers[i].hash == kmersConcurrent[i].hash);
-        assert(kmers[i].indInRead == kmersConcurrent[i].indInRead);
-    }
-
-    cerr << "Concurrency passed" << endl;
-    exit(1);
-}
-
 class MemTestClass {
     char c;
     short t;
@@ -106,9 +56,6 @@ class MemTestClass {
 int main(int argc, char **argv) {
     initilizeStaticData();
 
-//    testConcurrency();
-
-//    Bitset::test();
     DEBUG(sizeof(MemTestClass));
     DEBUG(sizeof(std::mutex));
     DEBUG(sizeof(MILPII));
@@ -215,7 +162,7 @@ int main(int argc, char **argv) {
         ReadPreprocess prepr;
         VB prefReads = prepr.getPrefixReads();
         int cnt = 0;
-        for (int i = 0; i < READS->size(); i++) {
+        for (unsigned i = 0; i < READS->size(); i++) {
             if (prefReads[i]) {
                 Global::removeRead(i);
                 cnt++;
@@ -319,7 +266,9 @@ int main(int argc, char **argv) {
             Global::READS.resize(back_index);
             vector<Read *>(Global::READS.begin(), Global::READS.end()).swap(Global::READS);
             DEBUG(Global::READS.size());
-            for (int i = 0; i < Global::READS.size(); i++) Global::READS[i]->setId(i);
+            for (unsigned i = 0; i < Global::READS.size(); i++)
+                if (Global::READS[i] != nullptr)
+                    Global::READS[i]->setId(i);
         }
     }
 
@@ -359,7 +308,7 @@ int main(int argc, char **argv) {
         GraphCreator *graphCreator;
         cerr << "Creating GraphCreator" << endl;
         if (Params::ALGORITHM_IN_USE == Params::PREF_SUF_GRAPH_CREATION)
-            graphCreator = new GraphCreatorPrefSuf(READS, G);
+            graphCreator = new GraphCreatorPrefSuf(READS, G, true);
         else if (Params::USE_LI) graphCreator = new GraphCreatorLI(&Global::READS, &Global::GRAPH);
 
 
@@ -566,15 +515,13 @@ int main(int argc, char **argv) {
     }
 
 
-
-//        bool extendContigs = true;
-    bool extendContigs = Params::TPN.find("extend") != string::npos;
+    bool extendContigs = false;
     if (extendContigs) {
 
         vector<Read *> newReads;
         for (auto t : contigs) newReads.push_back(t);
 
-        int cnt = 0;
+        unsigned cnt = 0;
         for (auto t : contigs)
             newReads.push_back(
                     new Read(cnt++, MyUtils::getComplimentaryString(MyUtils::getReverse(t->getSequenceAsString()))));
@@ -635,11 +582,6 @@ int main(int argc, char **argv) {
                 int cnt = countPEConnections(i, d);
                 if (cnt < PE_THRESHOLD) {
                     toRemove.push_back({i, d});
-//                        cerr << "edge (" << i << "," << d << ") has only " << cnt << " connections - removing!" << endl;
-                } else {
-//                        cerr << endl;
-//                        cerr << "\t\tBINGO!" << "Edge (" << i << "," << d << ") has " << cnt << " connections!" << endl;
-//                        cerr << endl;
                 }
             }
         }
@@ -656,21 +598,14 @@ int main(int argc, char **argv) {
         auto contractDisjointPaths = [&M, &newGraph, &newGraphRev, &newReads, &contigsToRemove]() {
             VVI paths;
 
-            for (int i = 0; i < 2 * M; i++) {
+            for (unsigned i = 0; i < 2ll * M; i++) {
 
-//                    cerr << "i = " << i << endl;
                 if ((*newGraph)[i].size() != 1 || newGraphRev[i].size() > 1) continue;
-
-//                    cerr << "\tconsidering i = " << i << endl;
 
                 for (auto neigh : (*newGraph)[i]) {
                     int d = neigh.first;
 
-//                        cerr << "\td = " << d << endl;
-
                     if ((*newGraph)[d].size() > 1 || newGraphRev[d].size() > 1) continue;
-
-                    // now i extend contig i so that it contains also contig d
 
                     int offset = neigh.second;
                     int overlap = Read::calculateReadOverlap(newReads[i], newReads[d], offset);
@@ -682,20 +617,12 @@ int main(int argc, char **argv) {
                     int offx;
                     if (hasSuccessor) offx = (*newGraph)[d][0].second;
 
-
-//                        cerr << "i = " << i << "   d = " << d << "    x = " << x << endl;
-//                        cerr << "contig[i].size() = " << newReads[i]->size() << "   contigs[d].size() = " << newReads[d]->size() << endl;
-//                        cerr << "offset(i,d) = " << offset << endl;
-//                        if(hasSuccessor)cerr << "offset(d,x) = " << offx << endl << endl;
-
                     string s = newReads[i]->getSequenceAsString();
                     s = s.substr(0, s.size() - overlap);
                     s += newReads[d]->getSequenceAsString();
                     newReads[i]->modifySequence(s);
 
-
                     contigsToRemove.insert(d);
-
 
                     if (hasSuccessor) {
                         (*newGraph).pushDirectedEdge(i, x, offset + offx);
@@ -707,7 +634,6 @@ int main(int argc, char **argv) {
 
                     (*newGraph).removeDirectedEdge(i, d);
                     newGraphRev.removeDirectedEdge(d, i);
-
                 }
             }
         };
@@ -730,7 +656,6 @@ int main(int argc, char **argv) {
 
 
     bool trimContigs = true;
-//        bool trimContigs = Params::TPN.find( "trim" ) != string::npos;
     if (trimContigs) {
 
 

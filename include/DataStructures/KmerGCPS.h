@@ -21,7 +21,6 @@ public:
     KmerGCPS(unsigned id,
              unsigned hash); // creates Kmer for given read. This Kmer starts at the position ind and has given length
 
-//    Read *read; // pointer to the read this Kmer comes from
     unsigned read_id; // id of the read this kmer comes from
     unsigned long long hash;
 

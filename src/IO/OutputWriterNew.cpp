@@ -160,7 +160,7 @@ vector<Contig *> OutputWriterNew::filterContigs() {
 
     int progressCounter = 0;
     int ile = 0;
-    int id = 0;
+    unsigned id = 0;
 
     for (Contig *ctg : contigs) {
         ile++;

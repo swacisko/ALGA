@@ -51,26 +51,29 @@ void Read::clear() {
 
 void Read::createSequence(string &s) {
     sequence = Bitset((int) (s.size()) << 1);
-    for (int i = 0; i < s.size(); i++) {
 
+    for (unsigned i = 0; i < s.size(); i++) {
 
-        if (s[i] == 'A') {
-            //    sequence->set( i<<1, false );    // i dont need to set this, since in sequence it is initialized to 0.
-            //    sequence->set( (i<<1)+1, false ); // i dont need to set this, since in sequence it is initialized to 0.
-        } else if (s[i] == 'C') {
-            sequence.set(i << 1, true);
-            //    sequence->set( (i<<1)+1, false ); // i dont need to set this, since in sequence it is initialized to 0.
-        } else if (s[i] == 'G') {
-            //sequence->set( i<<1, false );    // i dont need to set this, since in sequence it is initialized to 0.
-            sequence.set((i << 1) + 1, true);
-        } else if (s[i] == 'T') {
-            sequence.set(i << 1, true);
-            sequence.set((i << 1) + 1, true);
-        } else {        // if N then i leave it as A
-            //  if( rand()%2 )sequence->set( i<<1, true );
-            //  if( rand()%2 )sequence->set( (i<<1)+1, true );
-            sequence.set(i << 1, true);
-//          containsNBp = true;
+        switch (s[i]) {
+            case 'A': {
+                break;
+            }
+            case 'C': { // C = 01
+                sequence.set(i << 1, true);
+                break;
+            }
+            case 'G': { // G = 10
+                sequence.set((i << 1) + 1, true);
+                break;
+            }
+            case 'T': { // T = 11
+                sequence.set(i << 1, true);
+                sequence.set((i << 1) + 1, true);
+                break;
+            }
+            default: { // N = 00
+//                sequence.set(i << 1, true);
+            }
         }
 
     }
@@ -99,7 +102,6 @@ vector<Kmer> Read::getKmers(int length) {
         if (factor >= Params::MAX_HASH_CONSIDERED) factor %= Params::MAX_HASH_CONSIDERED;
     }
 
-//    vector<Kmer> kmers( 1, Kmer(this,p,hash, length) );
 
     vector<Kmer> kmers;
     kmers.emplace_back(this, p, hash, length);
@@ -116,7 +118,6 @@ vector<Kmer> Read::getKmers(int length) {
 
         p++;
         q++;
-//        kmers.push_back( Kmer( this,p,hash, length ) );
         kmers.emplace_back(this, p, hash, length);
     }
 
@@ -126,15 +127,12 @@ vector<Kmer> Read::getKmers(int length) {
 
 
 vector<Params::KMER_HASH_TYPE> Read::getKmerHashes(int kmerLength) {
-
     vector<Kmer> kmers = getKmers(kmerLength);
     vector<Params::KMER_HASH_TYPE> hashes;
     for (Kmer k : kmers) hashes.push_back(k.hash);
     kmers.clear();
-//    delete kmers;
-//    kmers = 0;
 
-    return hashes;
+    return std::move(hashes);
 }
 
 
@@ -151,13 +149,8 @@ string Read::getSequenceAsString() {
     return s;
 }
 
-//bool Read::operator==(const Read& oth) {
-//    return (sequence == oth.sequence);
-//}
-
-
 ostream &operator<<(ostream &str, Read &r) {
-    str << r.getSequenceAsString() << "   Read: " << setw(3) << r.id << "   length: " << r.size();
+    str << r.getSequenceAsString() << "   Read: " << setw(5) << r.id << "   length: " << r.size();
     return str;
 }
 

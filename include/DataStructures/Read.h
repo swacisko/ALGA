@@ -59,9 +59,9 @@ public:
 
     vector<Kmer> getKmers(int length);
 
-    int getId() { return id; }
+    unsigned int getId() { return id; }
 
-    void setId(int val) { id = val; }
+    void setId(unsigned int val) { id = val; }
 
     string getSequenceAsString();
 
@@ -108,7 +108,8 @@ public:
 
 protected:
     Bitset sequence;
-    int id;
+//    int id;
+    unsigned id;
 
     void createSequence(string &s);
 

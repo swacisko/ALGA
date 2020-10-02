@@ -98,8 +98,8 @@ bool Graph::removeDirectedEdge(int a, int b) {
     if (!contractedEdges.empty()) contractedEdges[a]->erase(b);
 
     bool removed = false;
-    int p = V[a].size() - 1;
-    for (int i = V[a].size() - 1; i >= 0; i--) {
+    int p = (int) V[a].size() - 1;
+    for (int i = (int) V[a].size() - 1; i >= 0; i--) {
         if (V[a][i].first == b) {
             swap(V[a][i], V[a][p]);
 
@@ -108,6 +108,8 @@ bool Graph::removeDirectedEdge(int a, int b) {
             removed = true;
         }
     }
+
+    if (V[a].empty()) VPII().swap(V[a]); // clear space of empty vector
 
     return removed;
 }
@@ -119,16 +121,6 @@ int Graph::getWeight(int i, int k) {
 
 VI *Graph::getInDegrees() {
     VI *inDeg = new VI(size(), 0);
-
-//    for( int i=0; i<size(); i++ ){
-//        VPII neigh = getNeighbors(i);
-//        for(auto p : neigh){
-//            (*inDeg)[p.first]++;
-//        }
-//    }
-//    return inDeg;
-
-
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -555,7 +547,7 @@ void Graph::getReverseGraphJob(int a, int b, int thread_id, Graph &GRev) {
 
 void Graph::writeNonisolatedNodes(int a, int b) {
     VI *indeg = getInDegrees();
-    for (int i = a; i <= min(b, size() - 1); i++) {
+    for (int i = a; i <= min(b, (int) size() - 1); i++) {
         VPII neigh = getNeighbors(i);
         if ((*indeg)[i] > 0 || neigh.size() > 0) {
             cerr << i << ": ";
@@ -734,10 +726,14 @@ void Graph::pruneGraph() {
 void Graph::reverseGraph() {
 
     VVPII rev(size());
-    /*VI *inDegrees = getInDegrees();
-    for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
-    delete inDegrees;
-    inDegrees = nullptr;*/
+
+    const bool useIndegInitialization = false;
+    if (useIndegInitialization) {
+        VI *inDegrees = getInDegrees();
+        for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
+        delete inDegrees;
+        inDegrees = nullptr;
+    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -764,22 +760,23 @@ void Graph::reverseGraph() {
     worker(0, W - 1);
     for (auto &p : futures) p.get();
 
+
     swap(V, rev);
+
+    if (!useIndegInitialization) {
+        pruneGraph();
+    }
 }
 
 void Graph::createContractedEdgesVector() {
     contractedEdges = VMILPII(size());
     VI *indeg = getInDegrees();
 
-    int cnt = 0;
     for (int i = 0; i < size(); i++) {
         if (V[i].size() > 0 || (*indeg)[i] > 0) {
             contractedEdges[i] = new MILPII();
-            cnt++;
         }
     }
-
-//    cerr << "Created " << cnt << " out of " << size() << " MIPLII objects, each of size in bytes: " << sizeof(MILPII) << endl;
 
     delete indeg;
     indeg = nullptr;
@@ -787,9 +784,14 @@ void Graph::createContractedEdgesVector() {
 
 VVPII Graph::getReverseGraphNeighborhoods() {
     VVPII rev(size());
-//    VI* indeg = getInDegrees();
-//    for( int i=0; i<size(); i++ ) rev[i].reserve( (*indeg)[i] + 1 );
-//    delete indeg; indeg = nullptr;
+
+    const bool useIndegInitialization = false;
+    if (useIndegInitialization) {
+        VI *indeg = getInDegrees();
+        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i] + 1);
+        delete indeg;
+        indeg = nullptr;
+    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -813,6 +815,22 @@ VVPII Graph::getReverseGraphNeighborhoods() {
     }
     worker(0, W - 1);
     for (auto &p : futures) p.get();
+
+    if (!useIndegInitialization) {
+        auto worker2 = [=, &rev](int a, int b) {
+            for (int j = a; j <= b; j++) {
+                VPII(rev[j]).swap(rev[j]);
+            }
+        };
+
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) size() - 1);
+            futures[i - 1] = std::async(std::launch::async, worker2, a, b);
+        }
+        worker2(0, W - 1);
+        for (auto &p : futures) p.get();
+    }
 
     return std::move(rev);
 }

@@ -79,35 +79,6 @@ VB ReadPreprocess::getPrefixReads() {
     TimeMeasurer::stopMeasurement("LCP");
     return markedToRemove[0];
 
-
-
-
-    // old version - not memory efficient
-    /*vector<short> lcp = getLCP(reads);
-VI res;
-res.reserve( reads.size() >> 3 );
-for( int i=0; i<reads.size()-1; i++ ){
-
-    if( Params::REMOVE_PREF_READS_TYPE == Params::PREF_READS_ONLY_DUPLICATES ){
-        if( lcp[i] == reads[i]->size() && reads[i]->size() == reads[i+1]->size() ){
-            res.push_back( reads[i]->getId() );
-        }
-    }
-    else if( Params::REMOVE_PREF_READS_TYPE == Params::PREF_READS_ALL_PREFIX_READS && lcp[i] == reads[i]->size() ){
-        res.push_back( reads[i]->getId() );
-
-        if( reads[i]->size() < reads[i+1]->size() ){
-            res.push_back( reads[i]->getIdOfCompRevRead() ); // comprev read is a proper suffix of another read, we remove it as well.
-        }
-
-    }
-}
-
-for( int i : res ) markedToRemove[i] = true;
-return markedToRemove;*/
-
-//    return res;
-
 }
 
 vector<Read *> ReadPreprocess::getSortedReads() {
@@ -118,7 +89,7 @@ vector<Read *> ReadPreprocess::getSortedReads() {
     // THE CODE BELOW IS PARALLEL SORTING USING FIRST BUCKET SORT for first block of each biset, then usual sort for each bucket done in every thread separately.
     // creating buckets with reads
     vector<vector<Read *> > buckets(Params::THREADS);
-    int N = Global::READS.size();
+    unsigned N = Global::READS.size();
     int MOD = (1 << 11);
     for (Read *r : Global::READS) {
         if (r == nullptr) continue;
@@ -141,13 +112,6 @@ vector<Read *> ReadPreprocess::getSortedReads() {
 
     cerr << "buckets created" << endl;
 
-//    cerr << "buckets sizes: "; for(auto v : buckets) cerr << v.size() << " "; cerr << endl;
-//    for( int i=0; i<buckets.size(); i++ ){
-//        LL h = 0;
-//        for( auto d : buckets[i] ) h += d->getId();
-//        cerr << "hash of bucket #" << i << ":  " << h << endl;
-//    }
-
 
     // function to sort a single bucket
     auto sortFun = [&buckets](int i) {
@@ -159,8 +123,12 @@ vector<Read *> ReadPreprocess::getSortedReads() {
             while (p < m) {
                 if (b1->getBlock(p) == b2->getBlock(p)) p++;
                 else {
-                    int ind = __builtin_ctzll(b1->getBlock(p) ^ b2->getBlock(p));
+                    int ind;
+                    if (sizeof(Bitset::TYPE) == 8) ind = __builtin_ctzll(b1->getBlock(p) ^ b2->getBlock(p));
+                    else ind = __builtin_ctz(b1->getBlock(p) ^ b2->getBlock(p));
                     return (*b1)[p * Bitset::BLOCK_SIZE + ind] < (*b2)[p * Bitset::BLOCK_SIZE + ind];
+
+//                    assert( b1->getBlock(p) ^ b2->getBlock(p) != 0 ); // #TEST
                 }
             }
 
@@ -193,7 +161,7 @@ vector<Read *> ReadPreprocess::getSortedReads() {
 
 
     TimeMeasurer::stopMeasurement("SORTING");
-    return reads;
+    return std::move(reads);
 }
 
 vector<short> ReadPreprocess::getLCP(vector<Read *> &reads) {

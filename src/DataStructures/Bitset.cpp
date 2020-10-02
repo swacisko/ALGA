@@ -38,6 +38,24 @@ Bitset::Bitset(unsigned int size) : N(size) {
 
 }
 
+Bitset::Bitset(vector<bool> &bits) : Bitset(bits.size()) {
+    TYPE t = 0;
+    unsigned ind = 0;
+    for (unsigned i = 0; i < bits.size(); i++) {
+        if (bits[i]) t |= ((TYPE) 1 << IND_IN_BL(i));
+
+        if (IND_IN_BL(i + 1) == 0) {
+            V[ind] = t;
+            t = 0;
+            ind++;
+        }
+    }
+
+    if (t != ZEROS) {
+        V[ind] = t;
+    }
+}
+
 Bitset::Bitset(const Bitset &oth) {
 //    blocks = oth.blocks;
     if (size() != oth.size()) {
@@ -544,7 +562,7 @@ int Bitset::lower_bound(int pos) {
     return INF;
 }
 
-int Bitset::upper_bound(int pos) {
+unsigned int Bitset::upper_bound(unsigned int pos) {
     return lower_bound(pos + 1);
 }
 

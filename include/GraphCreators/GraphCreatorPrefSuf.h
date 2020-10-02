@@ -16,7 +16,7 @@
  */
 class GraphCreatorPrefSuf : public GraphCreator {
 public:
-    GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G);
+    GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool remove_isolated_reads = false);
 
     virtual ~GraphCreatorPrefSuf();
 
@@ -26,10 +26,13 @@ public:
 
     static void test();
 
-//    static const unsigned MAX_HASH_KMERGCPS = 500'000'003;
 
 private:
 
+    /**
+     * If true, then isolated reads will be removed from graph before reversing the graph. It is to reduce memory peak.
+     */
+    bool removeIsolatedReadsBeforeReversingGraph;
 
     void writeState();
 
@@ -60,10 +63,6 @@ private:
 
     void putKmersIntoBucketsJob(int a, int b, int thread_id);
 
-    /*
-     * suffixModulator[i] is the hash of i-th suffix modulo BUCKET_MODULATOR value.
-     */
-//    vector< long long > suffixModulatorHash;
     /*
      * This is the vector that keeps prefixes in buckets. prefixes from prefixKmers are kept in these buckets as pointers.
      */

@@ -12,7 +12,10 @@
 #include <functional>
 
 
-GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G) : GraphCreator(reads, G), maxReadLength(0) {
+GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool remove_isolated_reads) : GraphCreator(
+        reads, G), maxReadLength(0),
+                                                                                                        removeIsolatedReadsBeforeReversingGraph(
+                                                                                                                remove_isolated_reads) {
     calculateMaxReadLength();
 //    smallOverlapEdges = VVPII(G->size());
 
@@ -84,7 +87,7 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
 
     clear();
-//    if( reads->size() > 1e6 ) Global::removeIsolatedReads();
+    if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
 
     G->reverseGraph();
 

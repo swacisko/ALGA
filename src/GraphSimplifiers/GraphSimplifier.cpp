@@ -333,26 +333,22 @@ void GraphSimplifier::removeShortParallelPathsJob(int a, int b, int maxOffset, i
         }
     }
 
-    /*if( thread_id == 0 )*/ cerr << "There were " << pathsConsidered
+    cerr << "There were " << pathsConsidered
                                   << " paths considered in removeShortParallelPaths in thread " << thread_id << endl;
 }
 
 
 void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int thread_id) {
 
-
     vector<pair<pair<int, int>, int> > edges;  // each entry is an edge of the form ( (a,b), offset )
     VI neigh(1, beg);
 
-
     unordered_map<int, int> dst, par;
 
-//    dst[thread_id][beg] = 0;
     dst[beg] = 0;
     for (int i = 0; i < neigh.size(); i++) {
         int a = neigh[i];
 
-//        if( was[thread_id][a] || dst[thread_id][a] > maxOffset ) continue;
         if (was[thread_id][a] || dst[a] > maxOffset) continue;
 
         was[thread_id][a] = true;
@@ -362,7 +358,6 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
             int b = (*G)[a][k].first;
             int offset = G->getWeight(a, k);
 
-//            if( dst[thread_id][b] != -1 && dst[thread_id][b] < dst[thread_id][a] + offset ) continue;
             if (dst.count(b) > 0 && dst[b] < dst[a] + offset) continue;
 
 
@@ -387,9 +382,7 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
 
 
 
-//            dst[thread_id][b] = dst[thread_id][a] + offset;
             dst[b] = dst[a] + offset;
-//            dst[b] = min( dst[b], dst[a] + offset );
 
             edges.push_back({{a, b}, offset});
             neigh.push_back(b);
@@ -422,22 +415,15 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
         G->pushDirectedEdge(a.first.first, a.first.second, a.second);  // FAST VERSION
         G->unlockNode(a.first.first);
 
-//        par[thread_id][a.first.second] = a.first.first;
         par[a.first.second] = a.first.first;
 
         was[thread_id][a.first.second] = true;
     }
 
-
-//    for( auto &a : edges ) par[thread_id][ a.first.second ] = -1; // equivalent to par.clear();
     par.clear();
 
     for (auto &a : edges) was[thread_id][a.first.second] = false; // equivalent to was.clear()
 
-//    for( int i=0; i<neigh.size(); i++ ){ // equivalent to dst.clear();
-//        int a = neigh[i];
-//        dst[thread_id][a] = -1;
-//    }
     dst.clear();
 
     neigh.clear();
@@ -467,13 +453,6 @@ int GraphSimplifier::removeDanglingBranches(int maxOffset) {
 
             return branchesRemoved;
         }, a, b, i);
-
-//        futures[i-1] = std::async( std::launch::async, [=,&edgesToRemove](int a, int b, int i){
-//            int branchesRemoved = 0;
-//
-//
-//            return branchesRemoved;
-//        } ), a,b,i);
 
     }
 
@@ -532,11 +511,9 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
 
     unordered_map<int, int> dst, par;
 
-//    par[thread_id][beg] = beg;
     par[beg] = beg;
     for (int i = 0; i < (*G)[beg].size(); i++) {
         int v = (*G)[beg][i].first;
-//        par[thread_id][ v ] = beg;
         par[v] = beg;
 
         was[thread_id][v] = true;
@@ -554,7 +531,6 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
             was[thread_id][son] = true;
             neigh.push_back(son);
 
-//            par[thread_id][son] = v;
             par[son] = v;
 
             offset += G->getWeight(v, 0);
@@ -589,10 +565,8 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
         while (v != beg) {
 
             branchesRemoved++;
-//            edgesToRemove.push_back( { par[thread_id][v], v } );
             edgesToRemove.push_back({par[v], v});
 
-//            v = par[thread_id][v];
             v = par[v];
 
             if (infiniteLoopCheck++ > 1000000000) {
@@ -604,7 +578,6 @@ int GraphSimplifier::removeDanglingBranchesFromNode(int beg, int maxOffset, vect
 
     for (int a : neigh) {
         was[thread_id][a] = false;
-//        par[thread_id][a] = -1;
     }
     par.clear();
 
@@ -921,7 +894,6 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
             if (neighArev.count(Read::getIdOfCompRevRead(Read::getIdOfPairedRead(x)))) {
                 cnt++;
                 if (cnt >= THRESHOLD) return false;
-//                return false;
             }
         }
 

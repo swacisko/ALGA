@@ -57,16 +57,16 @@ void InputReader::readInput() {
     if (Params::ADD_PAIRED_READS && Params::INPUT_FILE_TYPE != Params::PFASTA) {
         if (readPairedReads()) {
             vector<Read *> reads(Global::READS.size());
-            int N = Global::READS.size();
+            unsigned N = Global::READS.size();
             if (Params::ADD_COMP_REV_READS) {
-                for (int i = 0; 4 * i < Global::READS.size(); i++) {
+                for (unsigned i = 0; 4ll * i < (LL) Global::READS.size(); i++) {
                     reads[i << 2] = Global::READS[i << 1];
                     reads[(i << 2) + 1] = Global::READS[(i << 1) + 1];
                     reads[(i << 2) + 2] = Global::READS[(N >> 1) + (i << 1)];
                     reads[(i << 2) + 3] = Global::READS[(N >> 1) + (i << 1) + 1];
                 }
             } else {
-                for (int i = 0; 2 * i < Global::READS.size(); i++) {
+                for (unsigned i = 0; 2ll * i < (LL) Global::READS.size(); i++) {
                     reads[i << 1] = Global::READS[i];
                     reads[(i << 1) + 1] = Global::READS[(N >> 1) + i];
                 }
@@ -79,12 +79,12 @@ void InputReader::readInput() {
         }
     }
 
-    for (int i = 0; i < Global::READS.size(); i += 2) { // changing positions of read R and Rrevcomp
-        swap(Global::READS[i], Global::READS[i + 1]);
+    for (unsigned i = 0; i < Global::READS.size(); i += 2) { // changing positions of read R and Rrevcomp
+        swap(Global::READS[i], Global::READS[i + 1]); // will it swap anything?
     }
 
 
-    for (int i = 0; i < Global::READS.size(); i++) { // changing id to the new order.
+    for (unsigned i = 0; i < Global::READS.size(); i++) { // changing id to the new order.
         if (Global::READS[i] != nullptr) Global::READS[i]->setId(i);
     }
 
@@ -97,7 +97,7 @@ void InputReader::readInput() {
     int L = 0;
     double sumLength = 0;
     int cnt = 0;
-    for (int i = 0; i < Global::READS.size(); i++) { // some statistics
+    for (unsigned i = 0; i < Global::READS.size(); i++) { // some statistics
         if (Global::READS[i] == nullptr) continue;
         if (Global::READS[i]->size() == 0) {
             cerr << "read of size 0: " << endl << (*Global::READS[i]) << endl;
