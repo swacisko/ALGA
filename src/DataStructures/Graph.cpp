@@ -97,7 +97,8 @@ bool Graph::removeDirectedEdge(int a, int b) {
 //    if( !contractedEdges.empty() ) contractedEdges[a].erase(b);
     if (!contractedEdges.empty()) {
 //        contractedEdges[a]->erase(b);
-        auto it = findContractedEdge(a, b);
+//        auto it = findContractedEdge(a, b);
+        removeContractedEdge(a, b);
     }
 
     bool removed = false;
@@ -299,8 +300,8 @@ void Graph::serializeGraph(string fileName) {
 vector<pair<int, int>> Graph::getNeighbors(int id) {
     vector<pair<int, int> > neigh;
     neigh = V[id];
-//    return std::move(neigh);
-    return neigh;
+    return std::move(neigh);
+//    return neigh;
 }
 
 
@@ -451,15 +452,25 @@ bool Graph::contractPath(int a, int b, int c) {
         addContractedEdgeOrReplace(a, c, LPII());
 
 
-        LPII *l = &findContractedEdge(a, c)->second; // pointer to the list where we will splice
+        auto it = findContractedEdge(a, c);
+        if (it == contractedEdges[a]->end()) addContractedEdgeOrReplace(a, c, LPII());
+        LPII *l;
 
         // apppending edge a->b to the list.
 //        (*contractedEdges[a])[c].splice((*contractedEdges[a])[c].end(), (*contractedEdges[a])[b]);
-        l->splice(l->end(), findContractedEdge(a, b)->second);
+        {
+            l = &findContractedEdge(a, c)->second; // pointer to the list where we will splice
+            it = findContractedEdge(a, b);
+            l->splice(l->end(), it->second);
+        }
 
         // appending edge b->c to the list.
 //        (*contractedEdges[a])[c].splice((*contractedEdges[a])[c].end(), (*contractedEdges[b])[c]);
-        l->splice(l->end(), findContractedEdge(b, c)->second);
+        {
+            l = &findContractedEdge(a, c)->second;
+            it = findContractedEdge(b, c);
+            l->splice(l->end(), it->second);
+        }
 
         removeDirectedEdge(a, b);
         clearNode(b);
@@ -740,13 +751,13 @@ void Graph::reverseGraph() {
 
     VVPII rev(size());
 
-    const bool useIndegInitialization = false;
-    if (useIndegInitialization) {
-        VI *inDegrees = getInDegrees();
-        for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
-        delete inDegrees;
-        inDegrees = nullptr;
-    }
+//    const bool useIndegInitialization = true;
+//    if (useIndegInitialization) {
+    VI *inDegrees = getInDegrees();
+    for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
+    delete inDegrees;
+    inDegrees = nullptr;
+//    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -776,9 +787,9 @@ void Graph::reverseGraph() {
 
     swap(V, rev);
 
-    if (!useIndegInitialization) {
-        pruneGraph();
-    }
+//    if (!useIndegInitialization) {
+//        pruneGraph();
+//    }
 }
 
 void Graph::createContractedEdgesVector() {

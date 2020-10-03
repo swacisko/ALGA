@@ -600,9 +600,9 @@ int GraphSimplifier::removeDanglingUpperBranches(int maxOffset) {
 bool GraphSimplifier::contractPathNodes() {
     TimeMeasurer::startMeasurement("GraphSimplifier_contractPathNodes");
 
-//    Graph GRev = G->getReverseGraph();
+    Graph GRev = G->getReverseGraph();
 
-    VVPII GRev = G->getReverseGraphNeighborhoods();
+//    VVPII GRev = G->getReverseGraphNeighborhoods();
     /**
      * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
      */
@@ -666,13 +666,13 @@ bool GraphSimplifier::contractPathNodes() {
         if (G->contractPath(a, b, c)) {
             anyContractionDone = true;
             contractionsDone++;
-//            GRev.removeDirectedEdge(b, a);
-//            GRev.removeDirectedEdge(c, b);
-//            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
+            GRev.removeDirectedEdge(b, a);
+            GRev.removeDirectedEdge(c, b);
+            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
 
-            removeDirectedEdge(b, a);
-            removeDirectedEdge(c, b);
-            addDirectedEdge(c, a, G->findWeight(a, c));
+//            removeDirectedEdge(b, a);
+//            removeDirectedEdge(c, b);
+//            addDirectedEdge(c, a, G->findWeight(a, c));
         }
 
         if ((*G)[a].size() == 1 && GRev[a].size() == 1) {
