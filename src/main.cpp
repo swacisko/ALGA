@@ -58,7 +58,8 @@ int main(int argc, char **argv) {
 
     DEBUG(sizeof(MemTestClass));
     DEBUG(sizeof(std::mutex));
-    DEBUG(sizeof(MILPII));
+//    DEBUG(sizeof(MILPII));
+    DEBUG(sizeof(VILPII));
     DEBUG(sizeof(LPII));
     DEBUG(sizeof(PII));
     DEBUG(sizeof(vector<int>));

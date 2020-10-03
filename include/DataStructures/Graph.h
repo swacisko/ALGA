@@ -41,8 +41,11 @@ typedef vector<PII> VPII;
 typedef vector<VPII> VVPII;
 
 typedef list<PII> LPII;
-typedef map<int, LPII> MILPII;
-typedef vector<MILPII *> VMILPII;
+//typedef map<int, LPII> MILPII;
+//typedef vector<MILPII *> VMILPII;
+
+typedef vector<pair<int, LPII> > VILPII;
+typedef vector<VILPII *> VVILPII;
 
 
 class Graph {
@@ -321,7 +324,29 @@ private:
     /**
      * contractedEdges[i] is a map that contains id of a neighbor as key and list of nodes on the contracted edge from i to that neighbor.
      */
-    VMILPII contractedEdges;
+//    VMILPII contractedEdges;
+    VVILPII contractedEdges;
+
+    /**
+     * Function returns an iterator to the contractedEdges[a] such that it->first == b, or contractedEdges[a].end() if b does not occur as a key
+     * @param a
+     * @param b
+     * @return
+     */
+    VILPII::iterator findContractedEdge(unsigned a, unsigned b);
+
+    /**
+     * Removes contracted edge (a,b) if present in contractedEdges
+     * @param a
+     * @param b
+     * @return true if edge was removed, false otherwise
+     */
+    bool removeContractedEdge(unsigned a, unsigned b);
+
+    /*
+     * Functions adds or replaced the contracted edge (a,b) with given path e
+     */
+    void addContractedEdgeOrReplace(unsigned a, unsigned b, LPII e);
 
     vector<LPII *> contractedEdgeDummy;
 
