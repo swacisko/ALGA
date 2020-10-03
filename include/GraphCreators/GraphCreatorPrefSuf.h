@@ -43,10 +43,12 @@ private:
      * This is an array of prefixes of all reads. prefixKemrs[i] is the current prefix of read with id i
      */
 //    vector<Kmer> prefixKmers;
-    vector<KmerGCPS> prefixKmers;
+//    vector<KmerGCPS> prefixKmers;
+    vector<unsigned long long> prefixKmers; // just the hash values of kmers
 
 //    vector<Kmer> suffixKmers;
-    vector<KmerGCPS> suffixKmers;
+//    vector<KmerGCPS> suffixKmers;
+    vector<unsigned long long> suffixKmers;
 
     /**
      * This is used to keep only Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN edges with small overlap.
@@ -67,7 +69,8 @@ private:
      * This is the vector that keeps prefixes in buckets. prefixes from prefixKmers are kept in these buckets as pointers.
      */
 //    vector<vector<Kmer *> > prefixKmersInBuckets;
-    vector<vector<KmerGCPS *> > prefixKmersInBuckets;
+//    vector<vector<KmerGCPS *> > prefixKmersInBuckets;
+    vector<vector<unsigned> > prefixKmersInBuckets; // just the ids of reads, from which kmers are taken
     int prefixKmersBuckets; // this is the number of buckets.
 
     void calculateMaxReadLength();

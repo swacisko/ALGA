@@ -36,11 +36,14 @@ GraphCreatorPrefSuf::~GraphCreatorPrefSuf() {
 }
 
 void GraphCreatorPrefSuf::clear() {
-    vector<KmerGCPS>().swap(prefixKmers);
+//    vector<KmerGCPS>().swap(prefixKmers);
+    vector<unsigned long long>().swap(prefixKmers);
 
-    vector<KmerGCPS>().swap(suffixKmers);
+//    vector<KmerGCPS>().swap(suffixKmers);
+    vector<unsigned long long>().swap(suffixKmers);
 
-    vector<vector<KmerGCPS *> >().swap(prefixKmersInBuckets);
+//    vector<vector<KmerGCPS *> >().swap(prefixKmersInBuckets);
+    vector<vector<unsigned> >().swap(prefixKmersInBuckets);
 
 }
 
@@ -94,11 +97,14 @@ void GraphCreatorPrefSuf::createInitialState() {
     prefixKmers.reserve(G->size());
     suffixKmers.reserve(G->size());
 
-    KmerGCPS dummyKmer((unsigned) (-1), 0); // -1 is just the maximal unsigned value
+//    KmerGCPS dummyKmer((unsigned) (-1), 0); // -1 is just the maximal unsigned value
+    unsigned long long dummyKmer = (unsigned long long) (-1); // -1 is just the maximal unsigned value
     for (unsigned i = 0; i < G->size(); i++) {
         if ((*reads)[i] != nullptr) {
-            prefixKmers.emplace_back(i, 0);
-            suffixKmers.emplace_back(i, 0);
+//            prefixKmers.emplace_back(i, 0);
+            prefixKmers.emplace_back(0);
+//            suffixKmers.emplace_back(i, 0);
+            suffixKmers.emplace_back(0);
         } else {
             prefixKmers.push_back(dummyKmer);
             suffixKmers.push_back(dummyKmer);
@@ -106,7 +112,8 @@ void GraphCreatorPrefSuf::createInitialState() {
     }
 
     prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3));
-    prefixKmersInBuckets = vector<vector<KmerGCPS *> >(prefixKmersBuckets);
+//    prefixKmersInBuckets = vector<vector<KmerGCPS *> >(prefixKmersBuckets);
+    prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);
 
     vector<std::thread> parallelJobs;
     parallelJobs.reserve(Params::THREADS);
@@ -168,17 +175,22 @@ void GraphCreatorPrefSuf::createInitialStateJob(int a, int b, int thread_id) {
 bool GraphCreatorPrefSuf::updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor) {
     if (currentPrefSufLength > (*reads)[id]->size()) return false;
 
-    prefixKmers[id].hash += (*(*reads)[id])[currentPrefSufLength - 1] * prefHashFactor;
-    if (prefixKmers[id].hash >= Params::MAX_HASH_CONSIDERED) prefixKmers[id].hash %= Params::MAX_HASH_CONSIDERED;
+//    prefixKmers[id].hash += (*(*reads)[id])[currentPrefSufLength - 1] * prefHashFactor;
+    prefixKmers[id] += (*(*reads)[id])[currentPrefSufLength - 1] * prefHashFactor;
+//    if (prefixKmers[id].hash >= Params::MAX_HASH_CONSIDERED) prefixKmers[id].hash %= Params::MAX_HASH_CONSIDERED;
+    if (prefixKmers[id] >= Params::MAX_HASH_CONSIDERED) prefixKmers[id] %= Params::MAX_HASH_CONSIDERED;
     return true;
 }
 
 bool GraphCreatorPrefSuf::updateSuffixHash(int id, int currentPrefSufLength) {
     if (currentPrefSufLength > (*reads)[id]->size() - Params::MIN_OFFSET_FOR_ALIGNMENT) return false;
 
-    suffixKmers[id].hash <<= 2;
-    suffixKmers[id].hash += (*(*reads)[id])[(*reads)[id]->size() - currentPrefSufLength];
-    if (suffixKmers[id].hash >= Params::MAX_HASH_CONSIDERED) suffixKmers[id].hash %= Params::MAX_HASH_CONSIDERED;
+//    suffixKmers[id].hash <<= 2;
+    suffixKmers[id] <<= 2;
+//    suffixKmers[id].hash += (*(*reads)[id])[(*reads)[id]->size() - currentPrefSufLength];
+    suffixKmers[id] += (*(*reads)[id])[(*reads)[id]->size() - currentPrefSufLength];
+//    if (suffixKmers[id].hash >= Params::MAX_HASH_CONSIDERED) suffixKmers[id].hash %= Params::MAX_HASH_CONSIDERED;
+    if (suffixKmers[id] >= Params::MAX_HASH_CONSIDERED) suffixKmers[id] %= Params::MAX_HASH_CONSIDERED;
 
     return true;
 }
@@ -264,16 +276,19 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 void GraphCreatorPrefSuf::removeKmersFromBucketsJob(int a, int b, int thread_id) {
     for (int i = a; i <= b; i++) {
-        vector<KmerGCPS *>().swap(prefixKmersInBuckets[i]);
+//        vector<KmerGCPS *>().swap(prefixKmersInBuckets[i]);
+        vector<unsigned>().swap(prefixKmersInBuckets[i]);
     }
 }
 
 void GraphCreatorPrefSuf::putKmersIntoBucketsJob(int a, int b, int thread_id) {
-    for (int i = a; i <= b; i++) {
+    for (unsigned i = a; i <= b; i++) {
         if (!alignTo[i]) continue;
-        int ind = prefixKmers[i].hash % prefixKmersBuckets;
+//        int ind = prefixKmers[i].hash % prefixKmersBuckets;
+        int ind = prefixKmers[i] % prefixKmersBuckets;
         G->lockNode(ind);
-        prefixKmersInBuckets[ind].push_back(&prefixKmers[i]);
+//        prefixKmersInBuckets[ind].push_back(&prefixKmers[i]);
+        prefixKmersInBuckets[ind].push_back(i);
         G->unlockNode(ind);
     }
 }
@@ -309,18 +324,23 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
 
         if (sufUpdated) {
-            KmerGCPS *suff = &suffixKmers[i];
+//            KmerGCPS *suff = &suffixKmers[i];
+
             const int suffId = i; // should be suffId == i
 
-            const int b = suff->hash % prefixKmersBuckets;
+//            const int b = suff->hash % prefixKmersBuckets;
+            const int b = suffixKmers[suffId] % prefixKmersBuckets;
 
             const int offset = (*reads)[i]->size() - currentPrefSufLength;
 
 
-            for (KmerGCPS *pref : prefixKmersInBuckets[b]) {
+//            for (KmerGCPS *pref : prefixKmersInBuckets[b]) {
+            for (unsigned pref : prefixKmersInBuckets[b]) {
 
-                int prefId = pref->read_id;
-                if (pref->hash == suff->hash && prefId != suffId) {
+//                int prefId = pref->read_id;
+                int prefId = pref;
+//                if (pref->hash == suff->hash && prefId != suffId) {
+                if (prefixKmers[prefId] == suffixKmers[suffId] && prefId != suffId) {
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
                         continue; // this line here prohibits included alignment
@@ -399,9 +419,10 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
 
 void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id) {
-    for (int i = a; i <= b; i++) {
-        KmerGCPS *suff = &suffixKmers[i];
-        if (suff == nullptr || (*reads)[i] == nullptr) continue;
+    for (unsigned i = a; i <= b; i++) {
+//        KmerGCPS *suff = &suffixKmers[i];
+//        if (suff == nullptr || (*reads)[i] == nullptr) continue;
+        if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
 
         const int suffId = i;
         if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
