@@ -82,20 +82,6 @@ int main(int argc, char **argv) {
 
     Params::initializeParams(argc, argv);
 
-    const bool debug_small_test = false;
-    if (debug_small_test) {
-        DEBUG(std::experimental::filesystem::current_path());
-        Params::THREADS = 1;
-        Params::INPUT_FILE_TYPE = Params::FASTA;
-        Params::fileExtension = "fasta";
-        Params::TEST_NAME = "ALGA_read_test";
-        Params::inStreamFilePath1 = "test_reads_1.fasta";
-        Params::inStreamFilePath2 = "test_reads_2.fasta";
-        Params::inStream = ifstream(Params::inStreamFilePath1);
-        assert(Params::inStream.is_open());
-        cin.rdbuf(Params::inStream.rdbuf());
-    }
-
 
     TimeMeasurer::startMeasurement(TimeMeasurer::TOTAL_TIME);
 
@@ -114,17 +100,12 @@ int main(int argc, char **argv) {
 
     int LEN = Global::calculateAvgReadLength() + Params::READ_END_TRIM_LEFT + Params::READ_END_TRIM_RIGHT;
     Params::CONTIG_MIN_OUTPUT_LENGTH = max(Params::CONTIG_MIN_OUTPUT_LENGTH, (int) (1.75 * LEN));
-//    Params::CONTIG_MIN_OUTPUT_LENGTH = max( Params::CONTIG_MIN_OUTPUT_LENGTH, (int)( 1.5 * LEN) );
     Params::MAX_OFFSET_PARALLEL_PATHS = max(Params::MAX_OFFSET_PARALLEL_PATHS, (int) (1.75 * LEN));
     Params::MAX_OFFSET_DANGLING_BRANCHES = max(Params::MAX_OFFSET_DANGLING_BRANCHES, (int) (1.75 * LEN));
 
 
     if (Params::MOST_FREQUENTLY_USED_PARAMETER == -1) { // if no parameters were specified, I use default values
-//        int LEN = Global::calculateAvgReadLength() + Params::READ_END_TRIM_LEFT + Params::READ_END_TRIM_RIGHT;
         int L = LEN * Params::SCALE;
-//        DEBUG(Params::SCALE);
-//        int RSOEMO = LEN * ( 2*Params::SCALE + 3 ) / 5;
-//        int RSOEMO = LEN * ( 3*Params::SCALE + 2 ) / 5;
         int RSOEMO = LEN * (Params::SCALE + 1) / 2;
 
         Params::LI_KMER_LENGTH = min(2 * L / 3, 60);
@@ -137,7 +118,6 @@ int main(int argc, char **argv) {
         Params::MIN_OVERLAP_AREA = L;
 
     } else if (Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP == -1) {
-//        int RSOEMO =  ( 50 + Params::MOST_FREQUENTLY_USED_PARAMETER/2 ) * LEN / 100;
         int RSOEMO = (Params::MOST_FREQUENTLY_USED_PARAMETER + LEN) / 2;
         Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP = RSOEMO;
     }
@@ -176,16 +156,9 @@ int main(int argc, char **argv) {
 
     MyUtils::process_mem_usage();
 
-    bool write_and_read = false;
-    if (Params::ADD_PAIRED_READS == false) write_and_read = false;
-
     {
         unsigned id = 0;
-
-        if (write_and_read) cerr << "WRITING REMAINING READS TO A SINGLE FASTA FILE" << endl;
-        else cerr << "Remapping reads to the set of valid ids" << endl;
-        ofstream str;
-        if (write_and_read) str.open(Params::TEST_NAME + "remaining_reads.fasta");
+        cerr << "Remapping reads to the set of valid ids" << endl;
         Global::pairedReadOffset.clear();
 
         unsigned back_index = 0;
@@ -196,7 +169,6 @@ int main(int argc, char **argv) {
             back_index += 2;
         };
 
-
         for (unsigned i = 0; i < Global::READS.size(); i += 2) {
 
             if (Global::READS[i] != nullptr) {
@@ -205,44 +177,36 @@ int main(int argc, char **argv) {
                 assert(Global::READS[i + 1] !=
                        nullptr); // this should not happen - either both read r and its reverse complimentary are present, or neither.
 
-                if (write_and_read) str << "read_" << id << "\n";
-                if (write_and_read) str << Global::READS[i]->getSequenceAsString() << "\n";
-
-
-                if ((i % 4) == 0) {
+                if ((i & 3) == 0) {
 
                     if (i + 2 < Global::READS.size() && Global::READS[i + 2] != nullptr) {
 
                         Global::pairedReadOffset.push_back(1); // for i-th read
                         Global::pairedReadOffset.push_back(1); // for reverse complimentary read
 
-                        if (!write_and_read) swap_reads(i);
+                        swap_reads(i);
 
                         Global::pairedReadOffset.push_back(2); // for paired reads
                         Global::pairedReadOffset.push_back(2); // for reverse complimentary paired read
 
-                        if (!write_and_read) swap_reads(i + 2);
+                        swap_reads(i + 2);
 
                     } else {
                         Global::pairedReadOffset.push_back(0);
                         Global::pairedReadOffset.push_back(0); // for reverse complimentary read
 
-                        if (!write_and_read) swap_reads(i);
+                        swap_reads(i);
                     }
                 } else if (Global::READS[i - 2] == nullptr) {
                     Global::pairedReadOffset.push_back(0); // for this read - its paired read was removed
                     Global::pairedReadOffset.push_back(0); // for reverse complimentary read
 
-                    if (!write_and_read) swap_reads(i);
+                    swap_reads(i);
                 }
             }
 
-            if (write_and_read && (i % 4) == 2) {
-                Global::removeRead(i - 2);
-                Global::removeRead(i);
-            }
 
-            if (!write_and_read && (i % 4) == 2 && 2 * id != back_index) { // just for test
+            if ((i & 3) == 2 && (id << 1) != back_index) { // just for test
                 DEBUG(i);
                 DEBUG(id);
                 DEBUG(2 * id);
@@ -250,49 +214,22 @@ int main(int argc, char **argv) {
                 assert(2 * id == back_index);
             }
         }
-        if (write_and_read) {
-            cerr << "The are " << id << " reads written to .fasta file (no complimentary reverse reads here)" << endl;
-            str.flush();
-            str.close();
-        } else {
-            DEBUG(id);
-            DEBUG(2 * id);
-            DEBUG(back_index);
-        }
 
-        if (write_and_read) vector<Read *>().swap(Global::READS);
-        else {
-            DEBUG(Global::READS.size());
-            Global::READS.resize(back_index);
-            vector<Read *>(Global::READS.begin(), Global::READS.end()).swap(Global::READS);
-            DEBUG(Global::READS.size());
-            for (unsigned i = 0; i < Global::READS.size(); i++)
-                if (Global::READS[i] != nullptr)
-                    Global::READS[i]->setId(i);
-        }
-    }
+        DEBUG(id);
+        DEBUG(2 * id);
+        DEBUG(back_index);
 
-    if (write_and_read) {
-        Params::inStreamFilePath1 = Params::TEST_NAME + "remaining_reads.fasta";
-        Params::INPUT_FILE_TYPE = Params::FASTA;
 
-        auto tl = Params::READ_END_TRIM_LEFT, tr = Params::READ_END_TRIM_RIGHT;
-        Params::READ_END_TRIM_LEFT = Params::READ_END_TRIM_RIGHT = 0;
-
-        Params::ADD_PAIRED_READS = 0;
-//        DEBUG(Params::ADD_COMP_REV_READS);
-//        Params::ADD_COMP_REV_READS = 1;
-        InputReader reader;
-        reader.readInput();
-        Params::ADD_PAIRED_READS = 1;
-
-        Params::READ_END_TRIM_LEFT = tl;
-        Params::READ_END_TRIM_RIGHT = tr;
-
-        DEBUG(Global::pairedReadOffset.size());
         DEBUG(Global::READS.size());
-        assert(Global::READS.size() == Global::pairedReadOffset.size());
+        Global::READS.resize(back_index);
+        vector<Read *>(Global::READS.begin(), Global::READS.end()).swap(Global::READS);
+        DEBUG(Global::READS.size());
+        for (unsigned i = 0; i < Global::READS.size(); i++)
+            if (Global::READS[i] != nullptr)
+                Global::READS[i]->setId(i);
+
     }
+
 
     READS = &Global::READS;
 
@@ -347,7 +284,7 @@ int main(int argc, char **argv) {
 
         graphCreator->clear();
         delete graphCreator;
-        graphCreator = 0;
+        graphCreator = nullptr;
 
         cerr << "retainingOnlySmallestOffset" << endl;
         G->retainOnlySmallestOffset();
@@ -359,7 +296,6 @@ int main(int argc, char **argv) {
 
     MyUtils::process_mem_usage();
 
-//    bool usePkbSupplement = ( Params::TPN.find( "suppl" ) != string::npos );
     bool usePkbSupplement = Params::USE_GRAPH_CREATOR_SUPPLEMENT;
 //    bool usePkbSupplement = true;
     if (usePkbSupplement) {
@@ -401,10 +337,10 @@ int main(int argc, char **argv) {
         G->retainOnlySmallestOffset();
 
         delete inDeg;
-        inDeg = 0;
+        inDeg = nullptr;
 
         delete graphCreator;
-        graphCreator = 0;
+        graphCreator = nullptr;
         cerr << "After supplement G has " << G->countEdges() << " edges" << endl;
 
         TimeMeasurer::stopMeasurement("GraphCreator PKB Supplement");
@@ -441,10 +377,8 @@ int main(int argc, char **argv) {
         }
 
         G->pruneGraph();
-//        cerr << "Removing isolated reads" << endl;
         Global::removeIsolatedReads();
 
-//        cerr << "Creating contracted edges vector" << endl;
         G->createContractedEdgesVector();
 
 
@@ -718,11 +652,6 @@ int main(int argc, char **argv) {
                 }
 
                 if (i < M && d < M) trimLeft[d] = max(trimLeft[d], overlap);
-//                    else{
-//                        if( i < M && newReads[i]->size() < newReads[d]->size() ) trimRight[i] = max( trimRight[i], overlap );
-//                        if( d < M && newReads[d]->size() < newReads[i]->size() ) trimLeft[d] = max( trimLeft[d], overlap );
-//                    }
-
             }
         }
 
@@ -750,9 +679,6 @@ int main(int argc, char **argv) {
         delete newGraph;
         newGraph = nullptr;
 
-//            cerr << "Trimmed" << endl;
-
-
         Params::ADD_PAIRED_READS = Params::ADD_COMP_REV_READS = 0;
         cerr << "Leaving trimming section" << endl;
     }
@@ -760,9 +686,7 @@ int main(int argc, char **argv) {
 
     TimeMeasurer::startMeasurement(TimeMeasurer::OUTPUT_WRITER);
 
-//        DEBUG(contigs.size());
     OutputWriterNew writer(G, contigs);
-//        writer.writeContigs();
     writer.writeContigsNoFilter(contigs);
     TimeMeasurer::stopMeasurement(TimeMeasurer::OUTPUT_WRITER);
 
@@ -775,10 +699,6 @@ int main(int argc, char **argv) {
     Params::writeParams();
     TimeMeasurer::writeAllMeasurements();
     GenomeStatisticsCollector::writeTestStatistics();
-
-    cerr << endl << "READS WITH N STATISTICS:" << endl;
-    // for(auto a : reader.getReadsWithNSizes()) cerr << a << " " << flush;
-    //    StatisticsGenerator::writeAllStatistics( reader.getReadsWithNSizes() );
 
     StatisticsGeneratorBigData::writeAllStatistics();
 

@@ -161,7 +161,8 @@ vector<Read *> ReadPreprocess::getSortedReads() {
 
 
     TimeMeasurer::stopMeasurement("SORTING");
-    return std::move(reads);
+//    return std::move(reads);
+    return reads;
 }
 
 vector<short> ReadPreprocess::getLCP(vector<Read *> &reads) {

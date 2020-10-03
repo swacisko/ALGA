@@ -132,7 +132,8 @@ vector<Params::KMER_HASH_TYPE> Read::getKmerHashes(int kmerLength) {
     for (Kmer k : kmers) hashes.push_back(k.hash);
     kmers.clear();
 
-    return std::move(hashes);
+//    return std::move(hashes);
+    return hashes;
 }
 
 

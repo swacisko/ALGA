@@ -109,7 +109,8 @@ bool Bitset::operator<=(const Bitset& oth) {
 Bitset Bitset::operator<<(int offset) {
     Bitset b(*this);
     b <<= offset;
-    return std::move(b);
+//    return std::move(b);
+    return b;
 }
 
 Bitset &Bitset::operator<<=(int offset) {

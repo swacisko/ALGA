@@ -296,8 +296,8 @@ void Graph::serializeGraph(string fileName) {
 vector<pair<int, int>> Graph::getNeighbors(int id) {
     vector<pair<int, int> > neigh;
     neigh = V[id];
-    return std::move(neigh);
-//    return neigh;
+//    return std::move(neigh);
+    return neigh;
 }
 
 
@@ -526,7 +526,8 @@ Graph Graph::getReverseGraph() {
     for (auto &p : parallelJobs) p.join();
     cerr << endl;
 
-    return std::move(GRev);
+//    return std::move(GRev);
+    return GRev;
 }
 
 
@@ -788,7 +789,7 @@ VVPII Graph::getReverseGraphNeighborhoods() {
     const bool useIndegInitialization = false;
     if (useIndegInitialization) {
         VI *indeg = getInDegrees();
-        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i] + 1);
+        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i]);
         delete indeg;
         indeg = nullptr;
     }
@@ -832,7 +833,8 @@ VVPII Graph::getReverseGraphNeighborhoods() {
         for (auto &p : futures) p.get();
     }
 
-    return std::move(rev);
+//    return std::move(rev);
+    return rev;
 }
 
 
