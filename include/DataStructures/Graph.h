@@ -148,6 +148,12 @@ public:
     VI *getInDegrees();
 
     /**
+     * Creates a marker vector for nonzero indegree. res[i] = true if node i has indegree>0.
+     * @return
+     */
+    VB hasPositiveIndegree();
+
+    /**
      *
      * @return reverse graph to the given one. It contains only basic connections (edges in V or maps vectors, contracted edge will not be taken into account).
      */

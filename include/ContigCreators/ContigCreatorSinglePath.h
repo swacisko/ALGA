@@ -136,7 +136,7 @@ private:
 
     //**************************//**************************//**************************//**************************
 
-    VI *inDeg;
+//    VI *inDeg;
     VB was;
     VI dst;
 //    VVPII* initialStructure; // this is the structure of the initial graph. Initial graph is much more dense, than the resulting one,

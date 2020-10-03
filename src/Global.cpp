@@ -54,13 +54,15 @@ void Global::removeRead(int id) {
 
 void Global::removeIsolatedReads() {
 
-    VI *indeg = GRAPH.getInDegrees();
+//    VI *indeg = GRAPH.getInDegrees();
+    VB indeg = GRAPH.hasPositiveIndegree();
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
     auto worker = [=, &indeg](int a, int b) {
         for (int j = a; j <= b; j++) {
-            if ((*indeg)[j] == 0 && GRAPH[j].size() == 0) removeRead(j);
+//            if ((*indeg)[j] == 0 && GRAPH[j].size() == 0) removeRead(j);
+            if (indeg[j] == false && GRAPH[j].size() == 0) removeRead(j);
         }
     };
 
@@ -73,8 +75,8 @@ void Global::removeIsolatedReads() {
     worker(0, W - 1);
     for (auto &p : futures) p.get();
 
-    delete indeg;
-    indeg = 0;
+//    delete indeg;
+//    indeg = 0;
 }
 
 void Global::generateFasta(string filename) {

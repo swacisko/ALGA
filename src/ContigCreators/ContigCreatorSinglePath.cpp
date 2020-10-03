@@ -25,27 +25,33 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
 
     markReliablePredecessorsByPairedConnections();
 
-    inDeg = G->getInDegrees();
-
+//    inDeg = G->getInDegrees();
+    VB inDeg = G->hasPositiveIndegree();
 
     int progressCounter = 0;
-    int allSize = inDeg->size() + G->size();
+//    int allSize = inDeg->size() + G->size();
+    int allSize = 2 * G->size();
 
     vector<Contig *> contigs;
     Contig::ID_COUNT = 0;
-    for (int i = 0; i < inDeg->size(); i++) {
+//    for (int i = 0; i < inDeg->size(); i++) {
+    for (int i = 0; i < G->size(); i++) {
         if ((*reads)[i] == nullptr) continue;
 
-        MyUtils::writeProgress(i + 1, inDeg->size() + G->size(), progressCounter, "creating contigs", 1);
+//        MyUtils::writeProgress(i + 1, inDeg->size() + G->size(), progressCounter, "creating contigs", 1);
+        MyUtils::writeProgress(i + 1, G->size() + G->size(), progressCounter, "creating contigs", 1);
 
-        if ((*inDeg)[i] == 0 && (*G)[i].size() > 0) {
+//        if ((*inDeg)[i] == 0 && (*G)[i].size() > 0) {
+        if (inDeg[i] == false && (*G)[i].size() > 0) {
             vector<Contig *> ctg = getContigOmitShortCyclesFrom(i);
 
 //            cerr << endl << "Found " << ctg.size() << " new contigs" << endl << endl;
 
             contigs.insert(contigs.end(), ctg.begin(),
                            ctg.end()); // if the vertex has indegree 0 and outdegree > 0 then i write it
-        } else if ((*inDeg)[i] == 0 && (*G)[i].size() == 0 && (*reads)[i]->size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
+//        } else if ((*inDeg)[i] == 0 && (*G)[i].size() == 0 && (*reads)[i]->size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
+        } else if (inDeg[i] == false && (*G)[i].size() == 0 &&
+                   (*reads)[i]->size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
             vector<pair<Read *, int> > containedReads;
             containedReads.push_back({(*reads)[i], 0});
             Contig *ctg = new Contig(Contig::ID_COUNT++, (*reads)[i]->getSequenceAsString(), containedReads);
@@ -55,14 +61,16 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
 
 
     for (int i = 0; i < G->size(); i++) {
-        MyUtils::writeProgress(i + 1 + inDeg->size(), inDeg->size() + G->size(), progressCounter, "creating contigs",
-                               1);
+//        MyUtils::writeProgress(i + 1 + inDeg->size(), inDeg->size() + G->size(), progressCounter, "creating contigs", 1);
+        MyUtils::writeProgress(i + 1 + G->size(), G->size() + G->size(), progressCounter, "creating contigs", 1);
 
         /*if( (*G)[i].size() >= 2  && (*inDeg)[i] > 0   ){
             vector<Contig*> ctg = getContigOmitShortCyclesFrom(i);
             contigs.insert( contigs.end(), ctg.begin(), ctg.end() );
         }
-        else */if ((*G)[i].size() >= 1 && (*inDeg)[i] > 0) {
+        else */
+//        if ((*G)[i].size() >= 1 && (*inDeg)[i] > 0) {
+        if ((*G)[i].size() >= 1 && inDeg[i]) {
             vector<Contig *> ctg = getContigOmitShortCyclesFrom(i);
             contigs.insert(contigs.end(), ctg.begin(), ctg.end());
         }
@@ -87,8 +95,8 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
     cerr << endl << "SNPs corrected" << endl;
 
 
-    delete inDeg;
-    inDeg = 0;
+//    delete inDeg;
+//    inDeg = 0;
 
 
     DEBUG(reliablePredecessors.size());

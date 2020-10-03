@@ -95,7 +95,9 @@ void Graph::mergeVertices(int a, int b, int offset) {
 
 bool Graph::removeDirectedEdge(int a, int b) {
 //    if( !contractedEdges.empty() ) contractedEdges[a].erase(b);
-    if (!contractedEdges.empty()) contractedEdges[a]->erase(b);
+    if (!contractedEdges.empty()) {
+        contractedEdges[a]->erase(b);
+    }
 
     bool removed = false;
     int p = (int) V[a].size() - 1;
@@ -490,14 +492,12 @@ LPII &Graph::getContractedEdgePath(int a, int b) {
             auto *ptr = new LPII(1, PII(b, findWeight(a, b)));
             lockNode(1);
             contractedEdgeDummy.push_back(ptr);
-//            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         } else {
             auto *ptr = new LPII();
             lockNode(1);
             contractedEdgeDummy.push_back(ptr);
-//            DEBUG(contractedEdgeDummy.size());
             unlockNode(1);
             return (*ptr);
         }
@@ -771,16 +771,18 @@ void Graph::reverseGraph() {
 
 void Graph::createContractedEdgesVector() {
     contractedEdges = VMILPII(size());
-    VI *indeg = getInDegrees();
+//    VI *indeg = getInDegrees();
+    VB indeg = hasPositiveIndegree();
 
     for (int i = 0; i < size(); i++) {
-        if (V[i].size() > 0 || (*indeg)[i] > 0) {
+//        if (V[i].size() > 0 || (*indeg)[i] > 0) {
+        if (V[i].size() > 0 || indeg[i]) {
             contractedEdges[i] = new MILPII();
         }
     }
 
-    delete indeg;
-    indeg = nullptr;
+//    delete indeg;
+//    indeg = nullptr;
 }
 
 VVPII Graph::getReverseGraphNeighborhoods() {
@@ -835,6 +837,35 @@ VVPII Graph::getReverseGraphNeighborhoods() {
 
 //    return std::move(rev);
     return rev;
+}
+
+VB Graph::hasPositiveIndegree() {
+    VB inDeg(size());
+    vector<std::future<void> > futures(Params::THREADS - 1);
+
+    auto worker = [=, &inDeg](int a, int b) {
+        for (int j = a; j <= b; j++) {
+            for (auto p : V[j]) {
+                int d = p.first;
+                lockNode(d);
+                inDeg[d] = true;
+                unlockNode(d);
+            }
+        }
+    };
+
+    int W = (int) ceil((double) size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = i * W;
+        int b = min((i + 1) * W - 1, (int) size() - 1);
+
+        futures[i - 1] = std::async(std::launch::async, worker, a, b);
+    }
+
+    worker(0, W - 1);
+    for (auto &p : futures) p.get();
+
+    return inDeg;
 }
 
 
