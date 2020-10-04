@@ -24,13 +24,11 @@ using namespace std;
 #include<map>
 #include "Params.h"
 #include <list>
-//#include<thread>
 #include <mutex>
 #include <set>
 #include "Read.h"
 #include "Contig.h"
 
-//#define REP(i,N) for(int i=0; i<N; i++)
 typedef vector<int> VI;
 typedef vector<VI> VVI;
 typedef vector<short> VS;
@@ -68,11 +66,10 @@ public:
 
     void clear();
 
-    void push_back( /*VPII row*/ ) { /*V.push_back(row);*/ push_node(); }
+    void push_back() { push_node(); }
 
     void push_node();
 
-//    void pop_back(){ /*V.pop_back();*/ V.pop_back(); /*maps.pop_back();*/ contractedEdges.pop_back(); mutexes->pop_back(); }
     void addDirectedEdge(int a, int b,
                          int offset); // adds directed edge from a to b with given offset. If such edge exists it will modify the offset to the smallest of thos considered yet for those edge.
 

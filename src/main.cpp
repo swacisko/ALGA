@@ -38,8 +38,6 @@
 #include "Utils/TimeMeasurer.h"
 #include "Utils/GraphVisualizer.h"
 
-#include <forward_list>
-
 using namespace std;
 
 void initilizeStaticData() {
@@ -70,8 +68,7 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(std::mutex));
 //    DEBUG(sizeof(MILPII));
     DEBUG(sizeof(VILPII));
-    DEBUG(sizeof(LPII));
-    DEBUG(sizeof(forward_list<PII>));
+    DEBUG(sizeof(list<pair<int, int>>));
     DEBUG(sizeof(PII));
     DEBUG(sizeof(vector<int>));
     DEBUG(sizeof(PII[3]));
@@ -82,7 +79,7 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(Read));
     DEBUG(sizeof(Bitset));
 
-    // exit(1);
+//     exit(1);
 
     ios_base::sync_with_stdio(0);
     cin.tie(NULL);
