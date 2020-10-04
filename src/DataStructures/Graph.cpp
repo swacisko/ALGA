@@ -857,13 +857,13 @@ void Graph::createContractedEdgesVector() {
 VVPII Graph::getReverseGraphNeighborhoods() {
     VVPII rev(size());
 
-    const bool useIndegInitialization = false;
-    if (useIndegInitialization) {
-        VI *indeg = getInDegrees();
-        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i]);
-        delete indeg;
-        indeg = nullptr;
-    }
+//    const bool useIndegInitialization = false;
+//    if (useIndegInitialization) {
+//        VI *indeg = getInDegrees();
+//        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i]);
+//        delete indeg;
+//        indeg = nullptr;
+//    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -888,7 +888,7 @@ VVPII Graph::getReverseGraphNeighborhoods() {
     worker(0, W - 1);
     for (auto &p : futures) p.get();
 
-    if (!useIndegInitialization) {
+//    if (!useIndegInitialization) {
         auto worker2 = [=, &rev](int a, int b) {
             for (int j = a; j <= b; j++) {
                 VPII(rev[j]).swap(rev[j]);
@@ -902,7 +902,7 @@ VVPII Graph::getReverseGraphNeighborhoods() {
         }
         worker2(0, W - 1);
         for (auto &p : futures) p.get();
-    }
+//    }
 
     return rev;
 }
