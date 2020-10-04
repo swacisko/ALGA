@@ -38,6 +38,8 @@
 #include "Utils/TimeMeasurer.h"
 #include "Utils/GraphVisualizer.h"
 
+#include <forward_list>
+
 using namespace std;
 
 void initilizeStaticData() {
@@ -56,11 +58,20 @@ class MemTestClass {
 int main(int argc, char **argv) {
     initilizeStaticData();
 
+    const bool testing = false;
+    if (testing) { // just for testing in IDE
+        Params::inStreamFilePath1 = "/home/sylwester/Documents/PhD/ECBiG/GenomeAlignment/RealSequences/lux2_musket_k21_1.fastq";
+        Params::inStreamFilePath1 = "/home/sylwester/Documents/PhD/ECBiG/GenomeAlignment/RealSequences/lux2_musket_k21_2.fastq";
+        Params::outStreamFileName = "alga_test_test";
+        Params::INPUT_FILE_TYPE = Params::FASTQ;
+    }
+
     DEBUG(sizeof(MemTestClass));
     DEBUG(sizeof(std::mutex));
 //    DEBUG(sizeof(MILPII));
     DEBUG(sizeof(VILPII));
     DEBUG(sizeof(LPII));
+    DEBUG(sizeof(forward_list<PII>));
     DEBUG(sizeof(PII));
     DEBUG(sizeof(vector<int>));
     DEBUG(sizeof(PII[3]));
