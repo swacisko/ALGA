@@ -32,21 +32,17 @@ Kmer::Kmer(Read *r, int ind, Params::KMER_HASH_TYPE hash, short length) : read(r
     this->length = length;
 }
 
-//Kmer::Kmer(const Kmer& orig) : read(orig.read), indInRead(orig.indInRead), hash(orig.hash), length(orig.length) {
-//
-//}
+
 
 Kmer::~Kmer() {
     clear();
 }
 
 void Kmer::clear() {
-//    read = 0;
 }
 
 int Kmer::size() {
     return (int) length;
-//    return Params::KMER_LENGTH_BUCKET;
 }
 
 
@@ -63,35 +59,18 @@ bool Kmer::operator<(const Kmer &oth) const {
     if (hash != oth.hash) return hash < oth.hash;
     else if (indInRead != oth.indInRead) return indInRead > oth.indInRead;
     else if (read->size() != oth.read->size()) return read->size() < oth.read->size();
-    else return false;//(*read) < (*oth.read);
+    else return false;
 
-    /*  if( hash < oth.hash ) return true;
-      else if( hash > oth.hash ) return false;
-      else if( indInRead > oth.indInRead ) return true;
-      else if( indInRead < oth.indInRead ) return false;
-      else if( read->size() < oth.read->size() ) return true;
-      else if( read->size() > oth.read->size() ) return false;
-      else return false;*/
 }
 
-/*
-bool Kmer::operator==(const Kmer& oth) const {
-    if( hash != oth.hash ) return false;
-    else if( indInRead != oth.indInRead ) return false;
-    return read == oth.read;
-}*/
 
 string Kmer::getKmerAsString() {
-//    cerr << "here" << endl;
     string s = "";
     for (int i = 0; i < size(); i++) {
-//        cerr << "i = " << endl;
         Read *r = read;
         int nukl = (*r)[indInRead + i];
-//        cerr << "\tgot it" << endl;
         s += Params::getNuklAsString(nukl);
     }
-//    cerr << "returning" << endl;
     return s;
 }
 
@@ -101,10 +80,3 @@ ostream &operator<<(ostream &str, Kmer &k) {
     return str;
 }
 
-/*Kmer &Kmer::operator=(const Kmer &oth) {
-    read = oth.read;
-    hash = oth.hash;
-    indInRead = oth.indInRead;
-
-    return *this;
-}*/

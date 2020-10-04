@@ -13,12 +13,10 @@ SET(CMAKE_CXX_FLAGS "-pthread -std=c++14 -lm -O3") # compilation for faster exec
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 
 
-
-
 include_directories(include)
 
-file(GLOB SOURCES "src/*.cpp" "src/*/*.cpp" "src/*/*/*.cpp" "src/*/*/*/*.cpp" "src/*/*/*/*.cpp" )
+file(GLOB SOURCES "src/*.cpp" "src/*/*.cpp" "src/*/*/*.cpp" "src/*/*/*/*.cpp" "src/*/*/*/*.cpp")
 
 add_executable(ALGA ${SOURCES})
 
-target_link_libraries( ALGA stdc++fs )
+target_link_libraries(ALGA stdc++fs)

@@ -14,19 +14,13 @@ void GraphCreatorLI::createAlignmentsForKmers(vector<Kmer> &kmers, int p, int q,
     graphCreator->createAlignmentsForKmers(kmers, p, q);
 }
 
-/*
-vector<vector<Kmer> > GraphCreatorLI::getKmersForBucket(int bucket) {
-    return GraphCreatorKmerBased::getKmersForBucket(bucket);
-}
-*/
+
 void GraphCreatorLI::startAlignmentGraphCreation() {
-//    for( int i=0; i<3; i++ )  rotate( Read::priorities.begin(), Read::priorities.begin()+1, Read::priorities.end() );
 
     for (int i = 0; i < min(4, Params::LI_PRIORITIES_TO_CONSIDER); i++) {
         cerr
                 << "******************************************************************************************************************  STARTING ALIGNMENT GRAPH CREATION FOR PRIORITIES:\t";
         WRITE1(Read::priorities);
-//        GraphCreatorKmerBased::startAlignmentGraphCreation();
         graphCreator->startAlignmentGraphCreation();
         rotate(Read::priorities.begin(), Read::priorities.begin() + 1, Read::priorities.end());
     }

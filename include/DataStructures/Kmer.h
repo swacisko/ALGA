@@ -27,10 +27,9 @@ public:
 
     Kmer(Read *r, int ind, Params::KMER_HASH_TYPE hash,
          short length); // creates Kmer for given read. This Kmer starts at the position ind and has given length
-//    Kmer(const Kmer& orig);
-    /*virtual*/ ~Kmer();
 
-    // void operator=( const Kmer &oth );
+    ~Kmer();
+
 
     void clear();
 
@@ -47,7 +46,6 @@ public:
 
     Kmer &operator=(const Kmer &oth);
 
-//    bool operator==( const Kmer & oth ) const;
 
     string getKmerAsString();
 

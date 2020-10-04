@@ -201,7 +201,7 @@ void Graph::clearNode(int v) {
 void Graph::clearNeighborsForNode(int v) {
     VPII().swap(V[v]);
 
-//    if( !contractedEdges.empty() ) MILPII().swap( contractedEdges[v] );
+//    if( !contractedEdges.empty() ) MILPII().swap( contractedEdges[v] ); // is it a memory leak??
     if (!contractedEdges.empty()) {
         delete contractedEdges[v];
         contractedEdges[v] = nullptr;
@@ -751,13 +751,13 @@ void Graph::reverseGraph() {
 
     VVPII rev(size());
 
-//    const bool useIndegInitialization = true;
-//    if (useIndegInitialization) {
-    VI *inDegrees = getInDegrees();
-    for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
-    delete inDegrees;
-    inDegrees = nullptr;
-//    }
+    const bool useIndegInitialization = false;
+    if (useIndegInitialization) {
+        VI *inDegrees = getInDegrees();
+        for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
+        delete inDegrees;
+        inDegrees = nullptr;
+    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -793,9 +793,7 @@ void Graph::reverseGraph() {
 }
 
 void Graph::createContractedEdgesVector() {
-//    contractedEdges = VMILPII(size());
-    contractedEdges = VVILPII(size());
-//    VI *indeg = getInDegrees();
+    contractedEdges = VVILPII(size(), nullptr);
     VB indeg = hasPositiveIndegree();
 
     for (int i = 0; i < size(); i++) {
@@ -805,9 +803,6 @@ void Graph::createContractedEdgesVector() {
             contractedEdges[i] = new VILPII();
         }
     }
-
-//    delete indeg;
-//    indeg = nullptr;
 }
 
 VVPII Graph::getReverseGraphNeighborhoods() {

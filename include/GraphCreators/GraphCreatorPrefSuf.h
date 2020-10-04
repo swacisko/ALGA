@@ -40,24 +40,21 @@ private:
 
 
     /*
-     * This is an array of prefixes of all reads. prefixKemrs[i] is the current prefix of read with id i
+     * This is an array of prefixes of all reads. prefixKemrs[i] is the hash of current prefix of read with id i
      */
-//    vector<Kmer> prefixKmers;
-//    vector<KmerGCPS> prefixKmers;
     vector<unsigned long long> prefixKmers; // just the hash values of kmers
 
-//    vector<Kmer> suffixKmers;
-//    vector<KmerGCPS> suffixKmers;
+    /**
+     * Analogous to prefixKmers
+     */
     vector<unsigned long long> suffixKmers;
 
     /**
      * This is used to keep only Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN edges with small overlap.
      * It will be used only if Params::SPACE_EFFICIENT is set to 1.
      */
-//    VVPII smallOverlapEdges;
     static const int SOES = 3;
     typedef pair<unsigned, unsigned> *SOES_TYPE;
-//    vector< SOES_TYPE > smallOverlapEdges;
     vector<SOES_TYPE> smallOverlapEdges;
 
 
@@ -66,11 +63,9 @@ private:
     void putKmersIntoBucketsJob(int a, int b, int thread_id);
 
     /*
-     * This is the vector that keeps prefixes in buckets. prefixes from prefixKmers are kept in these buckets as pointers.
+     * This is the vector that keeps prefixes (ids) in buckets.
      */
-//    vector<vector<Kmer *> > prefixKmersInBuckets;
-//    vector<vector<KmerGCPS *> > prefixKmersInBuckets;
-    vector<vector<unsigned> > prefixKmersInBuckets; // just the ids of reads, from which kmers are taken
+    vector<vector<unsigned> > prefixKmersInBuckets; // 'hash map' to store just the ids of reads, from which prefixes are considered
     int prefixKmersBuckets; // this is the number of buckets.
 
     void calculateMaxReadLength();

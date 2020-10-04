@@ -19,19 +19,12 @@
 #include "DataStructures/Read.h"
 
 Read::Read(int id, string seq) : id(id), sequence(
-        Bitset((int) (seq.size()) << 1))/*, containsNBp(false), minPeriod(sequence.size())*/ {
-    /*if( Params::USE_LI && priorities.empty() ){
-        priorities = VI(4);
-        iota( priorities.begin(), priorities.end(),0 );
-    }*/
+        Bitset((int) (seq.size()) << 1)) {
 
     createSequence(seq);
-//    if( sequence != "" ) minPeriod = min( (int)MyUtils::MinPeriod( sequence.c_str() ), (int)minPeriod) ;
 }
 
 Read::Read(const Read &orig) : id(orig.id), sequence(orig.sequence) {
-//    sequence = new Bitset( orig.sequence );
-//    sequence = Bitset( orig.sequence );
 }
 
 Read::~Read() {
@@ -43,9 +36,6 @@ int Read::size() {
 }
 
 void Read::clear() {
-//    sequence.clear();
-//    delete sequence;
-//    sequence = 0;
 }
 
 
@@ -170,21 +160,18 @@ vector<Kmer> Read::getLIKmers(VI priorities, int length, int intervals) {
     while (q < length) {
         hash <<= 2;
         hash += priorities.at(Params::getNuklNumber((*this)[q]));
-        //    if( hash >= Params::MAX_HASH_CONSIDERED ) hash %= Params::MAX_HASH_CONSIDERED;
         q++;
     }
 
     HASH_TYPE factor = 1;
     for (int i = 0; i < length - 1; i++) {
         factor <<= 2; // after this should be 4^(KMER_LENGTH-1)
-        //   if( factor >= Params::MAX_HASH_CONSIDERED ) factor %= Params::MAX_HASH_CONSIDERED;
     }
 
 
     vector<HASH_TYPE> minHashInInterval(intervals, factor
-            << 2  /*Params::MAX_HASH_CONSIDERED */); // i fill with INFINITY (or at least larger than any hash)
+            << 2); // i fill with INFINITY (or at least larger than any hash)
 
-//    vector<Kmer> minLexInInterval(intervals); // minLexInInterval[i] is the LI kmer in i-th interval. i-th interval start at position i*intervalLength and ends in (i+1)*intervalLength
     vector<Kmer> minLexInInterval(
             intervals); // minLexInInterval[i] is the LI kmer in i-th interval. i-th interval start at position i*intervalLength and ends in (i+1)*intervalLength
 
@@ -204,25 +191,15 @@ vector<Kmer> Read::getLIKmers(VI priorities, int length, int intervals) {
     int interv;
 
     while (q < size()) {
-//        cerr << "p = " << p << "    hash = " << hash << "   diff = " << factor * priorities[ Params::getNuklNumber( (*this)[p]) ] << endl;
         hash -= factor * priorities.at(Params::getNuklNumber((*this)[p]));
-        /*if( hash >= Params::MAX_HASH_CONSIDERED || hash < 0 ){
-            hash %= Params::MAX_HASH_CONSIDERED;
-            if( hash < 0 ) hash += Params::MAX_HASH_CONSIDERED;
-        }*/
+
         hash <<= 2;
         hash += priorities.at(Params::getNuklNumber((*this)[q]));
-//        cerr << "      new hash  p = " << p << "    hash = " << hash << "   diff = " << factor * priorities[ Params::getNuklNumber( (*this)[p]) ] << endl << endl;
-
-
-
-        //    if( hash >= Params::MAX_HASH_CONSIDERED ) hash %= Params::MAX_HASH_CONSIDERED;
 
         p++;
         q++;
 
         interv = (int) (p / intervalLength);
-        //   cerr << "interv = " << interv << "   p = " << p << "    hash = " << hash << "    minHashInInterval: " << minHashInInterval[interv] << endl;
 
         if (interv < 0 || interv >= minHashInInterval.size() || interv >= minLexInInterval.size()) {
             cerr << "WRONG BOUND FOR INTERV IN getLIKmers! ! ! ! ! ! ! " << endl;
@@ -235,16 +212,9 @@ vector<Kmer> Read::getLIKmers(VI priorities, int length, int intervals) {
         }
     }
 
-//    minLexInInterval.resize( interv+1 ); // this is here to ensure that i dot have 'empty kmers'. interv is set to the largest index to which a kmer was added
-
     while (minLexInInterval.size() > interv + 1) minLexInInterval.pop_back();
 
 
-//    for( auto a : minHashInInterval ){
-//        if(a==0){
-//            cerr << *this << endl;
-//        }
-//    }
 
 
     for (int j = minLexInInterval.size() - 1; j >= 0; j--) {
@@ -334,15 +304,3 @@ void Read::set(int pos, Params::NUKL_TYPE val) {
 void Read::modifySequence(string &s) {
     createSequence(s);
 }
-
-
-
-
-
-/*bool Read::containsN(){
-    return containsNBp;
-}
-
-int Read::getMinPeriod() const {
-    return (int)minPeriod;
-}*/

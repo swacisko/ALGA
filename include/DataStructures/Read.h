@@ -29,8 +29,6 @@ public:
 
     Read(const Read &orig);
 
-//protected:
-//    virtual ~Read();
     ~Read();
 
 public:
@@ -43,14 +41,9 @@ public:
 
     void set(int pos, Params::NUKL_TYPE val);
 
-    void changeId(
-            int newId) { id = newId; } // changes id to newID. This is used to remove duplicate reads from all READS and assign new id's to those reads
+    bool operator<(Read &oth) { return id < oth.id; }
 
-    bool operator<(Read &oth) { /*if( *sequence != *oth.sequence ) return (*sequence) < (*oth.sequence); else */return
-                id < oth.id;
-    }
-
-    bool operator==(Read &oth) { /*return (*sequence) == (*oth.sequence);*/ return id == oth.id; }
+    bool operator==(Read &oth) { return id == oth.id; }
 
     Bitset &getSequence() { return sequence; }
 
@@ -66,7 +59,6 @@ public:
     string getSequenceAsString();
 
     friend ostream &operator<<(ostream &str, Read &r);
-//    bool operator==( const Read & oth );
 
     static VI priorities;
 
@@ -108,7 +100,6 @@ public:
 
 protected:
     Bitset sequence;
-//    int id;
     unsigned id;
 
     void createSequence(string &s);

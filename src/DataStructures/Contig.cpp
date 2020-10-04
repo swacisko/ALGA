@@ -46,7 +46,6 @@ string Contig::correctSnipsInContig() {
         int offset = containedReads[i].second;
 
 
-//        cerr << "next read: " << *containedReads[i].first << endl;
 
         while (offset > 0) {
             offset--;
@@ -70,7 +69,6 @@ string Contig::correctSnipsInContig() {
             auto it = max_element(mostFrequent.begin(), mostFrequent.end());
             freqs.push_back(*it);
 
-//            cerr << "\tappending " << Params::getNuklAsString( it - mostFrequent.begin() ) << " to s" << endl;
             s += Params::getNuklAsString(it - mostFrequent.begin());
 
         }
@@ -90,26 +88,6 @@ string Contig::correctSnipsInContig() {
     s = s.substr(p, q - p + 1);
 
 
-
-    /*int TRIM_END_LEFT = 14;
-    int TRIM_END_RIGHT = 8;
-
-    if( containedReads.size() > 2 ){
-        TRIM_END_LEFT = containedReads[1].second *//*+ containedReads[2].second*//*; // i trim the whole part of the first read
-
-        Read* r1 = containedReads[ getContainedReads().size()-2 ].first;
-        Read* r2 = containedReads.back().first;
-        int offset = containedReads.back().second;
-
-        TRIM_END_RIGHT = Read::getRightOffset( r1,r2,offset );
-    }
-
-
-    if( s.size() > TRIM_END_LEFT + TRIM_END_RIGHT  ) s = s.substr( TRIM_END_LEFT, s.size() - TRIM_END_LEFT - TRIM_END_RIGHT);
-    else s = "A"; // for some reason i do not want empty contig :)*/
-
-
-//    exit(1);
 
     createSequence(s);
     return s;

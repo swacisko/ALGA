@@ -71,8 +71,7 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(Read));
     DEBUG(sizeof(Bitset));
 
-//    exit(1);
-
+    // exit(1);
 
     ios_base::sync_with_stdio(0);
     cin.tie(NULL);
@@ -246,7 +245,7 @@ int main(int argc, char **argv) {
         GraphCreator *graphCreator;
         cerr << "Creating GraphCreator" << endl;
         if (Params::ALGORITHM_IN_USE == Params::PREF_SUF_GRAPH_CREATION)
-            graphCreator = new GraphCreatorPrefSuf(READS, G, true);
+            graphCreator = new GraphCreatorPrefSuf(READS, G, false);
         else if (Params::USE_LI) graphCreator = new GraphCreatorLI(&Global::READS, &Global::GRAPH);
 
 

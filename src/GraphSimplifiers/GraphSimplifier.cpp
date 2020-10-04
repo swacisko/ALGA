@@ -91,9 +91,10 @@ void GraphSimplifier::simplifyGraphOld() {
     int min_overlap = Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP;
     int number_to_retain = Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN;
 
-//    if( Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION ) removeSmallOverlapEdges(min_overlap, number_to_retain);
     G->sortEdgesByIncreasingOffset();
-    removeSmallOverlapEdges(min_overlap, number_to_retain);
+    if (Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION)
+        removeSmallOverlapEdges(min_overlap, number_to_retain);
+//    removeSmallOverlapEdges(min_overlap, number_to_retain); // this should not make any change in case of GCPS graph creation
 
 
     G->pruneGraph();
@@ -101,15 +102,14 @@ void GraphSimplifier::simplifyGraphOld() {
     G->sortEdgesByIncreasingOffset();
 
 
-/*        if( Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION || Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_ALL_PREFIX_READS ) while( mergeLength0Edges() ) {} // merge until impossible to merge more*/
-    while (mergeLength0Edges()) {}
+//        if( Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION || Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_ALL_PREFIX_READS ) while( mergeLength0Edges() ) {} // merge until impossible to merge more
+    while (mergeLength0Edges()) {} // this should not make any change in case of GCPS graph creation
 
 
     G->sortEdgesByIncreasingOffset();
 
     cutNonAndWeaklyMetricTriangles();
     Global::removeIsolatedReads();
-
 
 
     for (int i = 0; i < Params::THREADS; i++) VPII().swap(edgesToRemove[i]);
@@ -334,7 +334,7 @@ void GraphSimplifier::removeShortParallelPathsJob(int a, int b, int maxOffset, i
     }
 
     cerr << "There were " << pathsConsidered
-                                  << " paths considered in removeShortParallelPaths in thread " << thread_id << endl;
+         << " paths considered in removeShortParallelPaths in thread " << thread_id << endl;
 }
 
 
@@ -600,9 +600,9 @@ int GraphSimplifier::removeDanglingUpperBranches(int maxOffset) {
 bool GraphSimplifier::contractPathNodes() {
     TimeMeasurer::startMeasurement("GraphSimplifier_contractPathNodes");
 
-    Graph GRev = G->getReverseGraph();
+//    Graph GRev = G->getReverseGraph();
 
-//    VVPII GRev = G->getReverseGraphNeighborhoods();
+    VVPII GRev = G->getReverseGraphNeighborhoods();
     /**
      * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
      */
@@ -666,13 +666,13 @@ bool GraphSimplifier::contractPathNodes() {
         if (G->contractPath(a, b, c)) {
             anyContractionDone = true;
             contractionsDone++;
-            GRev.removeDirectedEdge(b, a);
-            GRev.removeDirectedEdge(c, b);
-            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
+//            GRev.removeDirectedEdge(b, a);
+//            GRev.removeDirectedEdge(c, b);
+//            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
 
-//            removeDirectedEdge(b, a);
-//            removeDirectedEdge(c, b);
-//            addDirectedEdge(c, a, G->findWeight(a, c));
+            removeDirectedEdge(b, a);
+            removeDirectedEdge(c, b);
+            addDirectedEdge(c, a, G->findWeight(a, c));
         }
 
         if ((*G)[a].size() == 1 && GRev[a].size() == 1) {
@@ -724,7 +724,8 @@ int GraphSimplifier::mergeLength0Edges() {
 
                 mergeNodes(a, b, GRev, 0);
 
-//                cerr << "merging nodes:" << endl << *(*reads)[a] << endl << *(*reads)[b] << endl;
+                cerr << "merging nodes:" << endl << *(*reads)[a] << endl << *(*reads)[b] << endl
+                     << "if done in GCPS, then it should be considered an error!" << endl;
 
                 nodesMerged++;
                 break;

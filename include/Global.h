@@ -104,7 +104,6 @@ struct pairhash {
 public:
     template<typename T, typename U>
     std::size_t operator()(const std::pair<T, U> &x) const {
-//        return std::hash<T>()(x.first) ^ (  std::hash<U>()(x.second) ^ (std::hash<T>( x.first )+1) ) ;
         return x.first ^ (x.second + 171);
     }
 };
@@ -194,7 +193,6 @@ public:
             else return a.first < b.first;
         });
 
-//        cerr << neigh[0].first << endl;
 
         for (int i = 0; i < neigh.size(); i++) {
             for (int k = 0; k < neigh[i].second; k++) {
@@ -211,13 +209,11 @@ public:
             });
 
             for (int j = 0; j < neigh2.size(); j++) {
-//                cerr << "    expanding" << endl;
                 for (int k = 0; k < neigh2[j].second + neigh[i].second; k++) { cerr << " "; }
                 cerr << *READS[neigh2[j].first] << endl;
             }
 
 
-//            if( GRAPH[b].size() > 0 )cerr << "collapsing" << endl;
 
         }
     }
