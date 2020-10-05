@@ -118,3 +118,29 @@ void Global::generateFasta(string filename) {
     cerr << endl;
 
 }
+
+bool Global::checkOLCGraphCorrectness(Graph *G, vector<Read *> *reads) {
+    bool correct = true;
+    for (int i = 0; i < G->size(); i++) {
+        if ((*reads)[i] == nullptr) continue;
+        auto b1 = (*reads)[i]->getSequence();
+        for (PII p : (*G)[i]) {
+            auto b2 = (*reads)[p.first]->getSequence();
+            auto b3 = b1;
+            b3 <<= (p.second << 1);
+            int overlap = Read::calculateReadOverlap((*reads)[i], (*reads)[p.first], p.second);
+            b3 ^= b2;
+            int cnt = b3.count(0, (overlap << 1) - 1);
+            if (cnt > 0) {
+                cerr << "ERROR! OVERLAP IS NOT THE SAME!," << endl;
+                Global::writeReadPair((*reads)[i], (*reads)[p.first], p.second);
+                DEBUG(cnt);
+                DEBUG(b1);
+                DEBUG(b2);
+                DEBUG(b3);
+                correct = false;
+            }
+        }
+    }
+    return correct;
+}

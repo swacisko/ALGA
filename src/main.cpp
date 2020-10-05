@@ -59,9 +59,11 @@ int main(int argc, char **argv) {
     const bool testing = false;
     if (testing) { // just for testing in IDE
         Params::inStreamFilePath1 = "/home/sylwester/Documents/PhD/ECBiG/GenomeAlignment/RealSequences/lux2_musket_k21_1.fastq";
-        Params::inStreamFilePath1 = "/home/sylwester/Documents/PhD/ECBiG/GenomeAlignment/RealSequences/lux2_musket_k21_2.fastq";
+        Params::inStreamFilePath2 = "/home/sylwester/Documents/PhD/ECBiG/GenomeAlignment/RealSequences/lux2_musket_k21_2.fastq";
         Params::outStreamFileName = "alga_test_test";
         Params::INPUT_FILE_TYPE = Params::FASTQ;
+//        Params::SERIALIZE_GRAPH_BEFORE_SIMPLIFIER = 1;
+        Params::DESERIALIZE_GRAPH = 1;
     }
 
     DEBUG(sizeof(MemTestClass));
