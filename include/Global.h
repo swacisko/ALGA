@@ -160,6 +160,12 @@ public:
 
     static void writeReads(int a, int b); // writes all reads from given interval
 
+    /**
+     *
+     * @return true if the constructed graph G is correct with regard to overlaps (all overlapping areas must be axactly the same), false otherwise
+     */
+    static bool checkOLCGraphCorrectness(Graph *G, vector<Read *> *reads);
+
     static void writeNodeWithNeighbors(int id) {
         cerr << id << endl;
         cerr << *READS[id] << endl;

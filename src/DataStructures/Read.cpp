@@ -18,8 +18,8 @@
 
 #include "DataStructures/Read.h"
 
-Read::Read(int id, string seq) : id(id), sequence(
-        Bitset((int) (seq.size()) << 1)) {
+Read::Read(int id, string seq) : id(id), /*sequence(
+        Bitset((int) (seq.size()) << 1)) */ sequence((int) seq.size() << 1) {
 
     createSequence(seq);
 }
@@ -40,7 +40,7 @@ void Read::clear() {
 
 
 void Read::createSequence(string &s) {
-    sequence = Bitset((int) (s.size()) << 1);
+//    sequence = Bitset((int) (s.size()) << 1);
 
     for (unsigned i = 0; i < s.size(); i++) {
 
@@ -62,7 +62,7 @@ void Read::createSequence(string &s) {
                 break;
             }
             default: { // N = 00
-//                sequence.set(i << 1, true);
+                break;
             }
         }
 
@@ -122,7 +122,6 @@ vector<Params::KMER_HASH_TYPE> Read::getKmerHashes(int kmerLength) {
     for (Kmer k : kmers) hashes.push_back(k.hash);
     kmers.clear();
 
-//    return std::move(hashes);
     return hashes;
 }
 

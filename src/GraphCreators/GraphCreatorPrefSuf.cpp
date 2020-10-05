@@ -37,8 +37,10 @@ GraphCreatorPrefSuf::~GraphCreatorPrefSuf() {
 
 void GraphCreatorPrefSuf::clear() {
     vector<unsigned long long>().swap(prefixKmers);
+    vector<ADDITIONAL_HASH_TYPE>().swap(prefixKmersAdditional);
 
     vector<unsigned long long>().swap(suffixKmers);
+    vector<ADDITIONAL_HASH_TYPE>().swap(suffixKmersAdditional);
 
     vector<vector<unsigned> >().swap(prefixKmersInBuckets);
 
@@ -92,16 +94,23 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
 void GraphCreatorPrefSuf::createInitialState() {
     prefixKmers.reserve(G->size());
+    prefixKmersAdditional.reserve(G->size());
     suffixKmers.reserve(G->size());
+    suffixKmersAdditional.reserve(G->size());
 
-    unsigned long long dummyKmer = (unsigned long long) (-1); // -1 is just the maximal unsigned value
+    unsigned long long dummyKmer = (unsigned long long) (-1); // -1 is just the maximal unsigned long long value
+    ADDITIONAL_HASH_TYPE dummyKmerAdditional = (ADDITIONAL_HASH_TYPE) (-1); // -1 is just the maximal unsigned value
     for (unsigned i = 0; i < G->size(); i++) {
         if ((*reads)[i] != nullptr) {
             prefixKmers.emplace_back(0);
+            prefixKmersAdditional.emplace_back(0);
             suffixKmers.emplace_back(0);
+            suffixKmersAdditional.emplace_back(0);
         } else {
             prefixKmers.push_back(dummyKmer);
+            prefixKmersAdditional.push_back(dummyKmerAdditional);
             suffixKmers.push_back(dummyKmer);
+            suffixKmersAdditional.push_back(dummyKmerAdditional);
         }
     }
 
@@ -127,28 +136,34 @@ void GraphCreatorPrefSuf::createInitialState() {
 
     currentPrefSufLength = 0;
     prefHashFactor = 1;
+    prefHashFactorAdditional = 1;
     for (int l = 0; l < Params::MIN_OVERLAP_PREF_SUF - 1; l++) {
         currentPrefSufLength++;
         prefHashFactor <<= 2;
+        prefHashFactorAdditional <<= 2;
+
         if (prefHashFactor >= Params::MAX_HASH_CONSIDERED) prefHashFactor %= Params::MAX_HASH_CONSIDERED;
+        if (prefHashFactorAdditional >= MAX_ADDITIONAL_HASH) prefHashFactorAdditional %= MAX_ADDITIONAL_HASH;
     }
 
     cerr << "creating initial state ended" << endl;
 }
 
 void GraphCreatorPrefSuf::createInitialStateJob(int a, int b, int thread_id) {
-    Params::KMER_HASH_TYPE currentPrefSufLength, prefHashFactor;
+    Params::KMER_HASH_TYPE currentPrefSufLength, prefHashFactor, prefHashFactorAdditional;
 
     int progressCounter = 0;
     for (int i = a; i <= b; i++) {
         if (!(alignFrom[i] || alignTo[i])) continue;
         currentPrefSufLength = 0;
         prefHashFactor = 1;
+        prefHashFactorAdditional = 1;
 
         for (int l = 0; l < Params::MIN_OVERLAP_PREF_SUF - 1; l++) {
             currentPrefSufLength++;
 
-            bool prefUpdated = alignTo[i] ? updatePrefixHash(i, currentPrefSufLength, prefHashFactor) : false;
+            bool prefUpdated = alignTo[i] ? updatePrefixHash(i, currentPrefSufLength, prefHashFactor,
+                                                             prefHashFactorAdditional) : false;
             if (!prefUpdated) alignTo[i] = false;
 
             bool suffUpdated = alignFrom[i] ? updateSuffixHash(i, currentPrefSufLength) : false;
@@ -156,6 +171,9 @@ void GraphCreatorPrefSuf::createInitialStateJob(int a, int b, int thread_id) {
 
             prefHashFactor <<= 2;
             if (prefHashFactor >= Params::MAX_HASH_CONSIDERED) prefHashFactor %= Params::MAX_HASH_CONSIDERED;
+
+            prefHashFactorAdditional <<= 2;
+            if (prefHashFactorAdditional >= MAX_ADDITIONAL_HASH) prefHashFactorAdditional %= MAX_ADDITIONAL_HASH;
         }
 
         if (thread_id == 0)
@@ -165,11 +183,15 @@ void GraphCreatorPrefSuf::createInitialStateJob(int a, int b, int thread_id) {
     if (thread_id == 0) cerr << endl;
 }
 
-bool GraphCreatorPrefSuf::updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor) {
+bool GraphCreatorPrefSuf::updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor,
+                                           ADDITIONAL_HASH_TYPE prefHashFactorAdditional) {
     if (currentPrefSufLength > (*reads)[id]->size()) return false;
 
     prefixKmers[id] += (*(*reads)[id])[currentPrefSufLength - 1] * prefHashFactor;
     if (prefixKmers[id] >= Params::MAX_HASH_CONSIDERED) prefixKmers[id] %= Params::MAX_HASH_CONSIDERED;
+
+    prefixKmersAdditional[id] += (*(*reads)[id])[currentPrefSufLength - 1] * prefHashFactorAdditional;
+    if (prefixKmersAdditional[id] >= MAX_ADDITIONAL_HASH) prefixKmersAdditional[id] %= MAX_ADDITIONAL_HASH;
     return true;
 }
 
@@ -180,6 +202,9 @@ bool GraphCreatorPrefSuf::updateSuffixHash(int id, int currentPrefSufLength) {
     suffixKmers[id] += (*(*reads)[id])[(*reads)[id]->size() - currentPrefSufLength];
     if (suffixKmers[id] >= Params::MAX_HASH_CONSIDERED) suffixKmers[id] %= Params::MAX_HASH_CONSIDERED;
 
+    suffixKmersAdditional[id] <<= 2;
+    suffixKmersAdditional[id] += (*(*reads)[id])[(*reads)[id]->size() - currentPrefSufLength];
+    if (suffixKmersAdditional[id] >= MAX_ADDITIONAL_HASH) suffixKmersAdditional[id] %= MAX_ADDITIONAL_HASH;
     return true;
 }
 
@@ -265,6 +290,9 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
     prefHashFactor <<= 2;
     if (prefHashFactor >= Params::MAX_HASH_CONSIDERED) prefHashFactor %= Params::MAX_HASH_CONSIDERED;
 
+    prefHashFactorAdditional <<= 2;
+    if (prefHashFactorAdditional >= MAX_ADDITIONAL_HASH) prefHashFactorAdditional %= MAX_ADDITIONAL_HASH;
+
 }
 
 void GraphCreatorPrefSuf::removeKmersFromBucketsJob(int a, int b, int thread_id) {
@@ -299,7 +327,7 @@ void GraphCreatorPrefSuf::writeState() {
 void GraphCreatorPrefSuf::updatePrexihHashJob(int a, int b, int thread_id) {
     for (int i = a; i <= b; i++) {
         if (alignTo[i]) {
-            bool prefixUpdated = updatePrefixHash(i, currentPrefSufLength, prefHashFactor);
+            bool prefixUpdated = updatePrefixHash(i, currentPrefSufLength, prefHashFactor, prefHashFactorAdditional);
             if (!prefixUpdated) alignTo[i] = false;
         }
     }
@@ -320,7 +348,9 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
             for (unsigned pref : prefixKmersInBuckets[b]) {
                 int prefId = pref;
-                if (prefixKmers[prefId] == suffixKmers[suffId] && prefId != suffId) {
+                if (prefixKmers[prefId] == suffixKmers[suffId] && prefId != suffId &&
+                    prefixKmersAdditional[prefId] == suffixKmersAdditional[suffId]) {
+
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
                         continue; // this line here prohibits included alignment

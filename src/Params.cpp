@@ -314,8 +314,8 @@ void Params::initializeParams(int argc, char **argv) {
                     inStreamFilePath1 = string(optarg);
 
                     cerr << "first inStreamFilePath1: " << inStreamFilePath1 << endl;
-                    inStream.open(inStreamFilePath1);
-                    cin.rdbuf(inStream.rdbuf());
+//                    inStream.open(inStreamFilePath1);
+//                    cin.rdbuf(inStream.rdbuf());
 
 //                    fileName;
                     it = inStreamFilePath1.rfind('/');
@@ -714,7 +714,8 @@ int Params::PREF_SUF_GRAPH_CREATION = 5;
 int Params::ALGORITHM_IN_USE = PREF_SUF_GRAPH_CREATION;
 
 
-Params::KMER_HASH_TYPE Params::MAX_HASH_CONSIDERED = ((100000000ll * 100000000ll + 1));
+//Params::KMER_HASH_TYPE Params::MAX_HASH_CONSIDERED = ((100000000ll * 100000000ll + 1));
+Params::KMER_HASH_TYPE Params::MAX_HASH_CONSIDERED = ((1'000'000'000ll * 1'000'000'000ll + 3)); // 10^18 + 3
 
 
 int Params::TRAVERSE_TYPE = /*TRAVERSE_GREEDY;*/    TRAVERSE_SHALLOW;
