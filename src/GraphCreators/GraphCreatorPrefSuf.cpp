@@ -351,29 +351,6 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                 if (prefixKmers[prefId] == suffixKmers[suffId] && prefId != suffId &&
                     prefixKmersAdditional[prefId] == suffixKmersAdditional[suffId]) {
 
-                    {
-                        auto r1 = (*reads)[suffId];
-                        auto r2 = (*reads)[prefId];
-                        int overlap = Read::calculateReadOverlap(r1, r2, offset);
-
-                        auto b1 = r1->getSequence();
-                        auto b2 = r2->getSequence();
-                        b1 <<= (offset << 1);
-                        b1 ^= b2;
-                        int cnt = b1.count(0, (overlap << 1) - 1);
-                        if (cnt > 0) {
-                            cerr << "HASH COLLISION!!   OVERLAP IS NOT THE SAME!," << endl;
-                            Global::writeReadPair(r1, r2, offset);
-                            DEBUG(suffId);
-                            DEBUG(prefId);
-                            DEBUG(suffixKmers[suffId]);
-                            DEBUG(prefixKmers[prefId]);
-                            DEBUG(cnt);
-                            cerr << endl << endl;
-                            continue;
-                        }
-
-                    }
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
                         continue; // this line here prohibits included alignment

@@ -29,14 +29,11 @@ public:
 
 private:
 
-    /**
-     * If true, then isolated reads will be removed from graph before reversing the graph. It is to reduce memory peak.
-     */
-    bool removeIsolatedReadsBeforeReversingGraph;
-
-    void writeState();
 
     int maxReadLength;
+    int currentPrefSufLength;
+    Params::KMER_HASH_TYPE prefHashFactor; // this is the hashFactor to create prefix hashes.
+
 
     using ADDITIONAL_HASH_TYPE = unsigned;
     const ADDITIONAL_HASH_TYPE MAX_ADDITIONAL_HASH = 1'000'000'007; //  500'009; // is also a prime
@@ -76,10 +73,10 @@ private:
 
     void calculateMaxReadLength();
 
+    /**
+     * Initializes necessary vectors and creates hashes for all suffixes and prefixes of minimum required overlap (perhaps +-1 of that length).
+     */
     void createInitialState();
-
-    int currentPrefSufLength;
-    Params::KMER_HASH_TYPE prefHashFactor; // this is the hashFactor to create prefix hashes.
 
 
     bool updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor,
@@ -100,6 +97,13 @@ private:
     void createInitialStateJob(int a, int b, int thread_id);
 
     void moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id);
+
+    /**
+     * If true, then isolated reads will be removed from graph before reversing the graph. It is to reduce memory peak.
+     */
+    bool removeIsolatedReadsBeforeReversingGraph;
+
+    void writeState();
 
 };
 

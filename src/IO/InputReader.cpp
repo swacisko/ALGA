@@ -49,6 +49,9 @@ InputReader::InputReader() {
 
 
 void InputReader::readInput() {
+    Params::inStream.open(Params::inStreamFilePath1);
+    cin.rdbuf(Params::inStream.rdbuf());
+
     Global::READS.clear();
     cerr << "starting to read" << endl;
     readReads();

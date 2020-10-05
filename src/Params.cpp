@@ -314,8 +314,8 @@ void Params::initializeParams(int argc, char **argv) {
                     inStreamFilePath1 = string(optarg);
 
                     cerr << "first inStreamFilePath1: " << inStreamFilePath1 << endl;
-                    inStream.open(inStreamFilePath1);
-                    cin.rdbuf(inStream.rdbuf());
+//                    inStream.open(inStreamFilePath1);
+//                    cin.rdbuf(inStream.rdbuf());
 
 //                    fileName;
                     it = inStreamFilePath1.rfind('/');
