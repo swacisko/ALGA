@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
     DEBUG(sizeof(Read));
     DEBUG(sizeof(Bitset));
 
+
 //     exit(1);
 
     ios_base::sync_with_stdio(0);
