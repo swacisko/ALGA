@@ -10,71 +10,63 @@
 #include <Global.h>
 #include <unordered_map>
 #include <functional>
+#include <future>
 
-#include "ContigCreators/ContigCreatorSinglePath.h"
 
 ContigCreatorSinglePath::ContigCreatorSinglePath(Graph *G, vector<Read *> &reads) : ContigCreator(G, &reads) {
-    was = VB(G->size(), false);
-    dst = VI(G->size(), 0);
+
 }
 
 
 vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
-    if (was.empty()) was = VB(G->size(), false);
-    if (dst.empty()) dst = VI(G->size(), 0);
 
     markReliablePredecessorsByPairedConnections();
 
-//    inDeg = G->getInDegrees();
     VB inDeg = G->hasPositiveIndegree();
 
     int progressCounter = 0;
-//    int allSize = inDeg->size() + G->size();
-    int allSize = 2 * G->size();
 
     vector<Contig *> contigs;
     Contig::ID_COUNT = 0;
-//    for (int i = 0; i < inDeg->size(); i++) {
-    for (int i = 0; i < G->size(); i++) {
-        if ((*reads)[i] == nullptr) continue;
 
-//        MyUtils::writeProgress(i + 1, inDeg->size() + G->size(), progressCounter, "creating contigs", 1);
-        MyUtils::writeProgress(i + 1, G->size() + G->size(), progressCounter, "creating contigs", 1);
 
-//        if ((*inDeg)[i] == 0 && (*G)[i].size() > 0) {
-        if (inDeg[i] == false && (*G)[i].size() > 0) {
-            vector<Contig *> ctg = getContigOmitShortCyclesFrom(i);
+    { // parallel traversal
+        auto getContigOmitShortCyclesFromJob = [=](unsigned a, unsigned b, unsigned thread_id) {
+            vector<Contig *> contigs;
+            for (unsigned i = a; i <= b; i++) {
+                if ((*reads)[i] == nullptr) continue;
+                if ((*G)[i].size() > 0) {
+                    vector<Contig *> ctg = getContigOmitShortCyclesFrom(i);
+                    contigs.insert(contigs.end(), ctg.begin(),
+                                   ctg.end()); // if the vertex has indegree 0 and outdegree > 0 then i write it
+                }
+            }
+            return contigs;
+        };
 
-//            cerr << endl << "Found " << ctg.size() << " new contigs" << endl << endl;
+        vector<std::future<vector<Contig *> > > futures(Params::THREADS - 1);
 
-            contigs.insert(contigs.end(), ctg.begin(),
-                           ctg.end()); // if the vertex has indegree 0 and outdegree > 0 then i write it
-//        } else if ((*inDeg)[i] == 0 && (*G)[i].size() == 0 && (*reads)[i]->size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
-        } else if (inDeg[i] == false && (*G)[i].size() == 0 &&
-                   (*reads)[i]->size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
-            vector<pair<Read *, int> > containedReads;
-            containedReads.push_back({(*reads)[i], 0});
-            Contig *ctg = new Contig(Contig::ID_COUNT++, (*reads)[i]->getSequenceAsString(), containedReads);
-            contigs.push_back(ctg); // if the vertex has indegree 0 and outdegree > 0 then i write it
+        VI nodesToCheck; // this is just the list of all nodes from which we will have to start creating paths. It is done to equally divide work into threads.
+        for (unsigned i = 0; i <= G->size(); i++) {
+            if ((*reads)[i] == nullptr) continue;
+            if ((*G)[i].size() > 0) nodesToCheck.push_back(i);
         }
+        int WW = (int) ceil((double) nodesToCheck.size() / Params::THREADS);
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = nodesToCheck[i * WW];
+            int b = min((i + 1) * WW - 1, (int) nodesToCheck.size() - 1);
+            b = nodesToCheck[b];
+            futures[i - 1] = std::async(std::launch::async, getContigOmitShortCyclesFromJob, a, b, i);
+        }
+        contigs = getContigOmitShortCyclesFromJob(nodesToCheck[0], nodesToCheck[WW - 1], 0);
+
+        for (auto &p : futures) {
+            auto thread_contigs = p.get();
+            contigs.insert(contigs.end(), thread_contigs.begin(), thread_contigs.end());
+        }
+
     }
 
-
-    for (int i = 0; i < G->size(); i++) {
-//        MyUtils::writeProgress(i + 1 + inDeg->size(), inDeg->size() + G->size(), progressCounter, "creating contigs", 1);
-        MyUtils::writeProgress(i + 1 + G->size(), G->size() + G->size(), progressCounter, "creating contigs", 1);
-
-        /*if( (*G)[i].size() >= 2  && (*inDeg)[i] > 0   ){
-            vector<Contig*> ctg = getContigOmitShortCyclesFrom(i);
-            contigs.insert( contigs.end(), ctg.begin(), ctg.end() );
-        }
-        else */
-//        if ((*G)[i].size() >= 1 && (*inDeg)[i] > 0) {
-        if ((*G)[i].size() >= 1 && inDeg[i]) {
-            vector<Contig *> ctg = getContigOmitShortCyclesFrom(i);
-            contigs.insert(contigs.end(), ctg.begin(), ctg.end());
-        }
-    }
     cerr << endl << "contigs created" << endl;
     cerr << "There are " << contigs.size() << " contigs after creation, before correcting SNPs" << endl;
 
@@ -95,16 +87,10 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
     cerr << endl << "SNPs corrected" << endl;
 
 
-//    delete inDeg;
-//    inDeg = 0;
-
 
     DEBUG(reliablePredecessors.size());
     unordered_map<int, unordered_set<int> >().swap(reliablePredecessors);
-//    VVPII().swap(GRev);
     unordered_map<unsigned, VPII>().swap(GRev);
-    VI().swap(dst);
-    VB().swap(was);
 
 
     cerr << "There are " << contigs.size() << " contigs returned" << endl;
@@ -127,10 +113,8 @@ void ContigCreatorSinglePath::correctSNPsJob(int a, int b, int thread_id, vector
 vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) {
     string s = "";
 
-    int forks = 0;
-
-//    unordered_map<int,bool> was;
-//    unordered_map<int,int> dst;
+    unordered_map<int, bool> was;
+    unordered_map<int, int> dst;
 
     was[beg] = true;
     VI visited(1, beg);
@@ -142,7 +126,6 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
     for (int i = 0; i < (*G)[beg].size(); i++) {
 
         visited.clear();
-//        visited.push_back(beg);
         s = "";
 
         readsInContig.clear();
@@ -169,7 +152,6 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
         if (canBeNext == 1) {
             if (offset != -1) dst[nextId] = dst[p] + offset;
             addContractedPathToString(p, nextId, s, readsInContig);
-//            cerr << "appending path to contig " << Contig::ID_COUNT << endl;
             predecessor = p;
             p = nextId;
         }
@@ -209,12 +191,10 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
             if (!contigs.empty()) contigs.back()->setEndsInFork(true);
         }
 
-
         for (int a : visited) {
             was[a] = false;
             dst[a] = 0;
         }
-
     }
 
     was[beg] = false;
@@ -224,17 +204,14 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
         dst[a] = 0;
     }
 
-
     visited.clear();
     s.clear();
 
     return contigs;
-
 }
 
 
 VPII ContigCreatorSinglePath::getNextStepCandidates(int predecessor, int p, vector<pair<Read *, int>> &readsInContig) {
-//    return getNextStepCandidatesByPairedReads( predecessor,p,readsInContig );
 
     VPII res;
     for (int j = 0; j < (*G)[p].size(); j++) {
@@ -254,33 +231,19 @@ VPII ContigCreatorSinglePath::getNextStepCandidates(int predecessor, int p, vect
 bool ContigCreatorSinglePath::canBeNextStepCandidate(int predecessor, int p, int d, int of,
                                                      vector<pair<Read *, int>> &readsInContig) {
 
-//        cerr << "\tCAUTION! do not lengthening paths!" << endl; return false; // #TEST
-
-//    if( reliablePredecessors[p] == predecessor ) return true;
+//    return false; // uncomment this line to FORBID EXTENDING PATHS
     if (reliablePredecessors[p].count(predecessor)) return true;
 
-
-
-
-
-    /*bool REDUCE_MISASSEMBLIES = ( Params::TRAVERSE_TYPE == Params::TRAVERSE_SHALLOW );
-    if( REDUCE_MISASSEMBLIES ){
-        return false;
-    }*/
 
 //    if( was[d] == false || dst[p] - dst[ d ] + of > Params::CONTIG_CREATOR_SHORT_CYCLE_LENGTH ) return true;
 
     return false;
-
 }
 
 
 void
 ContigCreatorSinglePath::addContractedPathToString(int a, int b, string &s, vector<pair<Read *, int> > &readsInContig) {
     LPII path = G->getContractedEdgePath(a, b);
-//    if( path.size() > 100 ){
-//        cerr << endl << "Found contracted edge path of size " << path.size() << endl;
-//    }
     addContractedPathToString(a, path, s, readsInContig);
 }
 
@@ -299,35 +262,24 @@ ContigCreatorSinglePath::addContractedPathToString(int a, LPII &path, string &s,
 }
 
 void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
-//    reliablePredecessors = VI(G->size(),-1);
-//    reliablePredecessors = vector<unordered_set<int>>(G->size());
     reliablePredecessors = unordered_map<int, unordered_set<int> >();
 
 
     minLengthOfEdgeForReliablePredecessor = Global::calculateAvgReadLength() * 2;
-//    minLengthOfEdgeForReliablePredecessor = Global::calculateAvgReadLength();
-//    minLengthOfEdgeForReliablePredecessor = 5;
+
 
     {
-//        GRev = G->getReverseGraph().getV();
         for (int i = 0; i < G->size(); i++) {
             for (PII p : (*G)[i]) {
                 GRev[p.first].emplace_back(i, p.second);
             }
         }
 
-//        int cnt = 0;
-//        for(int i=0; i<GRev.size(); i++) if( GRev[i].empty() ) cnt++;
-//        DEBUG(cnt);
-//        DEBUG(GRev.size());
-
         cerr << "Marking reliable predecessors, after creating GRev" << endl;
         MyUtils::process_mem_usage();
-//        exit(1);
     }
 
     auto helper = [=](int a, int b, int thread_id) {
-        int progressCounter = 0;
         for (int i = a; i <= b; i++) {
 
             auto it = GRev.find(i);
@@ -336,33 +288,15 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
             if ((*G)[i].size() == 1 && (*G)[i][0].second >= minLengthOfEdgeForReliablePredecessor &&
                 GRev[i].size() >= 1) {
 
-//                int relPred = getReliablePredecessor(i);
-//                G->lockNode(0); // just locking so that many threads cannot acces the same element at once
-//                reliablePredecessors[i] = relPred;
-//                if( relPred != -1 ){
-//                    reliablePredecessors[i] = relPred;
-//                    cerr << "Found reliable predecessor of node " << i << ": " << reliablePredecessors[i] << endl;
-//                }
-//                G->unlockNode(0);
-
-
-
-
                 VI relPred = getReliablePredecessors(i);
-//                VI relPred = VI( 1,getReliablePredecessor(i) ); // only one accepted predecessor, the same as above commented few lines
                 G->lockNode(0); // just locking so that many threads cannot acces the same element at once
                 if (!relPred.empty()) {
                     for (int x : relPred) reliablePredecessors[i].insert(x);
-//                    cerr << "Found reliable predecessor of node " << i << ": " << reliablePredecessors[i] << endl;
                 }
                 G->unlockNode(0);
-
             }
-
-//            MyUtils::writeProgress(i-a+1, b-a+1, progressCounter, "determination of reliable predecessors",1);
         }
     };
-
 
     vector<std::thread> parallelJobs;
     parallelJobs.reserve(Params::THREADS);
@@ -373,11 +307,9 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
         int b = min((i + 1) * W - 1, (int) G->size() - 1);
         parallelJobs.push_back(thread([=] { helper(a, b, i); }));
     }
-
     helper(0, W - 1, 0);
 
     for (auto &p : parallelJobs) p.join();
-
 }
 
 
@@ -463,8 +395,6 @@ int ContigCreatorSinglePath::countPairedConnections(int d, int a, int b) {
         int pairedRevCompId = Read::getIdOfCompRevRead(pairedId);
 
         if (begOfAB.count(pairedId) || begOfAB.count(pairedRevCompId)) {
-//            cerr << "Read:          " << *(*reads)[ DA[i].first ] << endl;
-//            cerr << "Paired read:   " << *(*reads)[ pairedRevCompId ] << endl << endl;
             cnt++;
         }
 
@@ -473,9 +403,6 @@ int ContigCreatorSinglePath::countPairedConnections(int d, int a, int b) {
 
     s += "}";
 
-//    cerr << s << endl;
-
-//    cerr << "cnt = " << cnt << endl;
 
     return cnt;
 

@@ -849,13 +849,13 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
 
         for (auto p : g[v]) {
 
-            LPII *edge;
+            LPII edge;
             int tempDst = dst;
             if (reversed) {
 
-                edge = &(G->getContractedEdgePath(p.first, v));
+                edge = G->getContractedEdgePath(p.first, v);
 
-                for (PII x : (*edge)) {
+                for (PII x : edge) {
                     if (tempDst > MAX_DST) break;
 
                     neigh.insert(x.first);
@@ -863,8 +863,8 @@ bool GraphSimplifier::removeEdgePairedEndSeparators() {
                 }
             } else {
 
-                edge = &G->getContractedEdgePath(v, p.first);
-                VPII edge2(edge->begin(), edge->end());
+                edge = G->getContractedEdgePath(v, p.first);
+                VPII edge2(edge.begin(), edge.end());
 
                 for (int j = (int) edge2.size() - 1; j >= 0 && tempDst < MAX_DST; j--) {
                     neigh.insert(edge2[j].first);

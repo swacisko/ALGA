@@ -7,7 +7,6 @@
 #include <Corrector/ReadCorrector.h>
 #include <Global.h>
 
-#include "Corrector/ReadCorrector.h"
 
 ReadCorrector::ReadCorrector(vector<Read *> &reads, int sLength, int bLength) {
     this->reads = &reads;
@@ -38,7 +37,6 @@ void ReadCorrector::addReadDataToMap(Read *r, vector<ReadCorrector::MAP_TYPE> &m
     if (r == nullptr) return;
     if (r->size() < smallLength + bigLength) return;
 
-//    cerr << "Processing read " << r->getSequenceAsString() << endl;
 
     SMALL_TYPE sH = 0;
     SMALL_TYPE smallPow = (1 << (2 * smallLength - 2)); // 4 ^ (smallLength-1);
@@ -68,7 +66,6 @@ void ReadCorrector::addReadDataToMap(Read *r, vector<ReadCorrector::MAP_TYPE> &m
 
     while (q < r->size()) {
 
-//        cerr << "\r(p,q) = (" << p << "," << q << ")" << flush;
 
         sH -= smallPow * accessReadPosition(r, p - smallLength);
         sH <<= 2;
@@ -92,7 +89,6 @@ void ReadCorrector::addReadDataToMap(Read *r, vector<ReadCorrector::MAP_TYPE> &m
         q++;
     }
 
-//    cerr << "\tprocessed" << endl;
 
 }
 
@@ -100,7 +96,6 @@ void ReadCorrector::addReadDataToMap(Read *r, vector<ReadCorrector::MAP_TYPE> &m
 void ReadCorrector::createFrequenciesMap() {
     vector<MAP_TYPE>(FREQS_SIZE).swap(frequencies);
 
-//    vector< MAP_TYPE > freqs( FREQS_SIZE );
     auto helper = [=](int a, int b, int thread_id) {
         int progressCounter = 0;
         for (int i = a; i <= b; i++) {
@@ -124,19 +119,6 @@ void ReadCorrector::createFrequenciesMap() {
 
     cerr << "All reads added to map, proceeding to merging maps" << endl;
 
-
-    /* swap( frequencies, freqs[0]);
-     for( int i=1; i<FREQS_SIZE; i++ ){
-         for( auto itx : freqs[i] ){
-             for( auto ity : itx.second ){
-                 frequencies[ itx.first ][ ity.first ] += ity.second;
-             }
-         }
-
-         MAP_TYPE().swap( freqs[i] );
-     }*/
-
-//    debugFrequencies();
 
     cerr << "Retaining only candidates in frequencies, candidateThreshold = " << candidateThreshold << endl;
 
@@ -169,24 +151,9 @@ void ReadCorrector::createFrequenciesMap() {
     retainer(0, W - 1);
     for (auto &p : parallelJobs) p.join();
 
-    /*for(auto &freqs : frequencies){
-
-        for( auto &itx : freqs ){
-            vector<SMALL_TYPE> toRemove;
-            for( auto ity : itx.second ){
-                if( ity.second < candidateThreshold ) toRemove.push_back(ity.first);
-            }
-            for(auto tr : toRemove) itx.second.erase(tr);
-        }
-
-        vector<BIG_TYPE> toRemove;
-        for(auto itx : freqs) if( itx.second.empty() ) toRemove.push_back(itx.first);
-        for(auto tr : toRemove) freqs.erase(tr);
-    }*/
 
 
     cerr << "maps merged" << endl;
-//    debugFrequencies();
 }
 
 
@@ -222,10 +189,6 @@ void ReadCorrector::applyCorrectionToRead(Read *r) {
     if (r == nullptr) return;
     if (r->size() < smallLength + bigLength) return;
 
-//    string rs =  r->getSequenceAsString();
-//    if( reversedReads ) reverse(rs.begin(), rs.end());
-//    cerr << "Correcting read " << rs << endl;
-
     SMALL_TYPE sH = 0;
     SMALL_TYPE smallPow = (1 << (2 * smallLength - 2)); // 4 ^ (smallLength-1);
 
@@ -249,23 +212,11 @@ void ReadCorrector::applyCorrectionToRead(Read *r) {
 
     auto correctLocal = [=, &r, &p, &q, &sH, &bH]() {
 
-//        cerr << "correctLocal: sMer: " << hashToString(sH,smallLength) << "    tMer: " << hashToString(bH, bigLength) << endl;
-
-//        if( frequencies.count(bH) == 0 ) return; // no bigLength kmer - returning (it could have been removed)
         if (frequencies[bH & (FREQS_SIZE - 1)].count(bH) == 0)
             return; // no bigLength kmer - returning (it could have been removed)
 
         if (frequencies[bH & (FREQS_SIZE - 1)][bH].count(sH))
             return; // if sH can be paired with bH in at least candidateThreshold kmers
-
-
-//        cerr << "Found read to correct" << endl;
-//        for(int i=0; i<r->size(); i++) cerr << Params::getNuklAsString( accessReadPosition(r,i) );
-//        cerr << endl;
-//        for( int i=0; i<p-smallLength; i++ ) cerr << ".";
-//        for(int i=p-smallLength; i < q; i++) cerr << Params::getNuklAsString( accessReadPosition(r,i) );
-//        for(int i=q; i<r->size(); i++) cerr << ".";
-//        cerr << endl;
 
 
         SMALL_TYPE closest = -1;
@@ -287,8 +238,6 @@ void ReadCorrector::applyCorrectionToRead(Read *r) {
 
                     // if sMer has different boundaries, then i do not change that - i change only SNPS that are inside the sMer, unless the sMer if at the beginning (or end) of the read)
                     if ((i == 0 || i == smallLength - 1) && (p > smallLength)) {
-//                        cerr << "sH boundaries differ, not correcting" << endl;
-//                                cerr << "correctLocal: sMer: " << hashToString(sH,smallLength) << "    tMer: " << hashToString(bH, bigLength) << endl;
 
                         sameBoundaries = false;
                         break;
@@ -305,27 +254,16 @@ void ReadCorrector::applyCorrectionToRead(Read *r) {
         int MAX_SNPS_TO_CORRECT = 1;
 
         if (minDst > MAX_SNPS_TO_CORRECT) {
-//            cerr << "minDst = " << minDst << ",  do not correct" << endl;
             return; /* i do not want to correct more than 2 positions of each sMer*/
         }
-
-//        cerr << "Correcting first " << smallLength << " positions of " << (smallLength+bigLength) << "-mer to: " << hashToString(closest,smallLength) << endl;
 
         for (int i = 0; i < smallLength; i++) {
             int mask = 3;
             int sMerPos = (closest & (mask << (2 * i))) >> (2 * i);
             setReadAtPosition(r, p - 1 - i, sMerPos);
-//            cerr << endl;
         }
 
-//        cerr << "before change sH = " << sH << endl;
         sH = closest;
-//        cerr << "After change sH = " << sH << endl;
-
-//        cerr << "Now r:" << endl << *r << endl;
-
-
-//        exit(1);
     };
 
 
@@ -368,9 +306,7 @@ void ReadCorrector::setReadAtPosition(Read *r, int pos, int val) {
     if (reversedReads) {
         r->set(r->size() - 1 - pos, val);
     } else {
-//        cerr << "Before setting to " << val << ": " << *r << endl;
         r->set(pos, val);
-//        cerr << "After setting  to " << val << ": " << *r << endl;
     }
 }
 

@@ -391,82 +391,52 @@ void Graph::retainOnlySmallestOffsetJob(int a, int b, int thread_id) {
 bool Graph::contractPath(int a, int b, int c) {
     if (a == c) return false;
     if (V[b].size() != 1) return false;
-
-    if (containsEdge(a, b) == false) {
-        return false;
-    }
+    if (containsEdge(a, b) == false) return false;
 
 
     int wbc = V[b][0].second;
-
     int wab = findWeight(a, b);
     int wabc = wab + wbc;
 
     int EDGE_LENGTH_THRESHOLD = Params::MAX_OFFSET_PARALLEL_PATHS;
-//    int EDGE_LENGTH_THRESHOLD = 500;
 
     bool existsEdgeAC = containsEdge(a, c);
-    if (existsEdgeAC && wabc >= EDGE_LENGTH_THRESHOLD) {
-
-
-        return false;
-    }
-
+    if (existsEdgeAC && wabc >= EDGE_LENGTH_THRESHOLD) return false;
 
     bool existsLongEdgeAC = containsEdgeLongerOrEqual(a, c, EDGE_LENGTH_THRESHOLD);
-    if (existsLongEdgeAC) {
-        return false;
-    }
+    if (existsLongEdgeAC) return false;
 
 
     if (contractedEdges[b]->size() == 0) {
         LPII l(1, PII(c, wbc));
-//        (*contractedEdges[b])[c] = l;
         addContractedEdgeOrReplace(b, c, l);
     }
 
-//    if (contractedEdges[a]->find(b) == contractedEdges[a]->end()) {
     if (findContractedEdge(a, b) == contractedEdges[a]->end()) {
         LPII l(1, PII(b, wab));
-//        (*contractedEdges[a])[b] = l;
         addContractedEdgeOrReplace(a, b, l);
     }
-
-
-
 
     // if the resulted path is 'short' then i add it (now matter if other short path already exists)
     if (wabc < EDGE_LENGTH_THRESHOLD || existsLongEdgeAC == false) {
 
-//        if( existsEdgeAC && findWeight(a,c) <= wabc ){
-//            removeDirectedEdge(a,b);
-//            removeDirectedEdge(b,c);
-//            (*contractedEdges[a])[c] = LPII();
-//            return true;
-//
-//        }else{
-
         removeDirectedEdge(a, c);
         // then i assume the short path is unique so i can replace the old one if it exists. First step - new one is empty.
-//        (*contractedEdges[a])[c] = LPII();
         addContractedEdgeOrReplace(a, c, LPII());
-
 
         auto it = findContractedEdge(a, c);
         if (it == contractedEdges[a]->end()) addContractedEdgeOrReplace(a, c, LPII());
         LPII *l;
 
-        // apppending edge a->b to the list.
-//        (*contractedEdges[a])[c].splice((*contractedEdges[a])[c].end(), (*contractedEdges[a])[b]);
         {
+            // apppending edge a->b to the list.
             l = &findContractedEdge(a, c)->second; // pointer to the list where we will splice
             it = findContractedEdge(a, b);
             l->splice(l->end(), it->second);
         }
 
-        // appending edge b->c to the list.
-//        (*contractedEdges[a])[c].splice((*contractedEdges[a])[c].end(), (*contractedEdges[b])[c]);
         {
+            // appending edge b->c to the list.
             l = &findContractedEdge(a, c)->second;
             it = findContractedEdge(b, c);
             l->splice(l->end(), it->second);
@@ -477,7 +447,6 @@ bool Graph::contractPath(int a, int b, int c) {
 
         addDirectedEdge(a, c, wabc);
 
-//        }
 
 
         return true;
@@ -502,30 +471,16 @@ bool Graph::containsEdgeLongerOrEqual(int a, int b, int offset) {
     return false;
 }
 
-LPII &Graph::getContractedEdgePath(int a, int b) {
-    /* if( contractedEdges[a]->find(b) == contractedEdges[a]->end() ){
-         if( containsEdge(a,b) ) return LPII( 1, PII( b, findWeight(a,b) ) );
-         else return LPII();
-     }*/
+LPII Graph::getContractedEdgePath(int a, int b) {
 
-//    if (contractedEdges[a]->find(b) == contractedEdges[a]->end()) {
     if (findContractedEdge(a, b) == contractedEdges[a]->end()) {
         if (containsEdge(a, b)) {
-            auto *ptr = new LPII(1, PII(b, findWeight(a, b)));
-            lockNode(1);
-            contractedEdgeDummy.push_back(ptr);
-            unlockNode(1);
-            return (*ptr);
+            return LPII(1, PII(b, findWeight(a, b)));
         } else {
-            auto *ptr = new LPII();
-            lockNode(1);
-            contractedEdgeDummy.push_back(ptr);
-            unlockNode(1);
-            return (*ptr);
+            return LPII();
         }
     }
 
-//    return (*contractedEdges[a])[b];
     return findContractedEdge(a, b)->second;
 }
 
@@ -549,7 +504,6 @@ Graph Graph::getReverseGraph() {
     for (auto &p : parallelJobs) p.join();
     cerr << endl;
 
-//    return std::move(GRev);
     return GRev;
 }
 
@@ -683,13 +637,6 @@ void Graph::clear() {
         mutexes = nullptr;
     }
 
-    for (auto *ptr : contractedEdgeDummy) {
-        if (ptr != nullptr) {
-            delete ptr;
-        }
-    }
-
-    vector<LPII *>().swap(contractedEdgeDummy);
 }
 
 LL Graph::countEdges() {
@@ -797,9 +744,7 @@ void Graph::createContractedEdgesVector() {
     VB indeg = hasPositiveIndegree();
 
     for (int i = 0; i < size(); i++) {
-//        if (V[i].size() > 0 || (*indeg)[i] > 0) {
         if (V[i].size() > 0 || indeg[i]) {
-//            contractedEdges[i] = new MILPII();
             contractedEdges[i] = new VILPII();
         }
     }
@@ -855,7 +800,6 @@ VVPII Graph::getReverseGraphNeighborhoods() {
         for (auto &p : futures) p.get();
     }
 
-//    return std::move(rev);
     return rev;
 }
 

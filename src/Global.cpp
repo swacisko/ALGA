@@ -60,7 +60,6 @@ void Global::removeIsolatedReads() {
 
     auto worker = [=, &indeg](int a, int b) {
         for (int j = a; j <= b; j++) {
-//            if ((*indeg)[j] == 0 && GRAPH[j].size() == 0) removeRead(j);
             if (indeg[j] == false && GRAPH[j].size() == 0) removeRead(j);
         }
     };

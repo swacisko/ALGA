@@ -24,13 +24,11 @@ using namespace std;
 #include<map>
 #include "Params.h"
 #include <list>
-//#include<thread>
 #include <mutex>
 #include <set>
 #include "Read.h"
 #include "Contig.h"
 
-//#define REP(i,N) for(int i=0; i<N; i++)
 typedef vector<int> VI;
 typedef vector<VI> VVI;
 typedef vector<short> VS;
@@ -41,9 +39,6 @@ typedef vector<PII> VPII;
 typedef vector<VPII> VVPII;
 
 typedef list<PII> LPII;
-//typedef map<int, LPII> MILPII;
-//typedef vector<MILPII *> VMILPII;
-
 typedef vector<pair<int, LPII> > VILPII;
 typedef vector<VILPII *> VVILPII;
 
@@ -68,11 +63,10 @@ public:
 
     void clear();
 
-    void push_back( /*VPII row*/ ) { /*V.push_back(row);*/ push_node(); }
+    void push_back() { push_node(); }
 
     void push_node();
 
-//    void pop_back(){ /*V.pop_back();*/ V.pop_back(); /*maps.pop_back();*/ contractedEdges.pop_back(); mutexes->pop_back(); }
     void addDirectedEdge(int a, int b,
                          int offset); // adds directed edge from a to b with given offset. If such edge exists it will modify the offset to the smallest of thos considered yet for those edge.
 
@@ -189,10 +183,6 @@ public:
     void writeAllEdgesWithNode(int id); // writes all edges that begin or end in given node
 
     int getGraphNonmapSizeThreshold() const;
-//    void setGraphNonmapSizeThreshold(int graphNonmapSizeThreshold);
-
-//    void transformMaps();
-//    void mapNodes();
 
     void serializeGraph(string fileName);
 
@@ -247,8 +237,7 @@ public:
      * @param b
      * @return a list representing the contracting path. It is of the form (neighbor,offset), so the first node on the path (node a) is not in that list.
      */
-    LPII &getContractedEdgePath(int a, int b);
-//    LPII empty,temp;
+    LPII getContractedEdgePath(int a, int b);
 
     /**
      * Function writes contracted path from a to b
@@ -259,7 +248,6 @@ public:
 
     void lockNode(int id) {
         (*mutexes)[id >> LOG2_MUTEX_SCALE].lock();
-//        while(!(*mutexes)[id >> LOG2_MUTEX_SCALE].try_lock() ); // active waiting
     }
 
     void unlockNode(int id) {
@@ -322,9 +310,9 @@ private:
 
 
     /**
-     * contractedEdges[i] is a map that contains id of a neighbor as key and list of nodes on the contracted edge from i to that neighbor.
+     * contractedEdges[i] is a 'map' that contains id of a neighbor as key and list of nodes on the contracted edge from i to that neighbor.
+     * To reduce space, we use 'naive vector map', perhaps at a slight loss of time in pessimistic case.
      */
-//    VMILPII contractedEdges;
     VVILPII contractedEdges;
 
     /**
@@ -347,8 +335,6 @@ private:
      * Functions adds or replaced the contracted edge (a,b) with given path e
      */
     void addContractedEdgeOrReplace(unsigned a, unsigned b, LPII e);
-
-    vector<LPII *> contractedEdgeDummy;
 
     VVPII V;
 
