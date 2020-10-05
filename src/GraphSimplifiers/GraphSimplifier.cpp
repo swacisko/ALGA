@@ -96,14 +96,17 @@ void GraphSimplifier::simplifyGraphOld() {
         removeSmallOverlapEdges(min_overlap, number_to_retain);
 //    removeSmallOverlapEdges(min_overlap, number_to_retain); // this should not make any change in case of GCPS graph creation
 
+//    Global::checkOLCGraphCorrectness(G,reads);
 
     G->pruneGraph();
 
     G->sortEdgesByIncreasingOffset();
 
 
-//        if( Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION || Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_ALL_PREFIX_READS ) while( mergeLength0Edges() ) {} // merge until impossible to merge more
-    while (mergeLength0Edges()) {} // this should not make any change in case of GCPS graph creation
+    if (Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION ||
+        Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_ALL_PREFIX_READS)
+        while (mergeLength0Edges()) {} // merge until impossible to merge more
+//    while (mergeLength0Edges()) {} // this should not make any change in case of GCPS graph creation
 
 
     G->sortEdgesByIncreasingOffset();
@@ -618,6 +621,8 @@ bool GraphSimplifier::contractPathNodes() {
                 removed = true;
             }
         }
+
+        if (GRev[a].empty()) VPII().swap(GRev[a]);
 
         return removed;
     };

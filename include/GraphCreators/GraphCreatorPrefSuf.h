@@ -38,16 +38,22 @@ private:
 
     int maxReadLength;
 
+    using ADDITIONAL_HASH_TYPE = unsigned;
+    const ADDITIONAL_HASH_TYPE MAX_ADDITIONAL_HASH = 1'000'000'007; //  500'009; // is also a prime
+    ADDITIONAL_HASH_TYPE prefHashFactorAdditional;
 
     /*
      * This is an array of prefixes of all reads. prefixKemrs[i] is the hash of current prefix of read with id i
      */
     vector<unsigned long long> prefixKmers; // just the hash values of kmers
+    vector<ADDITIONAL_HASH_TYPE> prefixKmersAdditional; // just the additinal hash check
 
     /**
      * Analogous to prefixKmers
      */
     vector<unsigned long long> suffixKmers;
+
+    vector<ADDITIONAL_HASH_TYPE> suffixKmersAdditional; // just the additional hash check
 
     /**
      * This is used to keep only Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN edges with small overlap.
@@ -76,8 +82,8 @@ private:
     Params::KMER_HASH_TYPE prefHashFactor; // this is the hashFactor to create prefix hashes.
 
 
-    bool updatePrefixHash(int id, int currentPrefSufLength,
-                          Params::KMER_HASH_TYPE prefHashFactor); // function updates hash of prefix of read with given id (Moves one position to the right). Returns tru if hash was updated or false if hash is already the length of the read
+    bool updatePrefixHash(int id, int currentPrefSufLength, Params::KMER_HASH_TYPE prefHashFactor,
+                          ADDITIONAL_HASH_TYPE prefHashFactorAdditional); // function updates hash of prefix of read with given id (Moves one position to the right). Returns tru if hash was updated or false if hash is already the length of the read
     bool updateSuffixHash(int id,
                           int currentPrefSufLength); // function updates hash of suffix of read with given id (moves one position to the left). Returns tru if hash was updated or false if hash is already the length of the read
 

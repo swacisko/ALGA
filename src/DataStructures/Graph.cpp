@@ -751,93 +751,93 @@ void Graph::reverseGraph() {
      * if true, then i reverse the graph in-place - we do not create a copy of VVPII(size()) that is memory-consuming.
      * It may be a bit slower however due to a bit more locks added.
      */
-//    const bool usedImprovedRevGraph = true;
-//    if(usedImprovedRevGraph){
-    vector<unsigned> degs(size(), 0); // will the unsigned short be enough??
-    auto fun1 = [=, &degs](unsigned a, unsigned b) {
-        for (unsigned i = a; i <= b; i++) degs[i] = V[i].size();
-    };
-    vector<std::future<void> > futures(Params::THREADS - 1);
-    int W = (int) ceil((double) size() / Params::THREADS);
-    for (int i = 1; i < Params::THREADS; i++) {
-        int a = i * W;
-        int b = min((i + 1) * W - 1, (int) size() - 1);
-        futures[i - 1] = std::async(std::launch::async, fun1, a, b);
-    }
-    fun1(0, W - 1);
-    for (auto &p : futures) p.get();
-    // degrees initialized
-
-    auto worker = [=, &degs](int a, int b) {
-        for (int j = a; j <= b; j++) {
-            lockNode(j);
-            VPII neigh = V[j]; // accessing the neighborhood, not to block two nodes in the same time
-            unlockNode(j);
-            for (unsigned i = 0; i < degs[j]; i++) {
-                PII &p = neigh[i];
-                int d = p.first;
-                int off = p.second;
-                lockNode(d);
-                V[d].emplace_back(j, off);
-                unlockNode(d);
-            }
-            lockNode(j);
-            V[j].erase(V[j].begin(), V[j].begin() + degs[j]);
-            VPII(V[j]).swap(V[j]);
-            unlockNode(j);
+    const bool usedImprovedRevGraph = false;
+    if (usedImprovedRevGraph) {
+        vector<unsigned> degs(size(), 0); // will the unsigned short be enough??
+        auto fun1 = [=, &degs](unsigned a, unsigned b) {
+            for (unsigned i = a; i <= b; i++) degs[i] = V[i].size();
+        };
+        vector<std::future<void> > futures(Params::THREADS - 1);
+        int W = (int) ceil((double) size() / Params::THREADS);
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) size() - 1);
+            futures[i - 1] = std::async(std::launch::async, fun1, a, b);
         }
-    };
+        fun1(0, W - 1);
+        for (auto &p : futures) p.get();
+        // degrees initialized
 
-    for (int i = 1; i < Params::THREADS; i++) {
-        int a = i * W;
-        int b = min((i + 1) * W - 1, (int) size() - 1);
-        futures[i - 1] = std::async(std::launch::async, worker, a, b);
+        auto worker = [=, &degs](int a, int b) {
+            for (int j = a; j <= b; j++) {
+                lockNode(j);
+                VPII neigh = V[j]; // accessing the neighborhood, not to block two nodes in the same time
+                unlockNode(j);
+                for (unsigned i = 0; i < degs[j]; i++) {
+                    PII &p = neigh[i];
+                    int d = p.first;
+                    int off = p.second;
+                    lockNode(d);
+                    V[d].emplace_back(j, off);
+                    unlockNode(d);
+                }
+                lockNode(j);
+                V[j].erase(V[j].begin(), V[j].begin() + degs[j]);
+                VPII(V[j]).swap(V[j]);
+                unlockNode(j);
+            }
+        };
+
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) size() - 1);
+            futures[i - 1] = std::async(std::launch::async, worker, a, b);
+        }
+        worker(0, W - 1);
+        for (auto &p : futures) p.get();
+
+
+        return;
+    } else {
+
+        VVPII rev(size());
+
+        const bool useIndegInitialization = false;
+        if (useIndegInitialization) {
+            VI *inDegrees = getInDegrees();
+            for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
+            delete inDegrees;
+            inDegrees = nullptr;
+        }
+
+        vector<std::future<void> > futures(Params::THREADS - 1);
+
+        auto worker = [=, &rev](int a, int b) {
+            for (int j = a; j <= b; j++) {
+                for (auto p : V[j]) {
+                    int d = p.first;
+                    int off = p.second;
+                    lockNode(d);
+                    rev[d].emplace_back(j, off);
+                    unlockNode(d);
+                }
+
+                VPII().swap(V[j]);
+            }
+        };
+
+        int W = (int) ceil((double) size() / Params::THREADS);
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) size() - 1);
+            futures[i - 1] = std::async(std::launch::async, worker, a, b);
+        }
+        worker(0, W - 1);
+        for (auto &p : futures) p.get();
+
+
+        swap(V, rev);
     }
-    worker(0, W - 1);
-    for (auto &p : futures) p.get();
-
-
-    return;
-//    }else {
-//
-//        VVPII rev(size());
-//
-//        const bool useIndegInitialization = false;
-//        if (useIndegInitialization) {
-//            VI *inDegrees = getInDegrees();
-//            for (int i = 0; i < size(); i++) rev[i].reserve((*inDegrees)[i]);
-//            delete inDegrees;
-//            inDegrees = nullptr;
-//        }
-//
-//        vector<std::future<void> > futures(Params::THREADS - 1);
-//
-//        auto worker = [=, &rev](int a, int b) {
-//            for (int j = a; j <= b; j++) {
-//                for (auto p : V[j]) {
-//                    int d = p.first;
-//                    int off = p.second;
-//                    lockNode(d);
-//                    rev[d].emplace_back(j, off);
-//                    unlockNode(d);
-//                }
-//
-//                VPII().swap(V[j]);
-//            }
-//        };
-//
-//        int W = (int) ceil((double) size() / Params::THREADS);
-//        for (int i = 1; i < Params::THREADS; i++) {
-//            int a = i * W;
-//            int b = min((i + 1) * W - 1, (int) size() - 1);
-//            futures[i - 1] = std::async(std::launch::async, worker, a, b);
-//        }
-//        worker(0, W - 1);
-//        for (auto &p : futures) p.get();
-//
-//
-//        swap(V, rev);
-//        }
 
 }
 
@@ -857,13 +857,13 @@ void Graph::createContractedEdgesVector() {
 VVPII Graph::getReverseGraphNeighborhoods() {
     VVPII rev(size());
 
-//    const bool useIndegInitialization = false;
-//    if (useIndegInitialization) {
-//        VI *indeg = getInDegrees();
-//        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i]);
-//        delete indeg;
-//        indeg = nullptr;
-//    }
+    const bool useIndegInitialization = false;
+    if (useIndegInitialization) {
+        VI *indeg = getInDegrees();
+        for (int i = 0; i < size(); i++) rev[i].reserve((*indeg)[i]);
+        delete indeg;
+        indeg = nullptr;
+    }
 
     vector<std::future<void> > futures(Params::THREADS - 1);
 
@@ -888,7 +888,7 @@ VVPII Graph::getReverseGraphNeighborhoods() {
     worker(0, W - 1);
     for (auto &p : futures) p.get();
 
-//    if (!useIndegInitialization) {
+    if (!useIndegInitialization) {
         auto worker2 = [=, &rev](int a, int b) {
             for (int j = a; j <= b; j++) {
                 VPII(rev[j]).swap(rev[j]);
@@ -902,7 +902,7 @@ VVPII Graph::getReverseGraphNeighborhoods() {
         }
         worker2(0, W - 1);
         for (auto &p : futures) p.get();
-//    }
+    }
 
     return rev;
 }
