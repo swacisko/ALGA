@@ -13,6 +13,11 @@
 class ContigCreatorSinglePath : public ContigCreator {
 public:
 
+    /**
+     * Constructor for the contigs creator.
+     * @param G
+     * @param reads
+     */
     ContigCreatorSinglePath(Graph *G, vector<Read *> &reads);
 
 
@@ -22,7 +27,6 @@ public:
 
 private:
     vector<Contig *> getContigOmitShortCyclesFrom(int beg);
-
 
     void addContractedPathToString(int a, int b, string &s, vector<pair<Read *, int>> &readsInContig);
 
@@ -110,14 +114,11 @@ private:
     /**
      * reliablePredecessors[i] is the id of the reliable predecessor of i or -1 if i has no such predecessor
      */
-//    VI reliablePredecessors;
-//    vector< unordered_set<int> > reliablePredecessors;
     unordered_map<int, unordered_set<int> > reliablePredecessors;
 
     /**
      * Reverse graph of G for calculating reliable predecessors.
      */
-//    VVPII GRev;
     unordered_map<unsigned, VPII> GRev;
 
     /**
@@ -136,10 +137,6 @@ private:
 
     //**************************//**************************//**************************//**************************
 
-//    VI *inDeg;
-    VB was;
-    VI dst;
-//    VVPII* initialStructure; // this is the structure of the initial graph. Initial graph is much more dense, than the resulting one,
 };
 
 
