@@ -14,7 +14,7 @@
 
 
 ContigCreatorSinglePath::ContigCreatorSinglePath(Graph *G, vector<Read *> &reads) : ContigCreator(G, &reads) {
-
+    GRev.clear();
 }
 
 
@@ -47,7 +47,7 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
         vector<std::future<vector<Contig *> > > futures(Params::THREADS - 1);
 
         VI nodesToCheck; // this is just the list of all nodes from which we will have to start creating paths. It is done to equally divide work into threads.
-        for (unsigned i = 0; i <= G->size(); i++) {
+        for (unsigned i = 0; i < G->size(); i++) {
             if ((*reads)[i] == nullptr) continue;
             if ((*G)[i].size() > 0) nodesToCheck.push_back(i);
         }
@@ -289,7 +289,7 @@ void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
                 GRev[i].size() >= 1) {
 
                 VI relPred = getReliablePredecessors(i);
-                G->lockNode(0); // just locking so that many threads cannot acces the same element at once
+                G->lockNode(0); // just locking so that many threads cannot access the same element at once
                 if (!relPred.empty()) {
                     for (int x : relPred) reliablePredecessors[i].insert(x);
                 }
