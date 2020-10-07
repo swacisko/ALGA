@@ -622,7 +622,7 @@ bool GraphSimplifier::contractPathNodes() {
             }
         }
 
-        if (GRev[a].empty()) VPII().swap(GRev[a]);
+//        if (GRev[a].empty()) VPII().swap(GRev[a]);
 
         return removed;
     };

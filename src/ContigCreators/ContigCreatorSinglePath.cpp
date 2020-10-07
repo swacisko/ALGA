@@ -53,9 +53,15 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
         }
         int WW = (int) ceil((double) nodesToCheck.size() / Params::THREADS);
         for (int i = 1; i < Params::THREADS; i++) {
+//            DEBUG(i * WW);
+//            DEBUG(min((i + 1) * WW - 1, (int) nodesToCheck.size() - 1));
+
             int a = nodesToCheck[i * WW];
             int b = min((i + 1) * WW - 1, (int) nodesToCheck.size() - 1);
             b = nodesToCheck[b];
+
+//            DEBUG(PII(a,b) );
+
             futures[i - 1] = std::async(std::launch::async, getContigOmitShortCyclesFromJob, a, b, i);
         }
         contigs = getContigOmitShortCyclesFromJob(nodesToCheck[0], nodesToCheck[WW - 1], 0);
@@ -113,10 +119,12 @@ void ContigCreatorSinglePath::correctSNPsJob(int a, int b, int thread_id, vector
 vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) {
     string s = "";
 
-    unordered_map<int, bool> was;
+    unordered_set<int> was;
     unordered_map<int, int> dst;
+    dst[beg] = 0;
 
-    was[beg] = true;
+//    was[beg] = true;
+    was.insert(beg);
     VI visited(1, beg);
 
     vector<Contig *> contigs;
@@ -139,7 +147,8 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
         addContractedPathToString(beg, p, s, readsInContig);
 
 
-        was[p] = true;
+//        was[p] = true;
+        was.insert(p);
         dst[p] = offset;
         visited.push_back(p);
 
@@ -158,7 +167,8 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
 
         while (canBeNext == 1) {
             visited.push_back(p);
-            was[p] = true;
+//            was[p] = true;
+            was.insert(p);
 
 
             nextCandidates = getNextStepCandidates(predecessor, p, readsInContig);
@@ -175,37 +185,52 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
                 p = nextId;
             }
 
-            if (p == -1 || was[p]) {
+//            if (p == -1 || was[p]) {
+            if (p == -1 || was.count(p)) {
                 break;
             }
 
         }
 
+        assert(p >= 0 && p < reads->size());
+        assert((*reads)[p] != nullptr);
         s += (*reads)[p]->getSequenceAsString();
 
         if (s.size() >= Params::CONTIG_MIN_OUTPUT_LENGTH) {
+            G->lockNode(
+                    0); // we aither need to lock some mutex or change type of static variable Contig::ID_COUNT to atomic type
             contigs.push_back(new Contig(Contig::ID_COUNT++, s, readsInContig));
+            G->unlockNode(0);
         }
 
         if (canBeNext > 1) {
             if (!contigs.empty()) contigs.back()->setEndsInFork(true);
         }
 
-        for (int a : visited) {
-            was[a] = false;
-            dst[a] = 0;
+//        for (int a : visited) {
+//            was[a] = false;
+//            dst[a] = 0;
+//        }
+        { // the same as clearing all nodes in visited
+            was.clear();
+            was.insert(beg);
+            dst.clear();
+            dst[beg] = 0;
         }
+
+
     }
 
-    was[beg] = false;
-    dst[beg] = 0;
-    for (int a : visited) {
-        was[a] = false;
-        dst[a] = 0;
+//    was[beg] = false;
+//    dst[beg] = 0;
+//    for (int a : visited) {
+//        was[a] = false;
+//        dst[a] = 0;
+//    }
+    {
+        visited.clear();
+        s.clear();
     }
-
-    visited.clear();
-    s.clear();
 
     return contigs;
 }
@@ -232,7 +257,8 @@ bool ContigCreatorSinglePath::canBeNextStepCandidate(int predecessor, int p, int
                                                      vector<pair<Read *, int>> &readsInContig) {
 
 //    return false; // uncomment this line to FORBID EXTENDING PATHS
-    if (reliablePredecessors[p].count(predecessor)) return true;
+    if (reliablePredecessors.find(p) != reliablePredecessors.end() && reliablePredecessors[p].count(predecessor))
+        return true;
 
 
 //    if( was[d] == false || dst[p] - dst[ d ] + of > Params::CONTIG_CREATOR_SHORT_CYCLE_LENGTH ) return true;
@@ -255,7 +281,11 @@ ContigCreatorSinglePath::addContractedPathToString(int a, LPII &path, string &s,
         int offset = p.second;
         readsInContig.emplace_back((*reads)[p.first], p.second);
 
-        for (int k = 0; k < offset; k++) s += Params::getNuklAsString((*(*reads)[a])[k]);
+        assert((*reads)[a] != nullptr);
+        for (int k = 0; k < offset; k++) {
+            assert(k < (*reads)[a]->size());
+            s += Params::getNuklAsString((*(*reads)[a])[k]);
+        }
         a = p.first;
     }
 
