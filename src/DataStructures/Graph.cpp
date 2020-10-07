@@ -113,7 +113,7 @@ bool Graph::removeDirectedEdge(int a, int b) {
         }
     }
 
-    if (V[a].empty()) VPII().swap(V[a]); // clear space of empty vector
+//    if (V[a].empty()) VPII().swap(V[a]); // clear space of empty vector - will it or not affect memory peak?
 
     return removed;
 }
