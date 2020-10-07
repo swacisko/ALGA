@@ -92,13 +92,14 @@ void GraphSimplifier::simplifyGraphOld() {
     int number_to_retain = Params::REMOVE_SMALL_OVERLAP_EDGES_NUMBER_TO_RETAIN;
 
     G->sortEdgesByIncreasingOffset();
-    if (Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION)
+    if (Params::ALGORITHM_IN_USE != Params::PREF_SUF_GRAPH_CREATION) {
         removeSmallOverlapEdges(min_overlap, number_to_retain);
-//    removeSmallOverlapEdges(min_overlap, number_to_retain); // this should not make any change in case of GCPS graph creation
+        G->pruneGraph();
+    }
+//    removeSmallOverlapEdges(min_overlap, number_to_retain); G->pruneGraph();  // this should not make any change in case of GCPS graph creation
 
 //    Global::checkOLCGraphCorrectness(G,reads);
 
-    G->pruneGraph();
 
     G->sortEdgesByIncreasingOffset();
 
@@ -130,6 +131,7 @@ void GraphSimplifier::simplifyGraphOld() {
                                     (float) 100)); // this should remove all the triangles as well. All parallel paths with length no more than 1/4 readlength will be removed
 
 
+    G->pruneGraph();
 
 
     Global::removeIsolatedReads();
