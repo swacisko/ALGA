@@ -18,7 +18,6 @@ public:
 
     void setContainedReads(const vector<pair<Read *, int>> &containedReads);
 
-//    int getIdOfCompRevRead(){ return -1; };
     int getIdOfPairedRead() { return -1; };
 
     /**

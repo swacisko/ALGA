@@ -5,7 +5,6 @@
 #include <DataStructures/Contig.h>
 #include <Global.h>
 
-#include "DataStructures/Contig.h"
 
 Contig::Contig(int id, string s, vector<pair<Read *, int>> &containedReads) : Read(id, s) {
     this->containedReads = containedReads;
