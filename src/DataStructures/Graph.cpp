@@ -392,9 +392,6 @@ bool Graph::contractPath(int a, int b, int c) {
     if (V[b].size() != 1) return false;
     if (containsEdge(a, b) == false) return false;
 
-    if (contractedEdges[a] == nullptr) contractedEdges[a] = new VILPII();
-    if (contractedEdges[b] == nullptr) contractedEdges[b] = new VILPII();
-    if (contractedEdges[c] == nullptr) contractedEdges[c] = new VILPII();
 
     int wbc = V[b][0].second;
     int wab = findWeight(a, b);
@@ -408,6 +405,9 @@ bool Graph::contractPath(int a, int b, int c) {
     bool existsLongEdgeAC = containsEdgeLongerOrEqual(a, c, EDGE_LENGTH_THRESHOLD);
     if (existsLongEdgeAC) return false;
 
+    if (contractedEdges[a] == nullptr) contractedEdges[a] = new VILPII();
+    if (contractedEdges[b] == nullptr) contractedEdges[b] = new VILPII();
+//    if (contractedEdges[c] == nullptr) contractedEdges[c] = new VILPII();
 
     if (contractedEdges[b]->size() == 0) {
         LPII l(1, PII(c, wbc));
@@ -886,6 +886,7 @@ VB Graph::hasPositiveIndegree() {
 }
 
 bool Graph::removeContractedEdge(unsigned int a, unsigned int b) {
+    if (contractedEdges[a] == nullptr) return false;
     auto it = findContractedEdge(a, b);
     if (it != contractedEdges[a]->end()) {
         contractedEdges[a]->erase(it);

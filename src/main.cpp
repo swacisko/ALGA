@@ -37,6 +37,7 @@
 #include "StatisticsGenerators/GenomeStatisticsCollector.h"
 #include "Utils/TimeMeasurer.h"
 #include "Utils/GraphVisualizer.h"
+#include "Utils/WorkloadManager.h"
 
 using namespace std;
 
@@ -69,6 +70,7 @@ int main(int argc, char **argv) {
 
         Params::THREADS = 6;
     } else {
+//        WorkloadManager::test();
 
         DEBUG(sizeof(MemTestClass));
         DEBUG(sizeof(std::mutex));

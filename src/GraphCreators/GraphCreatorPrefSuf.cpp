@@ -10,12 +10,14 @@
 #include <AlignmentControllers/AlignmentControllerHybrid.h>
 //#include <unordered_map>
 #include <functional>
+#include <Utils/WorkloadManager.h>
 
 
 GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool remove_isolated_reads) : GraphCreator(
-        reads, G), maxReadLength(0),
-                                                                                                        removeIsolatedReadsBeforeReversingGraph(
-                                                                                                                remove_isolated_reads) {
+        reads, G), maxReadLength(0), removeIsolatedReadsBeforeReversingGraph(remove_isolated_reads),
+                                                                                                        bitsetChecksCount(
+                                                                                                                0) {
+
     calculateMaxReadLength();
 
     smallOverlapEdges = vector<pair<unsigned, unsigned> *>(G->size());
@@ -81,6 +83,8 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 //    if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
 
     G->reverseGraph();
+
+    cerr << "There were " << bitsetChecksCount << " bitset checks done in GCPS" << endl;
 
 
     Params::MIN_OVERLAP_AREA = oldMOA;
@@ -284,6 +288,11 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         }
         nextPrefSufIterationJobAddEdges(0, W - 1, 0);
         for (auto &p : parallelJobs) p.join();
+
+        /* int blocks = 50 * Params::THREADS;
+         WorkloadManager::parallelBlockExecution(0, G->size()-1, blocks , Params::THREADS, [=](unsigned a, unsigned b, unsigned id){
+             nextPrefSufIterationJobAddEdges(a,b,id);
+         } );*/
     }
 
 
@@ -374,17 +383,19 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                         const int C = prefId;
                         const int B = suffId;
-                        G->lockNode(C);
-
-                        auto neighborhood_list = (*G)[C];// #TEST
-                        G->unlockNode(C);// #TEST
 
                         if (offset > 0) { // this can be checked - maybe i should not consider if offset = 0
+
+                            G->lockNode(C);
+                            auto neighborhood_list = (*G)[C];// #TEST
+                            G->unlockNode(C);// #TEST
 
                             for (PII &p : neighborhood_list) { // #TEST
                                 const int A = p.first;
 
                                 const int offsetDiff = p.second - offset;
+
+                                bitsetChecksCount++;
 
                                 if (offsetDiff < 0)
                                     continue; // this is here to prevent checking short edges that were added earlier

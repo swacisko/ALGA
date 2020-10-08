@@ -10,6 +10,7 @@
 #include "DataStructures/Kmer.h"
 #include<deque>
 #include <DataStructures/KmerGCPS.h>
+#include <atomic>
 
 /*
  * Cherry
@@ -104,6 +105,9 @@ private:
     bool removeIsolatedReadsBeforeReversingGraph;
 
     void writeState();
+
+
+    std::atomic<long long> bitsetChecksCount;
 
 };
 
