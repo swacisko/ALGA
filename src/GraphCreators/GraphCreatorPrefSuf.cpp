@@ -80,7 +80,7 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
 
     clear();
-//    if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
+    if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
 
     G->reverseGraph();
 
@@ -280,20 +280,20 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     {
-        /*parallelJobs.clear();
+        parallelJobs.clear();
         for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
             int a = min(i * W, G->size() - 1);
             int b = min((i + 1) * W - 1, G->size() - 1);
             parallelJobs.emplace_back([=] { nextPrefSufIterationJobAddEdges(a, b, i); });
         }
         nextPrefSufIterationJobAddEdges(0, W - 1, 0);
-        for (auto &p : parallelJobs) p.join();*/
+        for (auto &p : parallelJobs) p.join();
 
-        int blocks = 50 * Params::THREADS;
-        WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
-                                                [=](unsigned a, unsigned b, unsigned id) {
-                                                    nextPrefSufIterationJobAddEdges(a, b, id);
-                                                });
+        /* int blocks = 50 * Params::THREADS;
+         WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
+                                                 [=](unsigned a, unsigned b, unsigned id) {
+                                                     nextPrefSufIterationJobAddEdges(a, b, id);
+                                                 });*/
     }
 
 
@@ -390,13 +390,13 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                             G->lockNode(C);
                             auto neighborhood_list = (*G)[C];// #TEST
                             G->unlockNode(C);// #TEST
+                            bitsetChecksCount += neighborhood_list.size();
 
                             for (PII &p : neighborhood_list) { // #TEST
                                 const int A = p.first;
 
                                 const int offsetDiff = p.second - offset;
 
-                                bitsetChecksCount++;
 
                                 if (offsetDiff < 0)
                                     continue; // this is here to prevent checking short edges that were added earlier

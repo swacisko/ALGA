@@ -102,7 +102,7 @@ private:
     /**
      * If true, then isolated reads will be removed from graph before reversing the graph. It is to reduce memory peak.
      */
-    bool removeIsolatedReadsBeforeReversingGraph;
+    const bool removeIsolatedReadsBeforeReversingGraph;
 
     void writeState();
 
