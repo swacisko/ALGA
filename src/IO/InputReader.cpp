@@ -336,8 +336,11 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
                 ncnt++;
                 nind = i;
 //                if( Params::REMOVE_READS_WITH_N ) break;
-            } else if (s[i] == 'N') { // replace N'as with A'a
+            }/* else if (s[i] == 'N') { // replace N'as with A'a
                 s[i] = 'A';
+            }*/
+            else if (s[i] == 'N') {
+                s[i] = Params::getNuklAsString(rand() % 4)[0];
             } else if (Params::RNA && s[i] == 'U') s[i] = 'T';
 
         }

@@ -301,7 +301,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
     TimeMeasurer::startMeasurement("GraphSimplifier_removeShortParallelPaths");
     cerr << endl << "Removing short parallel paths" << endl;
 
-    /*{ // original version
+    { // original version
         vector<std::thread> parallelJobs;
         parallelJobs.reserve(Params::THREADS);
 
@@ -315,10 +315,10 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
 
         for (auto &p : parallelJobs) p.join();
 
-        for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
-    }*/
+//        for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
+    }
 
-    { // version with workload manger
+    /*{ // version with workload manger
         VI pathsConsidered(Params::THREADS, 0);
         VI blocksConsidered(Params::THREADS, 0);
 
@@ -347,7 +347,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
          for( int i=0; i<pathsConsidered.size(); i++){
              cerr << "There were " << pathsConsidered[i] << " paths and " << blocksConsidered[i] << " blocks considered in thread " << i << endl;
          }
-    }
+    }*/
 
     cerr << "\tShortParallelPaths removed" << endl;
     TimeMeasurer::stopMeasurement("GraphSimplifier_removeShortParallelPaths");
