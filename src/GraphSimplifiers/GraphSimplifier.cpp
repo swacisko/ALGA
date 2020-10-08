@@ -227,7 +227,6 @@ void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobRemoveEdges(int a, int
     }
 
     VPII().swap(edgesToRemove[thread_id]);
-//    edgesToRemove[thread_id].clear();
 }
 
 
@@ -247,12 +246,8 @@ void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobAddToRemove(int a, int
             for (int j = 0; j < (*G)[a].size(); j++) {
                 int b = (*G)[a][j].first;
 
-//                if( dst[thread_id][b] == -1 ) dst[thread_id][b] = G->getWeight(i,k) + G->getWeight(a,j);
-//                else dst[thread_id][b] = min( dst[thread_id][b], G->getWeight(i,k) + G->getWeight(a,j) );
-
                 if (dst.count(b) == 0) dst[b] = G->getWeight(i, k) + G->getWeight(a, j);
                 else dst[b] = min(dst[b], G->getWeight(i, k) + G->getWeight(a, j));
-
             }
         }
 
@@ -266,7 +261,14 @@ void GraphSimplifier::removeNonAndWeaklyMetricTrianglesJobAddToRemove(int a, int
             }
 
 //            if( dst[thread_id][b] != -1 && ( dst[thread_id][b] <= G->getWeight(i,k) ) ){
-            if (dst.count(b) /*&& ( dst[b] <= G->getWeight(i,k) )*/ ) {
+
+//            if (dst.count(b) /*&& ( dst[b] <= G->getWeight(i,k) )*/ ) {
+
+//            if (dst.count(b) && ( dst[b] <= G->getWeight(i,k) ) ) { // #TEST
+            if (dst.count(b) && (dst[b] == G->getWeight(i, k))) { // #TEST, equals distances
+//            if (dst.count(b) && ( abs( (int)dst[b] - (int)G->getWeight(i,k) ) <= 1 ) ) { // #TEST
+//            if (dst.count(b) && ( dst[b] >= G->getWeight(i,k) * 0.95 && dst[b] <= G->getWeight(i,k) ) * 1.05 ) { // #TEST
+
                 edgesToRemove[thread_id].emplace_back(i, b);
                 nonAndWeaklyMetricTriangles++;
 //            }else if( dst[thread_id][b] != -1 /*&& Params::REMOVE_TRULY_METRIC_TRIANGLES*/ ){
@@ -299,7 +301,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
     TimeMeasurer::startMeasurement("GraphSimplifier_removeShortParallelPaths");
     cerr << endl << "Removing short parallel paths" << endl;
 
-    { // original version
+    /*{ // original version
         vector<std::thread> parallelJobs;
         parallelJobs.reserve(Params::THREADS);
 
@@ -314,30 +316,38 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
         for (auto &p : parallelJobs) p.join();
 
         for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
-    }
+    }*/
 
-    /* { // version with workload manger
-         VI pathsConsidered(Params::THREADS,0);
-         VI blocksConsidered(Params::THREADS,0);
+    { // version with workload manger
+        VI pathsConsidered(Params::THREADS, 0);
+        VI blocksConsidered(Params::THREADS, 0);
 
-         unsigned blocks = 50 * Params::THREADS;
-         WorkloadManager::parallelBlockExecution(0, G->size()-1, blocks, Params::THREADS,
-                                                 [=, &pathsConsidered, &blocksConsidered](unsigned a, unsigned b, unsigned thread_id){
+        unsigned blocks = 50 * Params::THREADS;
+        WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
+                                                [=, &pathsConsidered, &blocksConsidered](unsigned a, unsigned b,
+                                                                                         unsigned thread_id) {
 
-             for( int i = a; i <= b; i++) {
-                 if ((*G)[i].size() >= 2 ) {
-                     tryToRemoveShortPathsMST(i, maxOffset, thread_id);
-                     pathsConsidered[thread_id]++;
-                 }
-             }
+                                                    for (int i = a; i <= b; i++) {
+                                                        G->lockNode(i);
+                                                        bool condition = ((*G)[i].size() >= 2);
+                                                        G->unlockNode(i);
+
+                                                        if (condition) {
+                                                            tryToRemoveShortPathsMST(i, maxOffset, thread_id);
+                                                            pathsConsidered[thread_id]++;
+                                                        }
+                                                    }
              blocksConsidered[thread_id]++;
-             if( thread_id == 0 ) cerr << "Thread 0 finished " << blocksConsidered[0] << " block out of average " << (double) blocks / Params::THREADS << endl;
+                                                    if (thread_id == 0)
+                                                        cerr << "\rThread 0 finished " << blocksConsidered[0]
+                                                             << " block out of average "
+                                                             << (double) blocks / Params::THREADS << flush;
          });
 
          for( int i=0; i<pathsConsidered.size(); i++){
              cerr << "There were " << pathsConsidered[i] << " paths and " << blocksConsidered[i] << " blocks considered in thread " << i << endl;
          }
-     }*/
+    }
 
     cerr << "\tShortParallelPaths removed" << endl;
     TimeMeasurer::stopMeasurement("GraphSimplifier_removeShortParallelPaths");
