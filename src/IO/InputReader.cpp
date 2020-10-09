@@ -278,6 +278,7 @@ void InputReader::readReads() {
 
 void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id) {
 
+    std::minstd_rand0 rand_ng(1'000'001ll * thread_id);
     string s;
     int readCount = 0;
 
@@ -339,7 +340,8 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
                 s[i] = 'A';
             }*/
             else if (s[i] == 'N') {
-                s[i] = Params::getNuklAsString(rand() & 3)[0];
+//                s[i] = Params::getNuklAsString(rand() & 3)[0];
+                s[i] = Params::getNuklAsString(rand_ng() & 3)[0];
 //                ncnt++;
             } else if (Params::RNA && s[i] == 'U') s[i] = 'T';
 

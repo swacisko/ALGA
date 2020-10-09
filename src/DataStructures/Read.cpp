@@ -16,7 +16,6 @@
 #include <Utils/MyUtils.h>
 #include <Global.h>
 
-#include "DataStructures/Read.h"
 
 Read::Read(int id, string seq) : id(id) {
 
