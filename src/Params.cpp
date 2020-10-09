@@ -279,18 +279,18 @@ void Params::initializeParams(int argc, char **argv) {
 //        {retl.c_str(),                                                  required_argument,          0,  0 },
 //        {retr.c_str(),                                                  required_argument,          0,  0 },
 //        {rsoentr.c_str(),                                               required_argument,          0,  0 },
-//        {remove_reads_with_n.c_str(),                                   required_argument,          0,  0 },
+            {remove_reads_with_n.c_str(), required_argument, 0, 0},
 //        {min_offset_for_alignment.c_str(),                              required_argument,          0,  0 },
 //        {rpr.c_str(),                                                   required_argument,          0,  0 },
 //        {remove_pref_reads.c_str(),                                     required_argument,          0,  0 },
-            {serialize.c_str(),     required_argument, 0, 0},
-//        {rna.c_str(),                                                   required_argument,          0,  0 },
+            {serialize.c_str(),           required_argument, 0, 0},
+            {rna.c_str(),                 required_argument, 0, 0},
 //        {scale.c_str(),                                                 required_argument,          0,  0 },
 //        {tpn.c_str(),                                                required_argument,          0,  0 },
 //        {tpv.c_str(),                                                required_argument,          0,  0 },
 //        {er.c_str(),                                                required_argument,          0,  0 },
 //        {correct_reads.c_str(),                                                required_argument,          0,  0 },
-            {0, 0,                                     0, 0}
+            {0, 0,                                           0, 0}
     };
 
 
@@ -735,7 +735,7 @@ int Params::CONTIG_CREATOR_SHORT_CYCLE_LENGTH = 150;
 
 
 int Params::INPUT_FILE_TYPE = MY_INPUT;
-int Params::REMOVE_READS_WITH_N = 1;
+int Params::REMOVE_READS_WITH_N = 0;
 
 int Params::CORRECT_READS = 0;
 

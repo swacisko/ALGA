@@ -18,8 +18,7 @@
 
 #include "DataStructures/Read.h"
 
-Read::Read(int id, string seq) : id(id)/*, sequence(
-        Bitset((int) (seq.size()) << 1))*/  /*sequence( (int) (seq.size()) << 1 )*/ {
+Read::Read(int id, string seq) : id(id) {
 
     createSequence(seq);
 }
