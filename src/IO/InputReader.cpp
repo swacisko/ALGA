@@ -326,21 +326,21 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
         int ncnt = 0;
         int nind = -1;
         for (int i = 0; i < s.size(); i++) {
+            if (s[i] == 'N') ncnt++;
+
             if (s[i] != 'A' && s[i] != 'C' && s[i] != 'G' && s[i] != 'T' && s[i] != 'N' && s[i] != 'U') {
                 cerr << "s[i] = " << s[i] << "   but should be A,C,G,T,N or U" << endl;
-//                cerr << "s = " << s << endl;
                 exit(1);
             }
             if (s[i] == 'N' && Params::REMOVE_READS_WITH_N) {
                 containsN = true;
-                ncnt++;
                 nind = i;
-//                if( Params::REMOVE_READS_WITH_N ) break;
             }/* else if (s[i] == 'N') { // replace N'as with A'a
                 s[i] = 'A';
             }*/
             else if (s[i] == 'N') {
                 s[i] = Params::getNuklAsString(rand() & 3)[0];
+//                ncnt++;
             } else if (Params::RNA && s[i] == 'U') s[i] = 'T';
 
         }

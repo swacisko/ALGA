@@ -192,8 +192,9 @@ int main(int argc, char **argv) {
             if (Global::READS[i] != nullptr) {
                 ++id;
 
+                // this should not happen - either both read r and its reverse complimentary are present, or neither,
                 assert(Global::READS[i + 1] !=
-                       nullptr); // this should not happen - either both read r and its reverse complimentary are present, or neither.
+                       nullptr);
 
                 if ((i & 3) == 0) {
 
