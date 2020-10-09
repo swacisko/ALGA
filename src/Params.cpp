@@ -553,6 +553,8 @@ void Params::initializeParams(int argc, char **argv) {
     TEST_NAME += "_scale" + to_string((int) (100 *
                                              SCALE));// + "_mfup" + to_string(MOST_FREQUENTLY_USED_PARAMETER) + "_rsoemo" + to_string(REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP);
 
+    TEST_NAME += (REMOVE_READS_WITH_N ? "_noN" : "_randN");
+
     cerr << "inStreamFilePath1 = " << inStreamFilePath1 << endl;
     cerr << "fileName = " << fileName << endl;
     cerr << "fileExtension = " << fileExtension << endl;

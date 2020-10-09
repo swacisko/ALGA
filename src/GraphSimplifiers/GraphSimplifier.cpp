@@ -639,94 +639,148 @@ int GraphSimplifier::removeDanglingUpperBranches(int maxOffset) {
 bool GraphSimplifier::contractPathNodes() {
     TimeMeasurer::startMeasurement("GraphSimplifier_contractPathNodes");
 
-//    Graph GRev = G->getReverseGraph();
-
-    VVPII GRev = G->getReverseGraphNeighborhoods();
-    /**
-     * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
-     */
-    auto removeDirectedEdge = [=, &GRev](int a, int b) {
-        bool removed = false;
-        int p = GRev[a].size() - 1;
-        for (int i = GRev[a].size() - 1; i >= 0; i--) {
-            if (GRev[a][i].first == b) {
-                swap(GRev[a][i], GRev[a][p]);
-
-                GRev[a].pop_back();
-                p--;
-                removed = true;
-            }
-        }
-
-//        if (GRev[a].empty()) VPII().swap(GRev[a]);
-
-        return removed;
-    };
-    /**
-    * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
-    */
-    auto addDirectedEdge = [=, &GRev](int a, int b, int offset) {
-        if (a == b) return;
-        VPII::iterator it = GRev[a].end();
-        for (it = GRev[a].begin(); it != GRev[a].end(); ++it) if (it->first == b) break;
-        if (it == GRev[a].end()) {
-            GRev[a].push_back({b, offset});
-        } else {
-            int ind = it - GRev[a].begin();
-            if (offset < GRev[a][ind].second) GRev[a][ind].second = offset;
-        }
-    };
-
-
-    cerr << "Memory usage in contractPathNodes(), after creating reverse graph, before contracting nodes" << endl;
-    MyUtils::process_mem_usage();
-
-    deque<int> pathNodes;
-    for (int i = 0; i < G->size(); i++) {
-        if ((*G)[i].size() == 1 && GRev[i].size() == 1) pathNodes.push_back(i);
-    }
-
-
     bool anyContractionDone = false;
     int contractionsDone = 0;
-    int progressCounter = 0;
 
-    unsigned cnt = 0;
-    while (!pathNodes.empty()) {
-        int b = pathNodes.front();
-        pathNodes.pop_front();
+    const bool USE_PARALLEL_CONTRACTION = true;
 
-        if ((*G)[b].size() == 0) continue;
+    if (!USE_PARALLEL_CONTRACTION) { // beginning of sequential path contraction
 
-        int a = GRev[b][0].first;
-        int c = (*G)[b][0].first;
+        VVPII GRev = G->getReverseGraphNeighborhoods();
+        /**
+         * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
+         */
+        auto removeDirectedEdge = [=, &GRev](int a, int b) {
+            bool removed = false;
+            int p = GRev[a].size() - 1;
+            for (int i = GRev[a].size() - 1; i >= 0; i--) {
+                if (GRev[a][i].first == b) {
+                    swap(GRev[a][i], GRev[a][p]);
 
-        if (a == c) continue;
+                    GRev[a].pop_back();
+                    p--;
+                    removed = true;
+                }
+            }
+
+            return removed;
+        };
+        /**
+        * Function does the same as removeDirected Edge in Graph class. It operates solely on the GRev VVPII structure. This is done to reduce memory peak.
+        */
+        auto addDirectedEdge = [=, &GRev](int a, int b, int offset) {
+            if (a == b) return;
+            VPII::iterator it = GRev[a].end();
+            for (it = GRev[a].begin(); it != GRev[a].end(); ++it) if (it->first == b) break;
+            if (it == GRev[a].end()) {
+                GRev[a].push_back({b, offset});
+            } else {
+                int ind = it - GRev[a].begin();
+                if (offset < GRev[a][ind].second) GRev[a][ind].second = offset;
+            }
+        };
 
 
-        if (G->contractPath(a, b, c)) {
-            anyContractionDone = true;
-            contractionsDone++;
-//            GRev.removeDirectedEdge(b, a);
-//            GRev.removeDirectedEdge(c, b);
-//            GRev.addDirectedEdge(c, a, G->findWeight(a, c));
+        cerr << "Memory usage in contractPathNodes(), after creating reverse graph, before contracting nodes" << endl;
+        MyUtils::process_mem_usage();
 
-            removeDirectedEdge(b, a);
-            removeDirectedEdge(c, b);
-            addDirectedEdge(c, a, G->findWeight(a, c));
+        int progressCounter = 0;
+        deque<int> pathNodes;
+        for (int i = 0; i < G->size(); i++) {
+            if ((*G)[i].size() == 1 && GRev[i].size() == 1) pathNodes.push_back(i);
         }
 
-        if ((*G)[a].size() == 1 && GRev[a].size() == 1) {
-            pathNodes.push_back(a);
-        }
-        if ((*G)[c].size() == 1 && GRev[c].size() == 1) {
-            pathNodes.push_back(c);
-        }
+        unsigned cnt = 0;
+        while (!pathNodes.empty()) {
+            int b = pathNodes.front();
+            pathNodes.pop_front();
 
-        cnt++;
-        MyUtils::writeProgress(cnt, G->size(), progressCounter, "contracting paths progress",
-                               1); // just roughly accurate
+            if ((*G)[b].size() == 0) continue;
+
+            int a = GRev[b][0].first;
+            int c = (*G)[b][0].first;
+
+            if (a == c) continue;
+
+
+            if (G->contractPath(a, b, c)) {
+                anyContractionDone = true;
+                contractionsDone++;
+
+                removeDirectedEdge(b, a);
+                removeDirectedEdge(c, b);
+                addDirectedEdge(c, a, G->findWeight(a, c));
+            }
+
+            if ((*G)[a].size() == 1 && GRev[a].size() == 1) {
+                pathNodes.push_back(a);
+            }
+            if ((*G)[c].size() == 1 && GRev[c].size() == 1) {
+                pathNodes.push_back(c);
+            }
+
+            cnt++;
+            MyUtils::writeProgress(cnt, G->size(), progressCounter, "contracting paths progress",
+                                   1); // just roughly accurate
+        }
+    } else { // parallel version
+        const int THREADS_OLD = Params::THREADS;
+//        Params::THREADS=1; // #TEST
+
+        VB indeg1outdeg1(G->size(), true);
+        VI *indegs = G->getInDegrees();
+        for (unsigned i = 0; i < G->size(); i++) {
+            if ((*indegs)[i] != 1) indeg1outdeg1[i] = false;
+            if ((*G)[i].size() != 1) indeg1outdeg1[i] = false;
+        }
+        delete indegs;
+
+
+        int blocks = 10 * Params::THREADS;
+        VB threadAnyContractionDone(Params::THREADS, false);
+        VI threadContractionsDone(Params::THREADS, 0);
+        WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
+                                                [=, &threadAnyContractionDone, &threadContractionsDone, &indeg1outdeg1](
+                                                        unsigned x, unsigned y, unsigned id) {
+
+                                                    for (unsigned i = x; i <= y; i++) {
+                                                        if (indeg1outdeg1[i]) continue;
+
+                                                        for (int j = 0; j < (*G)[i].size(); j++) {
+
+                                                            int a = i;
+                                                            PII p = (*G)[a][j];
+                                                            int b = p.first;
+
+                                                            if (!indeg1outdeg1[b]) continue;
+
+                                                            int c = (*G)[b][0].first;
+                                                            if (a == c) continue;
+
+                                                            if (G->contractPath(a, b, c)) {
+                                                                threadAnyContractionDone[id] = true;
+                                                                threadContractionsDone[id]++;
+
+                                                                /*removeDirectedEdge(b, a); // node b can be accessible only from a=i, so no need to lock
+                                                                G->lockNode(c); // need to lock, since node c may be considered by different thread
+                                                                removeDirectedEdge(c, b);
+                                                                addDirectedEdge(c, a, G->findWeight(a, c));
+                                                                G->unlockNode(c);*/
+
+                                                                j--; // need to check the same node as long as the contraction can be done
+                                                            }
+                                                        }
+                                                    }
+
+                                                });
+
+        contractionsDone = accumulate(threadContractionsDone.begin(), threadContractionsDone.end(), 0);
+        anyContractionDone = (contractionsDone > 0);
+
+        Params::THREADS = THREADS_OLD; // #TEST
     }
+
+
     cerr << endl;
     cerr << "There were " << contractionsDone << " contractions" << endl;
 
