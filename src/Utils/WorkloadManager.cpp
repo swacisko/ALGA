@@ -37,9 +37,8 @@ void WorkloadManager::parallelBlockExecution(unsigned n, unsigned N, unsigned bl
     vector<future<void> > futures(threads - 1);
     for (unsigned i = 1; i < threads; i++) {
         futures[i - 1] = std::async(std::launch::async, worker, i);
-//        sleep(1); // to test
     }
-    std::async(std::launch::async, worker, 0);
+    worker(0);
     for (auto &f : futures) f.get();
 }
 

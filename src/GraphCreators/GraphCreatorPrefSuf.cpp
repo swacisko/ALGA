@@ -280,20 +280,20 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     {
-        parallelJobs.clear();
+        /*parallelJobs.clear();
         for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
             int a = min(i * W, G->size() - 1);
             int b = min((i + 1) * W - 1, G->size() - 1);
             parallelJobs.emplace_back([=] { nextPrefSufIterationJobAddEdges(a, b, i); });
         }
         nextPrefSufIterationJobAddEdges(0, W - 1, 0);
-        for (auto &p : parallelJobs) p.join();
+        for (auto &p : parallelJobs) p.join();*/
 
-        /* int blocks = 50 * Params::THREADS;
-         WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
-                                                 [=](unsigned a, unsigned b, unsigned id) {
-                                                     nextPrefSufIterationJobAddEdges(a, b, id);
-                                                 });*/
+        int blocks = 50 * Params::THREADS;
+        WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
+                                                [=](unsigned a, unsigned b, unsigned id) {
+                                                    nextPrefSufIterationJobAddEdges(a, b, id);
+                                                });
     }
 
 

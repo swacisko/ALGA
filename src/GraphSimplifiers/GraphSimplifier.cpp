@@ -301,7 +301,8 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
     TimeMeasurer::startMeasurement("GraphSimplifier_removeShortParallelPaths");
     cerr << endl << "Removing short parallel paths" << endl;
 
-    { // original version
+    const bool USE_WORKLOAD_MANAGER = true;
+    if (!USE_WORKLOAD_MANAGER) { // original version
         vector<std::thread> parallelJobs;
         parallelJobs.reserve(Params::THREADS);
 
@@ -316,9 +317,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
         for (auto &p : parallelJobs) p.join();
 
 //        for (int i = 0; i < G->size(); i++) (*G)[i].shrink_to_fit();
-    }
-
-    /*{ // version with workload manger
+    } else { // version with workload manger
         VI pathsConsidered(Params::THREADS, 0);
         VI blocksConsidered(Params::THREADS, 0);
 
@@ -347,7 +346,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
          for( int i=0; i<pathsConsidered.size(); i++){
              cerr << "There were " << pathsConsidered[i] << " paths and " << blocksConsidered[i] << " blocks considered in thread " << i << endl;
          }
-    }*/
+    }
 
     cerr << "\tShortParallelPaths removed" << endl;
     TimeMeasurer::stopMeasurement("GraphSimplifier_removeShortParallelPaths");
@@ -474,57 +473,136 @@ int GraphSimplifier::removeDanglingBranches(int maxOffset) {
 
 
     VVPII edgesToRemove(Params::THREADS);
+    int branchesRemoved = 0;
 
-    vector<std::future<int> > futures(Params::THREADS - 1);
+    const bool USE_WORKLOAD_MANAGER = true;
+    if (!USE_WORKLOAD_MANAGER) {
 
-    int W = (int) ceil((double) G->size() / Params::THREADS);
-    for (int i = 1; i < Params::THREADS; i++) {
-        int a = i * W;
-        int b = min((i + 1) * W - 1, (int) G->size() - 1);
+        vector<std::future<int> > futures(Params::THREADS - 1);
 
-        futures[i - 1] = std::async(std::launch::async, [=, &edgesToRemove](int a, int b, int i) {
-            int branchesRemoved = 0;
-            for (int j = a; j <= b; j++) {
-                if ((*G)[j].size() >= 2) {
-                    branchesRemoved += removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[i], i);
+        int W = (int) ceil((double) G->size() / Params::THREADS);
+        for (int i = 1; i < Params::THREADS; i++) {
+            int a = i * W;
+            int b = min((i + 1) * W - 1, (int) G->size() - 1);
+
+            futures[i - 1] = std::async(std::launch::async, [=, &edgesToRemove](int a, int b, int i) {
+                int branchesRemoved = 0;
+                for (int j = a; j <= b; j++) {
+                    if ((*G)[j].size() >= 2) {
+                        branchesRemoved += removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[i], i);
+                    }
                 }
+
+                return branchesRemoved;
+            }, a, b, i);
+
+        }
+
+
+        for (int j = 0; j <= W - 1; j++) {
+            if ((*G)[j].size() >= 2) {
+                removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[0], 0);
+            }
+        }
+
+        for (auto &p : futures) p.get();
+
+        VPII toRemove;
+        for (auto &v : edgesToRemove) {
+            toRemove.insert(toRemove.end(), v.begin(), v.end());
+            VPII().swap(v);
+        }
+
+        sort(toRemove.begin(), toRemove.end());
+        toRemove.resize(unique(toRemove.begin(), toRemove.end()) - toRemove.begin());
+
+        int branchesRemoved = 0;
+        int progressCounter = 0;
+        for (auto e : toRemove) {
+            branchesRemoved++;
+            if (G->removeDirectedEdge(e.first, e.second) == false) {
+                cerr << "Trying to remove an edge that is not present in the graph! In removeDanglingBranches()"
+                     << endl;
+            }
+            MyUtils::writeProgress(progressCounter + 1, G->size(), progressCounter,
+                                   "RemoveDanglingBranches, removing edges", 1);
+        }
+        toRemove.clear();
+    } else {
+
+        VI threadBranchesRemoved(Params::THREADS, 0);
+
+        int blocks = 10 * Params::THREADS;
+        WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
+                                                [=, &edgesToRemove](unsigned a, unsigned b, unsigned id) {
+                                                    for (unsigned j = a; j <= b; j++) {
+                                                        if ((*G)[j].size() >= 2) {
+                                                            removeDanglingBranchesFromNode(j, maxOffset,
+                                                                                           edgesToRemove[id], id);
+                                                        }
+                                                    }
+                                                });
+
+        { // sequential sort and parallel removal of branches
+            VPII toRemove;
+            for (auto &v : edgesToRemove) {
+                toRemove.insert(toRemove.end(), v.begin(), v.end());
+                VPII().swap(v);
             }
 
-            return branchesRemoved;
-        }, a, b, i);
+            sort(toRemove.begin(), toRemove.end());
+            toRemove.resize(unique(toRemove.begin(), toRemove.end()) - toRemove.begin());
 
-    }
+            /*branchesRemoved = 0;
+            int progressCounter = 0;
+            for (auto e : toRemove) {
+                branchesRemoved++;
+                if (G->removeDirectedEdge(e.first, e.second) == false) {
+                    cerr << "Trying to remove an edge that is not present in the graph! In removeDanglingBranches()"
+                         << endl;
+                }
+                MyUtils::writeProgress(progressCounter + 1, G->size(), progressCounter,
+                                       "RemoveDanglingBranches, removing edges", 1);
+            }*/
 
-
-    for (int j = 0; j <= W - 1; j++) {
-        if ((*G)[j].size() >= 2) {
-            removeDanglingBranchesFromNode(j, maxOffset, edgesToRemove[0], 0);
+            // removing edges parallelly.
+            if (!toRemove.empty()) {
+                blocks = 3 * Params::THREADS;
+                random_shuffle(toRemove.begin(),
+                               toRemove.end()); // this should decrease the number of lock collisions in parallel removal of edges
+                WorkloadManager::parallelBlockExecution(0, toRemove.size() - 1, blocks, Params::THREADS,
+                                                        [=, &toRemove, &threadBranchesRemoved](unsigned a, unsigned b,
+                                                                                               unsigned id) {
+                                                            for (unsigned i = a; i <= b; i++) {
+                                                                PII *e = &toRemove[i];
+                                                                G->lockNode(e->first);
+                                                                if (G->removeDirectedEdge(e->first,
+                                                                                          e->second))
+                                                                    threadBranchesRemoved[id]++;
+                                                                G->unlockNode(e->first);
+                                                            }
+                                                        });
+            }
+            branchesRemoved = accumulate(threadBranchesRemoved.begin(), threadBranchesRemoved.end(), 0);
         }
+
+        /*{
+            // parallelly removing edges from graph. Need to lock nodes, because the same edges may be present to remove in many threads.
+            WorkloadManager::parallelBlockExecution(0, Params::THREADS - 1, Params::THREADS, Params::THREADS,
+                                                    [=, &edgesToRemove, &threadBranchesRemoved](unsigned a, unsigned b,
+                                                                                                unsigned id) {
+                                                        for (auto e : edgesToRemove[id]) {
+                                                            G->lockNode(e.first);
+                                                            if (G->removeDirectedEdge(e.first, e.second)) {
+                                                                threadBranchesRemoved[id]++;
+                                                            }
+                                                            G->unlockNode(e.first);
+                                                        }
+                                                    });
+            branchesRemoved = accumulate( threadBranchesRemoved.begin(), threadBranchesRemoved.end(), 0 );
+        }*/
+
     }
-
-    for (auto &p : futures) p.get();
-
-
-    VPII toRemove;
-    for (auto &v : edgesToRemove) {
-        toRemove.insert(toRemove.end(), v.begin(), v.end());
-        VPII().swap(v);
-    }
-
-    sort(toRemove.begin(), toRemove.end());
-    toRemove.resize(unique(toRemove.begin(), toRemove.end()) - toRemove.begin());
-
-    int branchesRemoved = 0;
-    int progressCounter = 0;
-    for (auto e : toRemove) {
-        branchesRemoved++;
-        if (G->removeDirectedEdge(e.first, e.second) == false) {
-            cerr << "Trying to remove an edge that is not present in the graph! In removeDanglingBranches()" << endl;
-        }
-        MyUtils::writeProgress(progressCounter + 1, G->size(), progressCounter,
-                               "RemoveDanglingBranches, removing edges", 1);
-    }
-    toRemove.clear();
 
 
     cerr << "\tdangling branches removed, " << branchesRemoved << " branches removed" << endl;
@@ -725,7 +803,6 @@ bool GraphSimplifier::contractPathNodes() {
         }
     } else { // parallel version
         const int THREADS_OLD = Params::THREADS;
-//        Params::THREADS=1; // #TEST
 
         VB indeg1outdeg1(G->size(), true);
         VI *indegs = G->getInDegrees();
@@ -760,12 +837,6 @@ bool GraphSimplifier::contractPathNodes() {
                                                             if (G->contractPath(a, b, c)) {
                                                                 threadAnyContractionDone[id] = true;
                                                                 threadContractionsDone[id]++;
-
-                                                                /*removeDirectedEdge(b, a); // node b can be accessible only from a=i, so no need to lock
-                                                                G->lockNode(c); // need to lock, since node c may be considered by different thread
-                                                                removeDirectedEdge(c, b);
-                                                                addDirectedEdge(c, a, G->findWeight(a, c));
-                                                                G->unlockNode(c);*/
 
                                                                 j--; // need to check the same node as long as the contraction can be done
                                                             }

@@ -53,14 +53,9 @@ vector<Contig *> ContigCreatorSinglePath::getAllContigs() {
         }
         int WW = (int) ceil((double) nodesToCheck.size() / Params::THREADS);
         for (int i = 1; i < Params::THREADS; i++) {
-//            DEBUG(i * WW);
-//            DEBUG(min((i + 1) * WW - 1, (int) nodesToCheck.size() - 1));
-
             int a = nodesToCheck[i * WW];
             int b = min((i + 1) * WW - 1, (int) nodesToCheck.size() - 1);
             b = nodesToCheck[b];
-
-//            DEBUG(PII(a,b) );
 
             futures[i - 1] = std::async(std::launch::async, getContigOmitShortCyclesFromJob, a, b, i);
         }
@@ -123,7 +118,6 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
     unordered_map<int, int> dst;
     dst[beg] = 0;
 
-//    was[beg] = true;
     was.insert(beg);
     VI visited(1, beg);
 
@@ -146,12 +140,9 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
 
         addContractedPathToString(beg, p, s, readsInContig);
 
-
-//        was[p] = true;
         was.insert(p);
         dst[p] = offset;
         visited.push_back(p);
-
 
         VPII nextCandidates = getNextStepCandidates(predecessor, p, readsInContig);
         int nextId = nextCandidates.empty() ? -1 : nextCandidates[0].first;
@@ -167,15 +158,12 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
 
         while (canBeNext == 1) {
             visited.push_back(p);
-//            was[p] = true;
             was.insert(p);
-
 
             nextCandidates = getNextStepCandidates(predecessor, p, readsInContig);
             nextId = nextCandidates.empty() ? -1 : nextCandidates[0].first;
             offset = nextCandidates.empty() ? -1 : nextCandidates[0].second;
             canBeNext = nextCandidates.size();
-
 
             if (canBeNext == 1) {
                 if (offset != -1) dst[nextId] = dst[p] + offset;
@@ -185,11 +173,9 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
                 p = nextId;
             }
 
-//            if (p == -1 || was[p]) {
             if (p == -1 || was.count(p)) {
                 break;
             }
-
         }
 
         assert(p >= 0 && p < reads->size());
@@ -207,26 +193,14 @@ vector<Contig *> ContigCreatorSinglePath::getContigOmitShortCyclesFrom(int beg) 
             if (!contigs.empty()) contigs.back()->setEndsInFork(true);
         }
 
-//        for (int a : visited) {
-//            was[a] = false;
-//            dst[a] = 0;
-//        }
         { // the same as clearing all nodes in visited
             was.clear();
             was.insert(beg);
             dst.clear();
             dst[beg] = 0;
         }
-
-
     }
 
-//    was[beg] = false;
-//    dst[beg] = 0;
-//    for (int a : visited) {
-//        was[a] = false;
-//        dst[a] = 0;
-//    }
     {
         visited.clear();
         s.clear();

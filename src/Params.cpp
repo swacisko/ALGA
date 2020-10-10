@@ -257,7 +257,7 @@ void Params::initializeParams(int argc, char **argv) {
 //        {offset_max_for_bitmap_alignment.c_str(),                       required_argument,          0,  0 },
 //        {serialize_graph_before_simplifier.c_str(),                     required_argument,          0,  0 },
 //        {serialize_graph_after_simplifier.c_str(),                      required_argument,          0,  0 },
-//        {deserialize_graph.c_str(),                                     required_argument,          0,  0 },
+            {deserialize_graph.c_str(), required_argument, 0, 0},
 //        {min_overlap_rate.c_str(),                                      required_argument,          0,  0 },
 //        {write_statistics.c_str(),                                      required_argument,          0,  0 },
 //        {mocfo.c_str(),                                                 required_argument,          0,  0 },
