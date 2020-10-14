@@ -20,11 +20,11 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
 
     calculateMaxReadLength();
 
-    smallOverlapEdges = vector<pair<unsigned, unsigned> *>(G->size());
+   /* smallOverlapEdges = vector<pair<unsigned, unsigned> *>(G->size());
     for (int i = 0; i < G->size(); i++) {
         smallOverlapEdges[i] = new pair<unsigned, unsigned>[SOES];
         for (int j = 0; j < SOES; j++) smallOverlapEdges[i][j] = {-1, -1};
-    }
+    }*/
 }
 
 void GraphCreatorPrefSuf::calculateMaxReadLength() {
@@ -258,16 +258,16 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-        cerr << "moving small overlap edges to graph" << endl;
-        parallelJobs.clear();
-        W = (int) ceil((double) G->size() / Params::THREADS);
-        for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
-            int a = min(i * W, G->size() - 1);
-            int b = min((i + 1) * W - 1, G->size() - 1);
-            parallelJobs.emplace_back([=] { moveSmallOverlapEdgesToGraphJob(a, b, i); });
-        }
-        moveSmallOverlapEdgesToGraphJob(0, W - 1, 0);
-        for (auto &p : parallelJobs) p.join();
+        /* cerr << "moving small overlap edges to graph" << endl;
+         parallelJobs.clear();
+         W = (int) ceil((double) G->size() / Params::THREADS);
+         for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
+             int a = min(i * W, G->size() - 1);
+             int b = min((i + 1) * W - 1, G->size() - 1);
+             parallelJobs.emplace_back([=] { moveSmallOverlapEdgesToGraphJob(a, b, i); });
+         }
+         moveSmallOverlapEdgesToGraphJob(0, W - 1, 0);
+         for (auto &p : parallelJobs) p.join();*/
 
         G->retainOnlySmallestOffset();
 
@@ -275,7 +275,7 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
         MyUtils::process_mem_usage();
 
-        vector<SOES_TYPE>().swap(smallOverlapEdges);
+//        vector<SOES_TYPE>().swap(smallOverlapEdges);
     }
 
 
@@ -366,7 +366,7 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                         continue; // this line here prohibits included alignment
 
                     if (currentPrefSufLength < Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-                        int xx = SOES;
+                        /*int xx = SOES;
                         for (int j = 0; j < SOES; j++)
                             if (smallOverlapEdges[suffId][j] == pair<unsigned, unsigned>(-1, -1)) {
                                 xx = j;
@@ -378,7 +378,12 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                             }
                             xx = SOES - 1;
                         }
-                        smallOverlapEdges[suffId][xx] = {prefId, offset}; // i add normal edges here
+                        smallOverlapEdges[suffId][xx] = {prefId, offset}; // i add normal edges here*/
+
+                        G->lockNode(prefId);
+                        if ((*G)[prefId].size() == SOES) (*G)[prefId].erase((*G)[prefId].begin());
+                        G->pushDirectedEdge(prefId, suffId, offset);
+                        G->unlockNode(prefId);
 
                     } else {
 
@@ -432,24 +437,24 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
 
 void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id) {
-    for (unsigned i = a; i <= b; i++) {
-        if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
+    /* for (unsigned i = a; i <= b; i++) {
+         if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
 
-        const int suffId = i;
-        if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-            for (int j = 0; j < SOES; j++) {
-                auto p = smallOverlapEdges[suffId][j];
-                if (p == pair<unsigned, unsigned>(-1, -1)) break;
-                G->lockNode(p.first);
-                (*G)[p.first].push_back({suffId, p.second}); // i add reverse edges to the graph!!
-                G->unlockNode(p.first);
-            }
-            if (smallOverlapEdges[suffId] != nullptr) {
-                delete[] smallOverlapEdges[suffId];
-                smallOverlapEdges[suffId] = nullptr;
-            }
-        }
-    }
+         const int suffId = i;
+         if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
+             for (int j = 0; j < SOES; j++) {
+                 auto p = smallOverlapEdges[suffId][j];
+                 if (p == pair<unsigned, unsigned>(-1, -1)) break;
+                 G->lockNode(p.first);
+                 (*G)[p.first].push_back({suffId, p.second}); // i add reverse edges to the graph!!
+                 G->unlockNode(p.first);
+             }
+             if (smallOverlapEdges[suffId] != nullptr) {
+                 delete[] smallOverlapEdges[suffId];
+                 smallOverlapEdges[suffId] = nullptr;
+             }
+         }
+     }*/
 }
 
 
