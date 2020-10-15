@@ -913,4 +913,51 @@ void Graph::addContractedEdgeOrReplace(unsigned int a, unsigned int b, LPII e) {
     }
 }
 
+void Graph::reverseGraphInPlace() {
+    vector<unsigned> degs(size(), 0); // will the unsigned short be enough??
+    auto fun1 = [=, &degs](unsigned a, unsigned b) {
+        for (unsigned i = a; i <= b; i++) degs[i] = V[i].size();
+    };
+    vector<std::future<void> > futures(Params::THREADS - 1);
+    int W = (int) ceil((double) size() / Params::THREADS);
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = i * W;
+        int b = min((i + 1) * W - 1, (int) size() - 1);
+        futures[i - 1] = std::async(std::launch::async, fun1, a, b);
+    }
+    fun1(0, W - 1);
+    for (auto &p : futures) p.get();
+    // degrees initialized
+
+    auto worker = [=, &degs](int a, int b) {
+        for (int j = a; j <= b; j++) {
+            lockNode(j);
+            VPII neigh = V[j]; // accessing the neighborhood, not to block two nodes in the same time
+            unlockNode(j);
+            for (unsigned i = 0; i < degs[j]; i++) {
+                PII &p = neigh[i];
+                int d = p.first;
+                int off = p.second;
+                lockNode(d);
+                V[d].emplace_back(j, off);
+                unlockNode(d);
+            }
+            lockNode(j);
+            V[j].erase(V[j].begin(), V[j].begin() + degs[j]);
+            VPII(V[j]).swap(V[j]);
+            unlockNode(j);
+        }
+    };
+
+    for (int i = 1; i < Params::THREADS; i++) {
+        int a = i * W;
+        int b = min((i + 1) * W - 1, (int) size() - 1);
+        futures[i - 1] = std::async(std::launch::async, worker, a, b);
+    }
+    worker(0, W - 1);
+    for (auto &p : futures) p.get();
+
+    return;
+}
+
 

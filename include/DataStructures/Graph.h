@@ -169,6 +169,11 @@ public:
     void reverseGraph();
 
     /**
+     * Function reverses the graph in-place, without creating additional VVPII object. It may be slowet than reverseGraph(), but should use less memory.
+     */
+    void reverseGraphInPlace();
+
+    /**
      * Performs operations of type vector<PII>().swap( V[i] ) for all nodes
      */
     void pruneGraph();
