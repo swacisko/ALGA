@@ -90,7 +90,8 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
     clear();
     if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
 
-    G->reverseGraph();
+//    G->reverseGraph();
+    G->reverseGraphInPlace();
 
     cerr << "There were " << bitsetChecksCount << " bitset checks done in GCPS" << endl;
 
