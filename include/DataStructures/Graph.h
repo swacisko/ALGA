@@ -70,6 +70,12 @@ public:
     void addDirectedEdge(int a, int b,
                          int offset); // adds directed edge from a to b with given offset. If such edge exists it will modify the offset to the smallest of thos considered yet for those edge.
 
+
+    /**
+     * Writes basic statistics about the graph
+     */
+    void writeBasicStatistics();
+
     /**
      *
      * @return structure of the graph, vector V.
@@ -187,7 +193,6 @@ public:
 
     void writeAllEdgesWithNode(int id); // writes all edges that begin or end in given node
 
-    int getGraphNonmapSizeThreshold() const;
 
     void serializeGraph(string fileName);
 

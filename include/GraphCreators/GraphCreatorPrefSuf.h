@@ -107,7 +107,12 @@ private:
     void writeState();
 
 
+    // STATISTICS
     std::atomic<long long> bitsetChecksCount;
+    std::atomic<long long> goodBitsetChecksCount;
+    std::atomic<long long> bitsetCheckEdgesRemoved;
+    std::atomic<long long> prefSufChecks;
+    std::atomic<long long> goodPrefSufChecks;
 
 };
 

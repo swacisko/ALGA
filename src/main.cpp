@@ -398,10 +398,11 @@ int main(int argc, char **argv) {
         G->pruneGraph();
         Global::removeIsolatedReads();
 
-        G->createContractedEdgesVector();
+        G->writeBasicStatistics();
 
 
         cerr << endl << "AFTER SIMPLIFIER, before contracting paths" << endl;
+        G->createContractedEdgesVector();
         MyUtils::process_mem_usage();
 
 
@@ -412,6 +413,7 @@ int main(int argc, char **argv) {
 
         cerr << endl << "AFTER SIMPLIFIER - CONTRACTING PATHS" << endl;
         MyUtils::process_mem_usage();
+        G->writeBasicStatistics();
 
     } // end of simplifier
 

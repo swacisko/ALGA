@@ -16,6 +16,12 @@
 GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool remove_isolated_reads) : GraphCreator(
         reads, G), maxReadLength(0), removeIsolatedReadsBeforeReversingGraph(remove_isolated_reads),
                                                                                                         bitsetChecksCount(
+                                                                                                                0),
+                                                                                                        bitsetCheckEdgesRemoved(
+                                                                                                                0),
+                                                                                                        goodPrefSufChecks(
+                                                                                                                0),
+                                                                                                        prefSufChecks(
                                                                                                                 0) {
 
     calculateMaxReadLength();
@@ -93,8 +99,14 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 //    G->reverseGraph();
     G->reverseGraphInPlace();
 
-    cerr << "There were " << bitsetChecksCount << " bitset checks done in GCPS" << endl;
-
+    {
+        DEBUG(prefSufChecks);
+        DEBUG(goodPrefSufChecks);
+        DEBUG(bitsetChecksCount);
+        DEBUG(goodBitsetChecksCount);
+        DEBUG(bitsetCheckEdgesRemoved);
+        G->writeBasicStatistics();
+    }
 
     Params::MIN_OVERLAP_AREA = oldMOA;
     Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = oldMOCFA;
@@ -267,16 +279,16 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-        /* cerr << "moving small overlap edges to graph" << endl;
-         parallelJobs.clear();
-         W = (int) ceil((double) G->size() / Params::THREADS);
-         for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
-             int a = min(i * W, G->size() - 1);
-             int b = min((i + 1) * W - 1, G->size() - 1);
-             parallelJobs.emplace_back([=] { moveSmallOverlapEdgesToGraphJob(a, b, i); });
-         }
-         moveSmallOverlapEdgesToGraphJob(0, W - 1, 0);
-         for (auto &p : parallelJobs) p.join();*/
+        /*cerr << "moving small overlap edges to graph" << endl;
+        parallelJobs.clear();
+        W = (int) ceil((double) G->size() / Params::THREADS);
+        for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
+            int a = min(i * W, G->size() - 1);
+            int b = min((i + 1) * W - 1, G->size() - 1);
+            parallelJobs.emplace_back([=] { moveSmallOverlapEdgesToGraphJob(a, b, i); });
+        }
+        moveSmallOverlapEdgesToGraphJob(0, W - 1, 0);
+        for (auto &p : parallelJobs) p.join();*/
 
         /*{
             LL edges_before = G->countEdges();
@@ -290,8 +302,9 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         }*/
 
         {
+            G->retainOnlySmallestOffset(); // this probably should de done before reversing graph
+            G->writeBasicStatistics();
             G->reverseGraphInPlace();
-            G->retainOnlySmallestOffset(); // this should not de done!! It will keeps only one copy of reverse edges, hence loosing connectionsin original graph!
         }
 
         MyUtils::process_mem_usage();
@@ -315,6 +328,7 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
                                                 [=](unsigned a, unsigned b, unsigned id) {
                                                     nextPrefSufIterationJobAddEdges(a, b, id);
                                                 });
+
     }
 
 
@@ -377,11 +391,17 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
             const int b = suffixKmers[suffId] % prefixKmersBuckets;
             const int offset = (*reads)[i]->size() - currentPrefSufLength;
 
+            auto suffHash = suffixKmers[suffId];
+            auto suffHashAdditional = suffixKmersAdditional[suffId];
+
+            prefSufChecks += prefixKmersInBuckets[b].size();
+
             for (unsigned pref : prefixKmersInBuckets[b]) {
                 int prefId = pref;
-                if (prefixKmers[prefId] == suffixKmers[suffId] && prefId != suffId &&
-                    prefixKmersAdditional[prefId] == suffixKmersAdditional[suffId]) {
+                if (prefId != suffId && prefixKmers[prefId] == /*suffixKmers[suffId]*/ suffHash &&
+                    prefixKmersAdditional[prefId] == /*suffixKmersAdditional[suffId]*/ suffHashAdditional) {
 
+                    goodPrefSufChecks++;
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
                         continue; // this line here prohibits included alignment
@@ -424,11 +444,11 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                         if (offset > 0) { // this can be checked - maybe i should not consider if offset = 0
 
                             G->lockNode(C);
-                            auto neighborhood_list = (*G)[C];// #TEST
+                            auto neighborhood_list = (*G)[C];
                             G->unlockNode(C);// #TEST
                             bitsetChecksCount += neighborhood_list.size();
 
-                            for (PII &p : neighborhood_list) { // #TEST
+                            for (PII &p : neighborhood_list) {
                                 const int A = p.first;
 
                                 const int offsetDiff = p.second - offset;
@@ -439,6 +459,8 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                                 if (A == B)
                                     continue; // if A == B then there will be no edge (A,B) and thus i do not want to remove (A,C) from graph
 
+                                goodBitsetChecksCount++;
+
                                 auto bs = (*reads)[A]->getSequence();
                                 bs <<= (offsetDiff << 1);
                                 bool removeEdge = Read::getRightOffset((*reads)[A], (*reads)[B], offsetDiff) >= 0
@@ -447,6 +469,7 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                                 if (removeEdge) {
                                     toRemove.push_back({C, A});
+                                    bitsetCheckEdgesRemoved++;
                                 }
                             }
                         }
@@ -468,24 +491,24 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
 
 void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id) {
-    /* for (unsigned i = a; i <= b; i++) {
-         if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
+    /*for (unsigned i = a; i <= b; i++) {
+        if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
 
-         const int suffId = i;
-         if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-             for (int j = 0; j < SOES; j++) {
-                 auto p = smallOverlapEdges[suffId][j];
-                 if (p == pair<unsigned, unsigned>(-1, -1)) break;
-                 G->lockNode(p.first);
-                 (*G)[p.first].push_back({suffId, p.second}); // i add reverse edges to the graph!!
-                 G->unlockNode(p.first);
-             }
-             if (smallOverlapEdges[suffId] != nullptr) {
-                 delete[] smallOverlapEdges[suffId];
-                 smallOverlapEdges[suffId] = nullptr;
-             }
-         }
-     }*/
+        const int suffId = i;
+        if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
+            for (int j = 0; j < SOES; j++) {
+                auto p = smallOverlapEdges[suffId][j];
+                if (p == pair<unsigned, unsigned>(-1, -1)) break;
+                G->lockNode(p.first);
+                (*G)[p.first].push_back({suffId, p.second}); // i add reverse edges to the graph!!
+                G->unlockNode(p.first);
+            }
+            if (smallOverlapEdges[suffId] != nullptr) {
+                delete[] smallOverlapEdges[suffId];
+                smallOverlapEdges[suffId] = nullptr;
+            }
+        }
+    }*/
 }
 
 

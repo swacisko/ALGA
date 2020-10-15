@@ -960,4 +960,39 @@ void Graph::reverseGraphInPlace() {
     return;
 }
 
+void Graph::writeBasicStatistics() {
+    cerr << "Basic graph statistics: " << endl;
+    cerr << "Nodes: " << size() << endl;
+    cerr << "Edges: " << countEdges() << endl;
+
+    cerr << endl;
+    cerr << "Maximum outdegree: "
+         << max_element(V.begin(), V.end(), [](auto &v1, auto &v2) { return v1.size() < v2.size(); })->size() << endl;
+    VI cnt(size(), 0);
+    for (int i = 0; i < size(); i++) cnt[V[i].size()]++;
+    int T = 5;
+    long long S = 0;
+    for (int i = 0; i <= T; i++) {
+        cerr << "Nodes with outdegree " << i << ": " << cnt[i] << endl;
+        S += cnt[i];
+    }
+    cerr << "Total nodes with outdegree <= " << T << ": " << S << endl;
+
+    cerr << endl;
+    S = 0;
+    fill(cnt.begin(), cnt.end(), 0);
+    VI *indegs = getInDegrees();
+    cerr << "Maximum indegree: "
+         << *max_element((*indegs).begin(), (*indegs).end(), [](auto &v1, auto &v2) { return v1 < v2; }) << endl;
+    for (int i = 0; i < size(); i++) cnt[(*indegs)[i]]++;
+    delete indegs;
+    for (int i = 0; i <= T; i++) {
+        cerr << "Nodes with indegree " << i << ": " << cnt[i] << endl;
+        S += cnt[i];
+    }
+    cerr << "Total nodes with indegree <= " << T << ": " << S << endl;
+
+    cerr << endl;
+}
+
 
