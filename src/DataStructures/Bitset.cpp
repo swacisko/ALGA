@@ -861,11 +861,22 @@ int Bitset::mismatch(Bitset oth) {
         if (V[i] != oth.V[i]) {
 //            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i]);
             if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]);
-            else return i * BLOCK_SIZE + __builtin_ctzll(V[i]);
-//            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
+//            else return i * BLOCK_SIZE + __builtin_ctzll(V[i]);
+            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
         }
     }
     return min(size(), oth.size());
+}
+
+bool Bitset::mismatchBounded(Bitset &oth, unsigned int pos) {
+    int m = min(blocks(), oth.blocks());
+    for (int i = 0; i < m; i++) {
+        if (V[i] != oth.V[i]) {
+            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]) < pos;
+            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]) <= pos;
+        } else if (i * BLOCK_SIZE >= pos) return false;
+    }
+    return false;
 }
 
 

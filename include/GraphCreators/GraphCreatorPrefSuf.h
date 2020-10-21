@@ -60,8 +60,6 @@ private:
      * It will be used only if Params::SPACE_EFFICIENT is set to 1.
      */
     static const int SOES = 3;
-//    typedef pair<unsigned, unsigned> *SOES_TYPE;
-//    vector<SOES_TYPE> smallOverlapEdges;
 
 
     void removeKmersFromBucketsJob(int a, int b, int thread_id);
@@ -109,6 +107,7 @@ private:
 
 
     // STATISTICS
+    static const bool GATHER_STATISTICS = false;
     std::atomic<long long> bitsetChecksCount;
     std::atomic<long long> goodBitsetChecksCount;
     std::atomic<long long> bitsetCheckEdgesRemoved;

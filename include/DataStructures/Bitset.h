@@ -117,6 +117,13 @@ public:
      */
     int mismatch(Bitset oth);
 
+    /**
+     *
+     * @param oth
+     * @return true, if there is a mismatch at first [pos] positions (that is the mismatch can occur not later than on index pos-1), false otherwise
+     */
+    bool mismatchBounded(Bitset &oth, unsigned pos);
+
     int size() const;
 
     int count() const;

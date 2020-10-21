@@ -36,6 +36,7 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
 
     int lg = (int) log2((double) G->size() / 2);
     prefixKmersBuckets = (1ll << lg);
+//    prefixKmersBuckets = MyUtils::getNearestLowerPrime((double) G->size() / 3);
     prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);
 
 }
@@ -97,7 +98,7 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
     G->reverseGraphInPlace();
 
-    {
+    if (GATHER_STATISTICS) {
         DEBUG(prefSufChecks);
         DEBUG(goodPrefSufChecks);
         DEBUG(bitsetChecksCount);
@@ -268,6 +269,11 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         }
         putKmersIntoBucketsJob(0, W - 1, 0);
         for (auto &p : parallelJobs) p.join();
+
+        // this sorting should make processor branch prediction better
+        /* WorkloadManager::parallelBlockExecution(0, prefixKmersBuckets-1, 3*Params::THREADS, Params::THREADS, [=](unsigned a, unsigned b, unsigned id){
+             for(unsigned i=a; i<=b; i++) sort( prefixKmersInBuckets[i].begin(), prefixKmersInBuckets[i].end() );
+         });*/
     }
 
 
@@ -276,20 +282,6 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         G->reverseGraphInPlace();
         G->retainOnlySmallestOffset();
         G->writeBasicStatistics();
-
-        /*WorkloadManager::parallelBlockExecution(0, G->size() - 1, Params::THREADS, Params::THREADS,
-                                                [=](unsigned a, unsigned b, unsigned id) {
-
-                            for( int i=a; i<=b; i++ ) if( (*G)[i].size() > 3 ){
-                                sort( (*G)[i].begin(), (*G)[i].end(),[=](auto a, auto b){
-                                    int overlapa = Read::calculateReadOverlap((*reads)[a.first], (*reads)[i], a.second);
-                                    int overlapb = Read::calculateReadOverlap((*reads)[b.first], (*reads)[i], b.second);
-                                    return overlapa > overlapb;
-                                } );
-                                (*G)[i].resize(3);
-                            }
-         });
-        G->writeBasicStatistics();*/
 
         MyUtils::process_mem_usage();
     }
@@ -323,6 +315,7 @@ void GraphCreatorPrefSuf::putKmersIntoBucketsJob(int a, int b, int thread_id) {
     for (unsigned i = a; i <= b; i++) {
         if (!alignTo[i]) continue;
         int ind = prefixKmers[i] & (prefixKmersBuckets - 1);
+//        int ind = prefixKmers[i] % prefixKmersBuckets;
         G->lockNode(ind);
         prefixKmersInBuckets[ind].push_back(i);
         G->unlockNode(ind);
@@ -352,29 +345,34 @@ void GraphCreatorPrefSuf::updatePrexihHashJob(int a, int b, int thread_id) {
 }
 
 void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thread_id) {
-    VPII toRemove;
+//    VPII toRemove;
+    unordered_set<unsigned> toRemove;
 
-    for (int i = a; i <= b; i++) {
+    for (int suffId = a; suffId <= b; suffId++) {
         bool sufUpdated = false;
-        if (alignFrom[i]) sufUpdated = updateSuffixHash(i, currentPrefSufLength);
+        if (alignFrom[suffId]) sufUpdated = updateSuffixHash(suffId, currentPrefSufLength);
 
         if (sufUpdated) {
 
-            const int suffId = i;
+//            const int suffId = i;
+//            const int B;// = suffId;
+            Read *rB = (*reads)[suffId];
+
             const int b = suffixKmers[suffId] & (prefixKmersBuckets - 1);
-            const int offset = (*reads)[i]->size() - currentPrefSufLength;
+//            const int b = suffixKmers[suffId] % prefixKmersBuckets;
+            const int offset = (*reads)[suffId]->size() - currentPrefSufLength;
 
             auto suffHash = suffixKmers[suffId];
             auto suffHashAdditional = suffixKmersAdditional[suffId];
 
-            prefSufChecks += prefixKmersInBuckets[b].size();
+            if (GATHER_STATISTICS) prefSufChecks += prefixKmersInBuckets[b].size();
 
-            for (unsigned pref : prefixKmersInBuckets[b]) {
-                int prefId = pref;
+            for (const unsigned prefId : prefixKmersInBuckets[b]) {
+//                int prefId = pref;
                 if (prefId != suffId && prefixKmers[prefId] == suffHash &&
                     prefixKmersAdditional[prefId] == suffHashAdditional) {
 
-                    goodPrefSufChecks++;
+                    if (GATHER_STATISTICS) goodPrefSufChecks++;
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
                         continue; // this line here prohibits included alignment
@@ -387,17 +385,15 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                     } else {
 
-                        const int C = prefId;
-                        const int B = suffId;
+//                        const int C = prefId;
 
                         if (offset > 0) { // this can be checked - maybe i should not consider if offset = 0
 
-                            G->lockNode(C);
-                            auto neighborhood_list = (*G)[C];
-                            G->unlockNode(C);// #TEST
-                            bitsetChecksCount += neighborhood_list.size();
+                            G->lockNode(prefId);
+                            auto neighborhood_list = (*G)[prefId];
+                            G->unlockNode(prefId);// #TEST
+                            if (GATHER_STATISTICS) bitsetChecksCount += neighborhood_list.size();
 
-                            Read *rB = (*reads)[B];
 
                             for (PII &p : neighborhood_list) {
                                 const int A = p.first;
@@ -407,43 +403,56 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                                 if (offsetDiff < 0)
                                     continue; // this is here to prevent checking short edges that were added earlier
-                                if (A == B)
+                                if (A == suffId)
                                     continue; // if A == B then there will be no edge (A,B) and thus i do not want to remove (A,C) from graph
 
-                                goodBitsetChecksCount++;
+                                if (GATHER_STATISTICS) goodBitsetChecksCount++;
 
                                 Read *rA = (*reads)[A];
 
+                                if (Read::getRightOffset(rA, rB, offsetDiff) < 0) continue;
 
                                 auto bs = rA->getSequence();
                                 bs <<= (offsetDiff << 1);
-                                bool removeEdge = Read::getRightOffset(rA, rB, offsetDiff) >= 0
-                                                  && (rB->getSequence().mismatch(bs) >=
-                                                      //                                                      (int) rA->size() - offsetDiff);
-                                                      (((int) rA->size() - offsetDiff)
-                                                              << 1)); // probably this should be
+//                                bool removeEdge = (rB->getSequence().mismatch(bs) >= (((int) rA->size() - offsetDiff) << 1));
+                                bool removeEdge = (!rB->getSequence().mismatchBounded(bs,
+                                                                                      (((int) rA->size() - offsetDiff)
+                                                                                              << 1)));
 
                                 if (removeEdge) {
-                                    toRemove.push_back({C, A});
-                                    bitsetCheckEdgesRemoved++;
+//                                    toRemove.push_back({prefId, A});
+                                    toRemove.insert(A);
+                                    if (GATHER_STATISTICS) bitsetCheckEdgesRemoved++;
                                 }
                             }
                         }
 
-                        G->lockNode(C); // #TEST
-                        for (auto &p : toRemove) {
-                            edgeRemoveAndAddOperations += (*G)[p.first].size();
+                        toRemove.insert(suffId); // this should be with unordered_set<int> version of toRemove
+
+                        G->lockNode(prefId); // #TEST
+                        /*for (auto &p : toRemove) {
+                            if (GATHER_STATISTICS) edgeRemoveAndAddOperations += (*G)[p.first].size();
                             G->removeDirectedEdge(p.first, p.second);
+                        }*/
+                        for (unsigned j = (*G)[prefId].size() - 1; j != (unsigned) -1; j--) {
+                            if (GATHER_STATISTICS) edgeRemoveAndAddOperations += (*G)[prefId].size();
+                            if (toRemove.count((*G)[prefId][j].first)) {
+                                swap((*G)[prefId][j], (*G)[prefId].back());
+                                (*G)[prefId].pop_back();
+                            }
                         }
                         toRemove.clear();
-                        G->addDirectedEdge(C, B, offset);
-                        edgeRemoveAndAddOperations += (*G)[C].size();
+//                        G->addDirectedEdge(prefId, suffId, offset);
+                        G->pushDirectedEdge(prefId, suffId,
+                                            offset); // by adding B to [toRemove], we ensure, that B will not be present in G[C].
+                        // If B was present in G[C], then the new connection is better, so it would replace B in the list anyway.
+                        if (GATHER_STATISTICS) edgeRemoveAndAddOperations += (*G)[prefId].size();
 
-                        G->unlockNode(C);
+                        G->unlockNode(prefId);
                     }
                 }
             }
-        } else alignFrom[i] = false;
+        } else alignFrom[suffId] = false;
     }
 }
 

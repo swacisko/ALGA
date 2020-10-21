@@ -16,7 +16,6 @@
 #include <StatisticsGenerators/StatisticsGeneratorBigData.h>
 #include <future>
 
-#include "IO/InputReader.h"
 #include "Global.h"
 #include "StatisticsGenerators/GenomeStatisticsCollector.h"
 
@@ -40,12 +39,6 @@ InputReader::InputReader() {
 
     NsInRead = VVI(Params::THREADS, VI(1000, 0));
 }
-
-//InputReader::InputReader(const InputReader& orig) {
-//}
-
-//InputReader::~InputReader() {
-//}
 
 
 void InputReader::readInput() {
@@ -303,7 +296,6 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
         }
 
         if (s.size() < Params::READ_END_TRIM_LEFT + Params::READ_END_TRIM_RIGHT + 10) {
-//            cerr << "s = " << s << endl;
         } else {
             s.erase(s.begin(), s.begin() + min(Params::READ_END_TRIM_LEFT,
                                                (int) s.size())); // these two lines here were used, to produce best results!!! (porbably ends are not as good as they ought to be, even after trimmomatic).
@@ -331,19 +323,14 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
 
             if (s[i] != 'A' && s[i] != 'C' && s[i] != 'G' && s[i] != 'T' && s[i] != 'N' && s[i] != 'U') {
                 cerr << "s[i] = " << s[i] << "   but should be A,C,G,T,N or U" << endl;
-//                cerr << "s = " << s << endl;
                 exit(1);
             }
             if (s[i] == 'N' && Params::REMOVE_READS_WITH_N) {
                 containsN = true;
                 nind = i;
-            }/* else if (s[i] == 'N') { // replace N'as with A'a
-                s[i] = 'A';
-            }*/
+            }
             else if (s[i] == 'N') {
-//                s[i] = Params::getNuklAsString(rand() & 3)[0];
                 s[i] = Params::getNuklAsString(rand_ng() & 3)[0];
-//                ncnt++;
             } else if (Params::RNA && s[i] == 'U') s[i] = 'T';
 
         }
@@ -398,8 +385,6 @@ void InputReader::readParallelJob(vector<vector<Read *> > &reads, int thread_id)
         }
 
     }
-
-//    cerr << "thread " << thread_id << " read " << readCount << " reads" << endl;
 
 
     str.close();
