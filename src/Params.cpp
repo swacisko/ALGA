@@ -737,7 +737,7 @@ int Params::CONTIG_CREATOR_SHORT_CYCLE_LENGTH = 150;
 
 
 int Params::INPUT_FILE_TYPE = MY_INPUT;
-int Params::REMOVE_READS_WITH_N = 0;
+int Params::REMOVE_READS_WITH_N = 1;
 
 int Params::CORRECT_READS = 0;
 

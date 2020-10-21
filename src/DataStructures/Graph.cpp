@@ -961,6 +961,7 @@ void Graph::reverseGraphInPlace() {
 }
 
 void Graph::writeBasicStatistics() {
+    return;
     cerr << "Basic graph statistics: " << endl;
     cerr << "Nodes: " << size() << endl;
     cerr << "Edges: " << countEdges() << endl;

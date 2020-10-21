@@ -859,8 +859,10 @@ int Bitset::mismatch(Bitset oth) {
     int m = min(blocks(), oth.blocks());
     for (int i = 0; i < m; i++) {
         if (V[i] != oth.V[i]) {
-            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i]);
+//            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i]);
+            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]);
             else return i * BLOCK_SIZE + __builtin_ctzll(V[i]);
+//            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
         }
     }
     return min(size(), oth.size());

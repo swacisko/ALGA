@@ -70,8 +70,6 @@ int main(int argc, char **argv) {
 
         Params::THREADS = 6;
     } else {
-//        WorkloadManager::test();
-
         DEBUG(sizeof(MemTestClass));
         DEBUG(sizeof(std::mutex));
         DEBUG(sizeof(VILPII));
@@ -87,7 +85,6 @@ int main(int argc, char **argv) {
         DEBUG(sizeof(Bitset));
         DEBUG(sizeof(Contig));
         DEBUG(sizeof(vector<pair<Read *, int> >));
-
 //        exit(1);
     }
 
@@ -706,6 +703,7 @@ int main(int argc, char **argv) {
 
 
     TimeMeasurer::startMeasurement(TimeMeasurer::OUTPUT_WRITER);
+
 
     OutputWriterNew writer(G, contigs);
     writer.writeContigsNoFilter(contigs);

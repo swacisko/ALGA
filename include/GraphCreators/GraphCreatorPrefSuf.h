@@ -11,6 +11,8 @@
 #include<deque>
 #include <DataStructures/KmerGCPS.h>
 #include <atomic>
+#include <unordered_map>
+#include <map>
 
 /*
  * Cherry
@@ -97,7 +99,6 @@ private:
 
     void createInitialStateJob(int a, int b, int thread_id);
 
-    void moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id);
 
     /**
      * If true, then isolated reads will be removed from graph before reversing the graph. It is to reduce memory peak.
@@ -113,6 +114,7 @@ private:
     std::atomic<long long> bitsetCheckEdgesRemoved;
     std::atomic<long long> prefSufChecks;
     std::atomic<long long> goodPrefSufChecks;
+    std::atomic<long long> edgeRemoveAndAddOperations;
 
 };
 

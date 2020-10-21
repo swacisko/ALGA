@@ -192,6 +192,9 @@ void OutputWriterNew::writeContigsNoFilter(vector<Contig *> contigs) {
 
     cout.rdbuf(Params::outStream.rdbuf());
 
+    unsigned contigs_to_write = contigs.size();
+    cerr << "contigs_to_write: " << contigs_to_write << endl;
+
     for (auto t : contigs) {
         string s = t->getSequenceAsString();
         cout << ">contig_id=" << t->getId() << "_length=" << s.size() << endl;

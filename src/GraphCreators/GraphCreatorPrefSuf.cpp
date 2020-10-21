@@ -8,7 +8,6 @@
 #include <Utils/TimeMeasurer.h>
 #include <thread>
 #include <AlignmentControllers/AlignmentControllerHybrid.h>
-//#include <unordered_map>
 #include <functional>
 #include <Utils/WorkloadManager.h>
 
@@ -22,6 +21,10 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
                                                                                                         goodPrefSufChecks(
                                                                                                                 0),
                                                                                                         prefSufChecks(
+                                                                                                                0),
+                                                                                                        goodBitsetChecksCount(
+                                                                                                                0),
+                                                                                                        edgeRemoveAndAddOperations(
                                                                                                                 0) {
 
     calculateMaxReadLength();
@@ -31,14 +34,10 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
     suffixKmers.reserve(G->size());
     suffixKmersAdditional.reserve(G->size());
 
-    prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3));
+    int lg = (int) log2((double) G->size() / 2);
+    prefixKmersBuckets = (1ll << lg);
     prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);
 
-    /* smallOverlapEdges = vector<pair<unsigned, unsigned> *>(G->size());
-     for (int i = 0; i < G->size(); i++) {
-         smallOverlapEdges[i] = new pair<unsigned, unsigned>[SOES];
-         for (int j = 0; j < SOES; j++) smallOverlapEdges[i][j] = {-1, -1};
-     }*/
 }
 
 void GraphCreatorPrefSuf::calculateMaxReadLength() {
@@ -96,7 +95,6 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
     clear();
     if (removeIsolatedReadsBeforeReversingGraph) Global::removeIsolatedReads();
 
-//    G->reverseGraph();
     G->reverseGraphInPlace();
 
     {
@@ -105,7 +103,9 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
         DEBUG(bitsetChecksCount);
         DEBUG(goodBitsetChecksCount);
         DEBUG(bitsetCheckEdgesRemoved);
+        DEBUG(edgeRemoveAndAddOperations);
         G->writeBasicStatistics();
+
     }
 
     Params::MIN_OVERLAP_AREA = oldMOA;
@@ -118,10 +118,6 @@ void GraphCreatorPrefSuf::startAlignmentGraphCreation() {
 
 
 void GraphCreatorPrefSuf::createInitialState() {
-    /*prefixKmers.reserve(G->size());
-    prefixKmersAdditional.reserve(G->size());
-    suffixKmers.reserve(G->size());
-    suffixKmersAdditional.reserve(G->size());*/
 
     unsigned long long dummyKmer = (unsigned long long) (-1); // -1 is just the maximal unsigned long long value
     ADDITIONAL_HASH_TYPE dummyKmerAdditional = (ADDITIONAL_HASH_TYPE) (-1); // -1 is just the maximal unsigned value
@@ -138,9 +134,6 @@ void GraphCreatorPrefSuf::createInitialState() {
             suffixKmersAdditional.push_back(dummyKmerAdditional);
         }
     }
-
-    /*prefixKmersBuckets = MyUtils::getNearestLowerPrime(max(100, G->size() / 3));
-    prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);*/
 
     vector<std::thread> parallelJobs;
     parallelJobs.reserve(Params::THREADS);
@@ -279,56 +272,36 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
 
 
     if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-        /*cerr << "moving small overlap edges to graph" << endl;
-        parallelJobs.clear();
-        W = (int) ceil((double) G->size() / Params::THREADS);
-        for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
-            int a = min(i * W, G->size() - 1);
-            int b = min((i + 1) * W - 1, G->size() - 1);
-            parallelJobs.emplace_back([=] { moveSmallOverlapEdgesToGraphJob(a, b, i); });
-        }
-        moveSmallOverlapEdgesToGraphJob(0, W - 1, 0);
-        for (auto &p : parallelJobs) p.join();*/
 
-        /*{
-            LL edges_before = G->countEdges();
-            G->retainOnlySmallestOffset(); // this should not de done!! It will keeps only one copy of reverse edges, hence loosing connectionsin original graph!
+        G->reverseGraphInPlace();
+        G->retainOnlySmallestOffset();
+        G->writeBasicStatistics();
 
-            cerr << "After moving small overlap edges to graph, G has " << G->countEdges() << " edges" << endl;
-            LL edges_after  = G->countEdges();
-            DEBUG(edges_before);
-            DEBUG(edges_after);
-            DEBUG(edges_before - edges_after);
-        }*/
+        /*WorkloadManager::parallelBlockExecution(0, G->size() - 1, Params::THREADS, Params::THREADS,
+                                                [=](unsigned a, unsigned b, unsigned id) {
 
-        {
-            G->retainOnlySmallestOffset(); // this probably should de done before reversing graph
-            G->writeBasicStatistics();
-            G->reverseGraphInPlace();
-        }
+                            for( int i=a; i<=b; i++ ) if( (*G)[i].size() > 3 ){
+                                sort( (*G)[i].begin(), (*G)[i].end(),[=](auto a, auto b){
+                                    int overlapa = Read::calculateReadOverlap((*reads)[a.first], (*reads)[i], a.second);
+                                    int overlapb = Read::calculateReadOverlap((*reads)[b.first], (*reads)[i], b.second);
+                                    return overlapa > overlapb;
+                                } );
+                                (*G)[i].resize(3);
+                            }
+         });
+        G->writeBasicStatistics();*/
 
         MyUtils::process_mem_usage();
-
-//        vector<SOES_TYPE>().swap(smallOverlapEdges);
     }
 
 
     {
-        /*parallelJobs.clear();
-        for (int i = 1; i < Params::THREADS; i++) { // PLACING KMERS INTO BUCKETS
-            int a = min(i * W, G->size() - 1);
-            int b = min((i + 1) * W - 1, G->size() - 1);
-            parallelJobs.emplace_back([=] { nextPrefSufIterationJobAddEdges(a, b, i); });
-        }
-        nextPrefSufIterationJobAddEdges(0, W - 1, 0);
-        for (auto &p : parallelJobs) p.join();*/
 
         int blocks = 50 * Params::THREADS;
         WorkloadManager::parallelBlockExecution(0, G->size() - 1, blocks, Params::THREADS,
                                                 [=](unsigned a, unsigned b, unsigned id) {
                                                     nextPrefSufIterationJobAddEdges(a, b, id);
                                                 });
-
     }
 
 
@@ -349,7 +322,7 @@ void GraphCreatorPrefSuf::removeKmersFromBucketsJob(int a, int b, int thread_id)
 void GraphCreatorPrefSuf::putKmersIntoBucketsJob(int a, int b, int thread_id) {
     for (unsigned i = a; i <= b; i++) {
         if (!alignTo[i]) continue;
-        int ind = prefixKmers[i] % prefixKmersBuckets;
+        int ind = prefixKmers[i] & (prefixKmersBuckets - 1);
         G->lockNode(ind);
         prefixKmersInBuckets[ind].push_back(i);
         G->unlockNode(ind);
@@ -387,8 +360,8 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
         if (sufUpdated) {
 
-            const int suffId = i; // should be suffId == i
-            const int b = suffixKmers[suffId] % prefixKmersBuckets;
+            const int suffId = i;
+            const int b = suffixKmers[suffId] & (prefixKmersBuckets - 1);
             const int offset = (*reads)[i]->size() - currentPrefSufLength;
 
             auto suffHash = suffixKmers[suffId];
@@ -398,8 +371,8 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
             for (unsigned pref : prefixKmersInBuckets[b]) {
                 int prefId = pref;
-                if (prefId != suffId && prefixKmers[prefId] == /*suffixKmers[suffId]*/ suffHash &&
-                    prefixKmersAdditional[prefId] == /*suffixKmersAdditional[suffId]*/ suffHashAdditional) {
+                if (prefId != suffId && prefixKmers[prefId] == suffHash &&
+                    prefixKmersAdditional[prefId] == suffHashAdditional) {
 
                     goodPrefSufChecks++;
 
@@ -407,34 +380,10 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                         continue; // this line here prohibits included alignment
 
                     if (currentPrefSufLength < Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-                        /*int xx = SOES;
-                        for (int j = 0; j < SOES; j++)
-                            if (smallOverlapEdges[suffId][j] == pair<unsigned, unsigned>(-1, -1)) {
-                                xx = j;
-                                break;
-                            }
-                        if (xx == SOES) {
-                            for (int j = 0; j < SOES - 1; j++) {
-                                smallOverlapEdges[suffId][j] = smallOverlapEdges[suffId][j + 1];
-                            }
-                            xx = SOES - 1;
-                        }
-                        smallOverlapEdges[suffId][xx] = {prefId, offset}; // i add normal edges here*/
 
-
-                        /*{
-                            // adding already reversed edges
-                            G->lockNode(prefId);
-                            if ((*G)[prefId].size() == SOES) (*G)[prefId].erase((*G)[prefId].begin());
-                            G->pushDirectedEdge(prefId, suffId, offset);
-                            G->unlockNode(prefId);
-                        }*/
-
-                        {
-                            // adding normal edges, will have to reverse it later
-                            if ((*G)[suffId].size() == SOES) (*G)[suffId].erase((*G)[suffId].begin());
-                            G->pushDirectedEdge(suffId, prefId, offset);
-                        }
+                        // adding normal edges, will have to reverse it later
+                        if ((*G)[suffId].size() == SOES) (*G)[suffId].erase((*G)[suffId].begin());
+                        G->pushDirectedEdge(suffId, prefId, offset);
 
                     } else {
 
@@ -447,6 +396,8 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                             auto neighborhood_list = (*G)[C];
                             G->unlockNode(C);// #TEST
                             bitsetChecksCount += neighborhood_list.size();
+
+                            Read *rB = (*reads)[B];
 
                             for (PII &p : neighborhood_list) {
                                 const int A = p.first;
@@ -461,11 +412,16 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                                 goodBitsetChecksCount++;
 
-                                auto bs = (*reads)[A]->getSequence();
+                                Read *rA = (*reads)[A];
+
+
+                                auto bs = rA->getSequence();
                                 bs <<= (offsetDiff << 1);
-                                bool removeEdge = Read::getRightOffset((*reads)[A], (*reads)[B], offsetDiff) >= 0
-                                                  && ((*reads)[B]->getSequence().mismatch(bs) >=
-                                                      (int) (*reads)[A]->size() - offsetDiff);
+                                bool removeEdge = Read::getRightOffset(rA, rB, offsetDiff) >= 0
+                                                  && (rB->getSequence().mismatch(bs) >=
+                                                      //                                                      (int) rA->size() - offsetDiff);
+                                                      (((int) rA->size() - offsetDiff)
+                                                              << 1)); // probably this should be
 
                                 if (removeEdge) {
                                     toRemove.push_back({C, A});
@@ -476,10 +432,12 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                         G->lockNode(C); // #TEST
                         for (auto &p : toRemove) {
+                            edgeRemoveAndAddOperations += (*G)[p.first].size();
                             G->removeDirectedEdge(p.first, p.second);
                         }
                         toRemove.clear();
                         G->addDirectedEdge(C, B, offset);
+                        edgeRemoveAndAddOperations += (*G)[C].size();
 
                         G->unlockNode(C);
                     }
@@ -489,27 +447,6 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
     }
 }
 
-
-void GraphCreatorPrefSuf::moveSmallOverlapEdgesToGraphJob(int a, int b, int thread_id) {
-    /*for (unsigned i = a; i <= b; i++) {
-        if (suffixKmers[i] == (unsigned long long) (-1) || (*reads)[i] == nullptr) continue;
-
-        const int suffId = i;
-        if (currentPrefSufLength == Params::REMOVE_SMALL_OVERLAP_EDGES_MIN_OVERLAP) {
-            for (int j = 0; j < SOES; j++) {
-                auto p = smallOverlapEdges[suffId][j];
-                if (p == pair<unsigned, unsigned>(-1, -1)) break;
-                G->lockNode(p.first);
-                (*G)[p.first].push_back({suffId, p.second}); // i add reverse edges to the graph!!
-                G->unlockNode(p.first);
-            }
-            if (smallOverlapEdges[suffId] != nullptr) {
-                delete[] smallOverlapEdges[suffId];
-                smallOverlapEdges[suffId] = nullptr;
-            }
-        }
-    }*/
-}
 
 
 
