@@ -36,6 +36,7 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
 
     int lg = (int) log2((double) G->size() / 2);
     prefixKmersBuckets = (1ll << lg);
+    if (prefixKmersBuckets * 3ll > G->size()) prefixKmersBuckets >>= 1;
 //    prefixKmersBuckets = MyUtils::getNearestLowerPrime((double) G->size() / 3);
     prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);
 
@@ -284,6 +285,7 @@ void GraphCreatorPrefSuf::nextPrefSufIteration() {
         G->writeBasicStatistics();
 
         MyUtils::process_mem_usage();
+//        Params::THREADS = 1; // #TEST
     }
 
 
@@ -347,6 +349,14 @@ void GraphCreatorPrefSuf::updatePrexihHashJob(int a, int b, int thread_id) {
 void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thread_id) {
 //    VPII toRemove;
     unordered_set<unsigned> toRemove;
+
+    const unsigned MAX_BLOCKS = 10;
+    vector<Bitset> temp_bitsets;
+    for (int i = 0; i < MAX_BLOCKS; i++) temp_bitsets.emplace_back(Bitset::BLOCK_SIZE * (i + 1));
+
+    auto blNum = [](unsigned offset) { return offset >> Bitset::BLOCK_OFFSET; };
+    auto indInBl = [](unsigned index) { return (index) & Bitset::MOD_MODIFIER; };
+
 
     for (int suffId = a; suffId <= b; suffId++) {
         bool sufUpdated = false;
@@ -412,12 +422,47 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                                 if (Read::getRightOffset(rA, rB, offsetDiff) < 0) continue;
 
-                                auto bs = rA->getSequence();
-                                bs <<= (offsetDiff << 1);
 //                                bool removeEdge = (rB->getSequence().mismatch(bs) >= (((int) rA->size() - offsetDiff) << 1));
-                                bool removeEdge = (!rB->getSequence().mismatchBounded(bs,
-                                                                                      (((int) rA->size() - offsetDiff)
-                                                                                              << 1)));
+                                bool removeEdge;
+
+
+                                unsigned begBlock = blNum(offsetDiff << 1);
+                                unsigned endBlock = blNum(p.second << 1);
+                                if (endBlock - begBlock + 1 < MAX_BLOCKS) {
+//                                    DEBUG(offset);
+//                                    DEBUG(offsetDiff);
+//                                    DEBUG(p.second);
+//                                    DEBUG(begBlock);
+//                                    DEBUG(endBlock);
+//                                    DEBUG(*rA);
+//                                    DEBUG(*rB);
+//                                    Global::writeReadPair(rA,rB,offsetDiff);
+//                                    Global::writeReadPair(rB, (*reads)[prefId],offset);
+                                    Bitset *temp = &temp_bitsets[endBlock - begBlock];
+//                                    DEBUG(*temp);
+                                    Bitset *aSeq = &rA->getSequence();
+//                                    DEBUG(*aSeq);
+                                    for (int j = begBlock; j <= endBlock; j++)
+                                        temp->setBlock(j - begBlock, aSeq->getBlock(j));
+//                                    (*temp) <<= (indInBl(offsetDiff<<1));
+                                    (*temp) <<= indInBl(offsetDiff << 1);
+//                                    DEBUG(*temp);
+
+
+
+                                    Bitset *bSeq = &rB->getSequence();
+//                                    DEBUG(*bSeq);
+                                    removeEdge = (!bSeq->mismatchBounded(*temp, offset << 1));
+
+//                                    exit(1);
+                                } else {
+                                    cerr << "siemka" << endl;
+                                    auto bs = rA->getSequence();
+                                    bs <<= (offsetDiff << 1);
+                                    removeEdge = (!rB->getSequence().mismatchBounded(bs,
+                                                                                     (((int) rA->size() - offsetDiff)
+                                                                                             << 1)));
+                                }
 
                                 if (removeEdge) {
 //                                    toRemove.push_back({prefId, A});

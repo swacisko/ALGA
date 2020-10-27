@@ -879,6 +879,12 @@ bool Bitset::mismatchBounded(Bitset &oth, unsigned int pos) {
     return false;
 }
 
+void Bitset::setBlock(unsigned int bl, Bitset::TYPE mask) {
+    if (bl >= blocks()) return;
+    V[bl] = mask;
+    if (bl == blocks() - 1) lastElementModifier = ONES;
+}
+
 
 Bitset::VT Bitset::bits;
 Bitset::VT Bitset::zerosOnes;

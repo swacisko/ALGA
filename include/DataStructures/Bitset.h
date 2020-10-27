@@ -60,6 +60,13 @@ public:
 
     // void resize( long long s );
 
+    /**
+     * Sets the values of bits in given blocks to the specified mask.
+     * CAUTION! If the last block is modified, then [lastElementModifier] is set to [ONES]
+     * @param bl
+     * @param mask
+     */
+    void setBlock(unsigned bl, TYPE mask);
 
     Bitset operator^(const Bitset &oth);
 
