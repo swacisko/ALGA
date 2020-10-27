@@ -105,6 +105,8 @@ private:
 
     void writeState();
 
+    vector<vector<bool> > toRemove;
+
 
     // STATISTICS
     static const bool GATHER_STATISTICS = false;

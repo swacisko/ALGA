@@ -25,7 +25,11 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
                                                                                                         goodBitsetChecksCount(
                                                                                                                 0),
                                                                                                         edgeRemoveAndAddOperations(
-                                                                                                                0) {
+                                                                                                                0),
+                                                                                                        toRemove(
+                                                                                                                Params::THREADS,
+                                                                                                                VB(G->size(),
+                                                                                                                   false)) {
 
     calculateMaxReadLength();
 
@@ -347,8 +351,9 @@ void GraphCreatorPrefSuf::updatePrexihHashJob(int a, int b, int thread_id) {
 }
 
 void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thread_id) {
-//    VPII toRemove;
-    unordered_set<unsigned> toRemove;
+
+    vector<unsigned> toR;
+    toR.reserve(1000);
 
     const unsigned MAX_BLOCKS = 10;
     vector<Bitset> temp_bitsets;
@@ -364,12 +369,9 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
         if (sufUpdated) {
 
-//            const int suffId = i;
-//            const int B;// = suffId;
             Read *rB = (*reads)[suffId];
 
             const int b = suffixKmers[suffId] & (prefixKmersBuckets - 1);
-//            const int b = suffixKmers[suffId] % prefixKmersBuckets;
             const int offset = (*reads)[suffId]->size() - currentPrefSufLength;
 
             auto suffHash = suffixKmers[suffId];
@@ -378,7 +380,6 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
             if (GATHER_STATISTICS) prefSufChecks += prefixKmersInBuckets[b].size();
 
             for (const unsigned prefId : prefixKmersInBuckets[b]) {
-//                int prefId = pref;
                 if (prefId != suffId && prefixKmers[prefId] == suffHash &&
                     prefixKmersAdditional[prefId] == suffHashAdditional) {
 
@@ -395,7 +396,6 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                     } else {
 
-//                        const int C = prefId;
 
                         if (offset > 0) { // this can be checked - maybe i should not consider if offset = 0
 
@@ -422,39 +422,19 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
 
                                 if (Read::getRightOffset(rA, rB, offsetDiff) < 0) continue;
 
-//                                bool removeEdge = (rB->getSequence().mismatch(bs) >= (((int) rA->size() - offsetDiff) << 1));
                                 bool removeEdge;
 
 
                                 unsigned begBlock = blNum(offsetDiff << 1);
                                 unsigned endBlock = blNum(p.second << 1);
                                 if (endBlock - begBlock + 1 < MAX_BLOCKS) {
-//                                    DEBUG(offset);
-//                                    DEBUG(offsetDiff);
-//                                    DEBUG(p.second);
-//                                    DEBUG(begBlock);
-//                                    DEBUG(endBlock);
-//                                    DEBUG(*rA);
-//                                    DEBUG(*rB);
-//                                    Global::writeReadPair(rA,rB,offsetDiff);
-//                                    Global::writeReadPair(rB, (*reads)[prefId],offset);
                                     Bitset *temp = &temp_bitsets[endBlock - begBlock];
-//                                    DEBUG(*temp);
                                     Bitset *aSeq = &rA->getSequence();
-//                                    DEBUG(*aSeq);
                                     for (int j = begBlock; j <= endBlock; j++)
                                         temp->setBlock(j - begBlock, aSeq->getBlock(j));
-//                                    (*temp) <<= (indInBl(offsetDiff<<1));
                                     (*temp) <<= indInBl(offsetDiff << 1);
-//                                    DEBUG(*temp);
-
-
-
                                     Bitset *bSeq = &rB->getSequence();
-//                                    DEBUG(*bSeq);
                                     removeEdge = (!bSeq->mismatchBounded(*temp, offset << 1));
-
-//                                    exit(1);
                                 } else {
                                     cerr << "siemka" << endl;
                                     auto bs = rA->getSequence();
@@ -465,29 +445,29 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                                 }
 
                                 if (removeEdge) {
-//                                    toRemove.push_back({prefId, A});
-                                    toRemove.insert(A);
+                                    toRemove[thread_id][A] = true;
+                                    toR.push_back(A);
                                     if (GATHER_STATISTICS) bitsetCheckEdgesRemoved++;
                                 }
                             }
                         }
 
-                        toRemove.insert(suffId); // this should be with unordered_set<int> version of toRemove
+                        toR.push_back(suffId);
+                        toRemove[thread_id][suffId] = true; // this should be with unordered_set<int> version of toRemove
 
                         G->lockNode(prefId); // #TEST
-                        /*for (auto &p : toRemove) {
-                            if (GATHER_STATISTICS) edgeRemoveAndAddOperations += (*G)[p.first].size();
-                            G->removeDirectedEdge(p.first, p.second);
-                        }*/
+
                         for (unsigned j = (*G)[prefId].size() - 1; j != (unsigned) -1; j--) {
                             if (GATHER_STATISTICS) edgeRemoveAndAddOperations += (*G)[prefId].size();
-                            if (toRemove.count((*G)[prefId][j].first)) {
+                            if (toRemove[thread_id][((*G)[prefId][j].first)]) {
                                 swap((*G)[prefId][j], (*G)[prefId].back());
                                 (*G)[prefId].pop_back();
                             }
                         }
-                        toRemove.clear();
-//                        G->addDirectedEdge(prefId, suffId, offset);
+
+                        for (auto x : toR) toRemove[thread_id][x] = false; // clearing nodes that are to be removed
+                        toR.clear();
+
                         G->pushDirectedEdge(prefId, suffId,
                                             offset); // by adding B to [toRemove], we ensure, that B will not be present in G[C].
                         // If B was present in G[C], then the new connection is better, so it would replace B in the list anyway.
