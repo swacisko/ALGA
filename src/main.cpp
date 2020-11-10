@@ -329,33 +329,38 @@ int main(int argc, char **argv) {
             if ((*inDeg)[i] == 0 && (*G)[i].size() > 0) graphCreator->setAlignTo(i, true);
             if ((*inDeg)[i] > 0 && (*G)[i].size() == 0) graphCreator->setAlignFrom(i, true);
 
-            if (Params::USE_GRAPH_CREATOR_SUPPLEMENT == 1 && (*inDeg)[i] > 0 && (*G)[i].size() > 0 &&
+            /*if (Params::USE_GRAPH_CREATOR_SUPPLEMENT == 1 && (*inDeg)[i] > 0 && (*G)[i].size() > 0 &&
                 ((*inDeg)[i] >= 2 || (*G)[i].size() >= 2)) {
                 graphCreator->setAlignFrom(i, true);
                 graphCreator->setAlignTo(i, true);
-            }
+            }*/
         }
 
-        Params::MIN_OVERLAP_AREA = Global::calculateAvgReadLength() -
+        /*Params::MIN_OVERLAP_AREA = Global::calculateAvgReadLength() -
                                    (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 10 : 0); // the latter is for GCPS
 
         Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 10
                                                                                             : 1);    // the latter is for GCPS
-        /*Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 95
+        Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 95
                                                                                           : 99); */  // the latter is for GCPS
+
+        auto avg_read_length = Global::calculateAvgReadLength();
+        Params::MIN_OVERLAP_AREA = (1.f + Params::SCALE) * avg_read_length / 2;
+
+        Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = (1.f - Params::SCALE) * avg_read_length / 2;
         Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = 99 - Params::ERROR_RATE;
 
 
         Params::LI_KMER_INTERVALS = 6;
         Params::LI_KMER_LENGTH = 35;
+        delete inDeg;
+        inDeg = nullptr;
         graphCreator->startAlignmentGraphCreation();
 
 
         cerr << "retainingOnlySmallestOffset" << endl;
         G->retainOnlySmallestOffset();
 
-        delete inDeg;
-        inDeg = nullptr;
 
         delete graphCreator;
         graphCreator = nullptr;
