@@ -771,7 +771,7 @@ int Params::USE_DATE_IN_STREAM_FILE_NAMES = 0;
 string Params::RUN_DATE = "NO_DATE";
 
 int Params::RNA = 0;
-int ERROR_RATE = 0;
+int Params::ERROR_RATE = 0;
 
 ifstream Params::inStream;
 ofstream Params::outStream;
