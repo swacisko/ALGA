@@ -400,7 +400,17 @@ bool Graph::contractPath(int a, int b, int c) {
     int EDGE_LENGTH_THRESHOLD = Params::MAX_OFFSET_PARALLEL_PATHS;
 
     bool existsEdgeAC = containsEdge(a, c);
-    if (existsEdgeAC && wabc >= EDGE_LENGTH_THRESHOLD) return false;
+    if (existsEdgeAC && wabc >= EDGE_LENGTH_THRESHOLD) return false; // ORIGINAL
+//    if (existsEdgeAC && findWeight(a,c) != wab + wbc) return false;
+    /*if( existsEdgeAC ){ // ELT_LONGER - keep only the longer edge
+        if( findWeight(a,c) <= wab + wbc ) removeDirectedEdge(a,c); // keep the longer edge
+        else if( findWeight(a,c) > wab + wbc ){
+            removeDirectedEdge(a,b);
+            removeDirectedEdge(b,c);
+            return true;
+        }
+        else return false;
+    }*/
 
     bool existsLongEdgeAC = containsEdgeLongerOrEqual(a, c, EDGE_LENGTH_THRESHOLD);
     if (existsLongEdgeAC) return false;

@@ -285,7 +285,7 @@ void Params::initializeParams(int argc, char **argv) {
 //        {remove_pref_reads.c_str(),                                     required_argument,          0,  0 },
             {serialize.c_str(),           required_argument, 0, 0},
             {rna.c_str(),                 required_argument, 0, 0},
-//        {scale.c_str(),                                                 required_argument,          0,  0 },
+            {scale.c_str(),               required_argument, 0, 0},
 //        {tpn.c_str(),                                                required_argument,          0,  0 },
 //        {tpv.c_str(),                                                required_argument,          0,  0 },
 //        {er.c_str(),                                                required_argument,          0,  0 },
@@ -354,6 +354,7 @@ void Params::initializeParams(int argc, char **argv) {
                              MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (1-rate) * 100;
                          }
                      }*/
+                    ERROR_RATE = 100 * rate;
                     if (rate <= 0.01) USE_GRAPH_CREATOR_SUPPLEMENT = 0;
                     else USE_GRAPH_CREATOR_SUPPLEMENT = 1;
                 }
@@ -770,7 +771,7 @@ int Params::USE_DATE_IN_STREAM_FILE_NAMES = 0;
 string Params::RUN_DATE = "NO_DATE";
 
 int Params::RNA = 0;
-
+int ERROR_RATE = 0;
 
 ifstream Params::inStream;
 ofstream Params::outStream;

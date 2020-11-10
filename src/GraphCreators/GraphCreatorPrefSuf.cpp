@@ -436,7 +436,7 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                                     Bitset *bSeq = &rB->getSequence();
                                     removeEdge = (!bSeq->mismatchBounded(*temp, offset << 1));
                                 } else {
-                                    cerr << "siemka" << endl;
+//                                    cerr << "siemka" << endl;
                                     auto bs = rA->getSequence();
                                     bs <<= (offsetDiff << 1);
                                     removeEdge = (!rB->getSequence().mismatchBounded(bs,

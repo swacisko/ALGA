@@ -116,6 +116,57 @@ void GraphSimplifier::simplifyGraphOld() {
     cutNonAndWeaklyMetricTriangles();
     Global::removeIsolatedReads();
 
+    /* {
+         const double ALPHA = 2;
+         const int BETA = 20;
+         G->sortEdgesByIncreasingOffset();
+         for( int i=0; i<G->size(); i++ ){
+             if( (*G)[i].size() > 2 ){
+                 if( (*G)[i].back().second > ALPHA * (*G)[i][0].second + BETA ){
+                    *//* for(int j=0; j<(*G)[i].size(); j++){
+                        int a = (*G)[i][j].first;
+                        Global::writeReadPair( (*reads)[i], (*reads)[a], (*G)[i][j].second );
+                        cerr << endl;
+                    }
+                    cerr << endl << endl;
+                    cerr << endl << endl;
+
+                    for(int j=(int)(*G)[i].size()-1; j>=0; j--){
+                        if( (*G)[i][j].second > ALPHA * (*G)[i][0].second + BETA ) {
+                            swap( (*G)[i][j], (*G)[i].back() );
+                            (*G)[i].pop_back();
+                        }else break;
+                    }*//*
+
+                   Global::writeNodeTreeWithNeighbors(i, 4  );
+                }
+            }
+        }
+
+        exit(1);
+    }*/
+
+
+    /*function< void(unsigned, unsigned, unsigned, VPII&, unordered_set<int>&) > getNodesWithinDistance =
+            [=]( unsigned v, unsigned max_d, unsigned d, VPII& nodes, unordered_set<int>& was ){
+        if( d > max_d || was.count(v) ) return;
+        nodes.emplace_back( v, d );
+
+        was.insert(v);
+        for( PII p : (*G)[v] ) getNodesWithinDistance( p.first, max_d, d - p.second, nodes, was );
+    };
+
+    for( int i=0; i<G->size(); i++ ){
+        VPII nodes;
+        unordered_set<int> was;
+        getNodesWithinDistance(i,100, 0, nodes, was);
+        sort( nodes.begin(), nodes.end(), [](  auto a, auto b ){ return a.second < b.second; } ); // sorting by offset
+
+        for( int j=0; j<nodes.size(); j++ ){
+
+        }
+    }*/
+
 
     for (int i = 0; i < Params::THREADS; i++) VPII().swap(edgesToRemove[i]);
 

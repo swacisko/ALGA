@@ -341,8 +341,10 @@ int main(int argc, char **argv) {
 
         Params::MAX_OFFSET_CONSIDERED_FOR_ALIGNMENT = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 10
                                                                                             : 1);    // the latter is for GCPS
-        Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 95
-                                                                                          : 99);   // the latter is for GCPS
+        /*Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = (Params::USE_GRAPH_CREATOR_SUPPLEMENT ? 95
+                                                                                          : 99); */  // the latter is for GCPS
+        Params::MINIMAL_OVERLAP_FOR_LCS_LOW_ERROR = 99 - Params::ERROR_RATE;
+
 
         Params::LI_KMER_INTERVALS = 6;
         Params::LI_KMER_LENGTH = 35;
@@ -723,7 +725,16 @@ int main(int argc, char **argv) {
 
     Params::WRITE_STATISTICS = 1;
     cerr << endl << "CONTIG-LENGTHS STATISTICS:" << endl;
-    StatisticsGenerator::writeAllStatistics(writer.getContigsLengths());
+    vector<long long> lengths;
+    lengths.reserve(contigs.size());
+    transform(contigs.begin(), contigs.end(), back_inserter(lengths), [](auto c) { return c->size(); });
+    for (int j = (int) lengths.size() - 1; j >= 0; j--) {
+        if (lengths[j] < Params::CONTIG_MIN_OUTPUT_LENGTH) {
+            swap(lengths[j], lengths.back());
+            lengths.pop_back();
+        }
+    }
+    StatisticsGenerator::writeAllStatistics(lengths);
 
 
     // clearing dynamically allocated memory
@@ -739,6 +750,7 @@ int main(int argc, char **argv) {
             if (Global::READS[i] != nullptr) Global::removeRead(i);
         }
 
+        G->clear();
     }
 
     return 0;

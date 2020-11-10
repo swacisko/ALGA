@@ -91,6 +91,7 @@ public:
     static int ADD_REV_COMP_CONNECTIONS; // if true, then connections for revcomp edges will be added.
     static int ADD_PAIRED_READS;
 
+    static int ERROR_RATE;
 
     /*
         half of the size of the window during LCS check for each index. LCS will work PERFECTLY if there is an alignment in which two aligned
