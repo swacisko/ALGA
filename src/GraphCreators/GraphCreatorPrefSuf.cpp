@@ -383,6 +383,9 @@ void GraphCreatorPrefSuf::nextPrefSufIterationJobAddEdges(int a, int b, int thre
                 if (prefId != suffId && prefixKmers[prefId] == suffHash &&
                     prefixKmersAdditional[prefId] == suffHashAdditional) {
 
+                    // uncomment the following section to create full errorless graph
+//                    {G->lockNode(prefId); G->pushDirectedEdge(prefId, suffId, offset);  G->unlockNode(prefId); continue;}
+
                     if (GATHER_STATISTICS) goodPrefSufChecks++;
 
                     if (Read::calculateReadOverlap((*reads)[suffId], (*reads)[prefId], offset) < currentPrefSufLength)
