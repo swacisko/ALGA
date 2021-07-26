@@ -94,6 +94,8 @@ private:
 
     void tryToRemoveShortPathsMST(int beg, int maxOffset, int thread_id);
 
+    void tryToRemoveShortPathsDijkstra(int beg, int maxOffset, int thread_id);
+
 
     /*
      * Function removes from graph G dangling branches.

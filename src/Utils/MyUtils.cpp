@@ -102,3 +102,16 @@ void MyUtils::process_mem_usage(double vm_usage, double resident_set) {
     DEBUG(resident_set);
     cerr << endl;
 }
+
+int MyUtils::getLongestPathDFSGreedy(Graph &g, int num, vector<bool> &was, VI &visited) {
+    if (was[num]) return 0;
+    was[num] = true;
+    visited.push_back(num);
+
+    int res = 0;
+    for (auto p : g[num]) {
+        res = max(res, p.second + getLongestPathDFSGreedy(g, p.first, was, visited));
+    }
+
+    return res;
+}

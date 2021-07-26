@@ -31,6 +31,10 @@ using namespace std;
 typedef vector<int> VI;
 typedef vector<long long> VLL;
 
+/**
+ * // CAUTION!!
+ * BITSET AS BINARY NUMBER WITH REPRESENTATION INVERSE TO V. So V[0] is the lest significant bit;
+ */
 class Bitset {
 public:
 //    typedef unsigned long long TYPE;

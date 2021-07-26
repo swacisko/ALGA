@@ -384,6 +384,7 @@ void GraphSimplifier::removeShortParallelPaths(int maxOffset) {
 
                                                         if (condition) {
                                                             tryToRemoveShortPathsMST(i, maxOffset, thread_id);
+//                                                            tryToRemoveShortPathsDijkstra(i, maxOffset, thread_id);
                                                             pathsConsidered[thread_id]++;
                                                         }
                                                     }
@@ -493,8 +494,6 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
     }); // sorted by MINIMAL OFFSET for directed version of MST.
 
 
-
-
     for (auto &a : neigh) was[thread_id][a] = false; // equivalent to was.clear()
 
     for (auto &a : edges) { // HERE I ADD EDGES ACCORDING TO MST METHOD. A NODE CANNOT BE AN END OF MORE THAN ONE EDGE (from edges) AFTER THIS.
@@ -515,6 +514,62 @@ void GraphSimplifier::tryToRemoveShortPathsMST(int beg, int maxOffset, int threa
 
     dst.clear();
 
+    neigh.clear();
+}
+
+void GraphSimplifier::tryToRemoveShortPathsDijkstra(int beg, int maxOffset, int thread_id) {
+
+    vector<pair<pair<int, int>, int> > edges_to_remove;  // each entry is an edge of the form ( (a,b), offset )
+    VI neigh(1, beg);
+
+    unordered_map<int, int> dst, par, pred;
+
+    dst[beg] = 0;
+
+    priority_queue<PII, VPII, std::greater<PII> > pq;
+    pq.push({0, beg});
+
+    while (!pq.empty()) {
+        PII top_el = pq.top();
+        pq.pop();
+
+        int a = top_el.second;
+
+        if (was[thread_id][a] || dst[a] > maxOffset) continue;
+
+        was[thread_id][a] = true;
+
+        G->lockNode(a);
+        for (int k = 0; k < (*G)[a].size(); k++) {
+            int b = (*G)[a][k].first;
+            int offset = G->getWeight(a, k);
+
+            if (dst.count(b) > 0 && dst[b] <= dst[a] + offset) {
+                edges_to_remove.push_back({{pred[b], b}, offset});
+                was[thread_id][b] = false;
+            }
+
+            dst[b] = dst[a] + offset;
+
+            pred[b] = a;
+
+            neigh.push_back(b);
+            pq.push({dst[b], b});
+
+        }
+        G->unlockNode(a);
+    }
+
+    for (auto &a : edges_to_remove) {
+        G->lockNode(a.first.first);
+        G->removeDirectedEdge(a.first.first, a.first.second); // removing the edge from the graph   // SLOW VERSION
+        G->unlockNode(a.first.first);
+    }
+
+    for (auto &a : neigh) was[thread_id][a] = false; // equivalent to was.clear()
+
+    par.clear();
+    dst.clear();
     neigh.clear();
 }
 

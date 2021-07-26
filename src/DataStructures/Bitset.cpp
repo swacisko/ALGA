@@ -857,26 +857,49 @@ void Bitset::test() {
 
 int Bitset::mismatch(Bitset oth) {
     int m = min(blocks(), oth.blocks());
+    int ind = 1e9;
     for (int i = 0; i < m; i++) {
         if (V[i] != oth.V[i]) {
 //            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i]);
-            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]);
+            if (sizeof(TYPE) == 4) {
+                ind = (i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]));
+                break;
+            }
 //            else return i * BLOCK_SIZE + __builtin_ctzll(V[i]);
-            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
+            else {
+                ind = i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
+                break;
+            }
         }
     }
-    return min(size(), oth.size());
+    if (ind < min(size(), oth.size())) return ind;
+    else return min(size(), oth.size());
 }
 
 bool Bitset::mismatchBounded(Bitset &oth, unsigned int pos) {
     int m = min(blocks(), oth.blocks());
+    int ind = 1e9;
     for (int i = 0; i < m; i++) {
         if (V[i] != oth.V[i]) {
-            if (sizeof(TYPE) == 4) return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]) < pos;
-            else return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]) <= pos;
+            if (sizeof(TYPE) == 4) {
+//                return i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]) < pos;
+                ind = i * BLOCK_SIZE + __builtin_ctz(V[i] ^ oth.V[i]);
+                break;
+            } else {
+//                return i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]) <= pos;
+                ind = i * BLOCK_SIZE + __builtin_ctzll(V[i] ^ oth.V[i]);
+                break;
+            }
         } else if (i * BLOCK_SIZE >= pos) return false;
     }
-    return false;
+
+    if (ind < min(size(), oth.size())) {
+        return ind < pos;
+    } else {
+        return min(size(), oth.size()) < pos;
+    }
+
+//        return false;
 }
 
 void Bitset::setBlock(unsigned int bl, Bitset::TYPE mask) {

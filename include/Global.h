@@ -251,6 +251,8 @@ public:
         cerr << *r2 << endl;
     }
 
+    static unsigned countValidReads();
+
 private:
 
 

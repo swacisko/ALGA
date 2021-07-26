@@ -143,3 +143,11 @@ bool Global::checkOLCGraphCorrectness(Graph *G, vector<Read *> *reads) {
     }
     return correct;
 }
+
+unsigned Global::countValidReads() {
+    unsigned res = 0;
+    for (int i = 0; i < Global::READS.size(); i++) {
+        if (Global::READS[i] != nullptr) res++;
+    }
+    return res;
+}

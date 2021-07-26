@@ -57,7 +57,6 @@ class MemTestClass {
 int main(int argc, char **argv) {
     initilizeStaticData();
 
-
     ios_base::sync_with_stdio(0);
     cin.tie(NULL);
     cout << fixed;
@@ -67,6 +66,12 @@ int main(int argc, char **argv) {
 
     Params::initializeParams(argc, argv);
 
+//    { // #TEST - some settings for IDE-built debugger
+//        clog << "TEST - data modified in main after initializing parameters" << endl;
+//        Params::INPUT_FILE_TYPE = Params::FASTA;
+//        Params::inStreamFilePath1 = "test_musket.fasta";
+//        Params::THREADS = 1;
+//    }
 
     TimeMeasurer::startMeasurement(TimeMeasurer::TOTAL_TIME);
 
@@ -81,6 +86,8 @@ int main(int argc, char **argv) {
     MyUtils::process_mem_usage();
 
     vector<Read *> *READS = &Global::READS;
+
+    clog << "There are " << Global::countValidReads() << " reads after removing periodic reads." << endl;
 
 
     int LEN = Global::calculateAvgReadLength() + Params::READ_END_TRIM_LEFT + Params::READ_END_TRIM_RIGHT;
@@ -122,7 +129,6 @@ int main(int argc, char **argv) {
 
     GenomeStatisticsCollector::addData("number of reads: ", Global::READS.size());
 
-
     if (Params::REMOVE_PREF_READS_TYPE != Params::PREF_READS_NONE) {
         ReadPreprocess prepr;
         VB prefReads = prepr.getPrefixReads();
@@ -140,6 +146,8 @@ int main(int argc, char **argv) {
     }
 
     MyUtils::process_mem_usage();
+
+    VI remapper;
 
     {
         unsigned id = 0;
@@ -210,10 +218,17 @@ int main(int argc, char **argv) {
         Global::READS.resize(back_index);
         vector<Read *>(Global::READS.begin(), Global::READS.end()).swap(Global::READS);
         DEBUG(Global::READS.size());
-        for (unsigned i = 0; i < Global::READS.size(); i++)
-            if (Global::READS[i] != nullptr)
-                Global::READS[i]->setId(i);
 
+        const bool create_remapper = false; // change to true if you need a remapper for some reason
+
+        if (create_remapper) remapper.resize(Global::READS.size());
+        for (unsigned i = 0; i < Global::READS.size(); i++) {
+            assert(Global::READS[i] != nullptr);
+            if (Global::READS[i] != nullptr) {
+                if (create_remapper) remapper[i] = Global::READS[i]->getId();
+                Global::READS[i]->setId(i);
+            }
+        }
     }
 
 
@@ -343,6 +358,8 @@ int main(int argc, char **argv) {
     G->pruneGraph();
     Global::removeIsolatedReads();
 
+    clog << "There are " << Global::countValidReads() << " reads after creating the overlap graph" << endl;
+
     {
         cerr << "Before first simplifier graph has " << G->countEdges() << " edges" << endl;
 
@@ -391,6 +408,7 @@ int main(int argc, char **argv) {
 
     } // end of simplifier
 
+    clog << "There are " << Global::countValidReads() << " reads after graph simplification" << endl;
 
     G->retainOnlySmallestOffset();
 

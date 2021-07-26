@@ -56,6 +56,7 @@ public:
 
     static string getComplimentaryString(string s);
 
+
     /**
      * Writes progress to cerr.
      * processed is the number of already processed elements
@@ -93,6 +94,13 @@ public:
         }
         return str;
     }
+
+    /**
+     * Runs DFS from given start node
+     * @param g
+     * @return
+     */
+    static int getLongestPathDFSGreedy(Graph &g, int num, vector<bool> &was, VI &visited);
 
     static string getReverse(string s) {
         reverse(s.begin(), s.end());

@@ -268,6 +268,8 @@ ContigCreatorSinglePath::addContractedPathToString(int a, LPII &path, string &s,
 void ContigCreatorSinglePath::markReliablePredecessorsByPairedConnections() {
     reliablePredecessors = unordered_map<int, unordered_set<int> >();
 
+//    DEBUG(Params::inStreamFilePath2);
+    if (Params::inStreamFilePath2 == "") return;
 
     minLengthOfEdgeForReliablePredecessor = Global::calculateAvgReadLength() * 2;
 

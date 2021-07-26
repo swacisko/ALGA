@@ -5,6 +5,7 @@
 
 #include <IO/ReadPreprocess.h>
 #include <future>
+#include <Utils/WorkloadManager.h>
 
 #include "IO/ReadPreprocess.h"
 #include "Utils/TimeMeasurer.h"
@@ -12,6 +13,9 @@
 VB ReadPreprocess::getPrefixReads() {
 
     vector<Read *> reads = getSortedReads();
+
+    assert(reads.size() == Global::countValidReads());
+
     vector<VB> markedToRemove(Params::THREADS, VB(Global::READS.size(), false));
 
 
@@ -28,27 +32,18 @@ VB ReadPreprocess::getPrefixReads() {
             Read *r1 = reads[a];
             Read *r2 = reads[b];
 
-            int m = min(r1->size(), r2->size());
-            int l = 0;
-            int BEG = 0;
-            if (r1->getSequence().getBlock(0) == r2->getSequence().getBlock(0)) l = BEG = Bitset::BLOCK_SIZE / 2;
+            int l = (r1->getSequence().mismatch(r2->getSequence()) >> 1);
 
-            for (int j = BEG; j < m; j++) {
-                if ((*r1)[j] == (*r2)[j]) l++;
-                else break;
-            }
+            assert(l <= reads[i]->size());
 
             if (Params::REMOVE_PREF_READS_TYPE == Params::PREF_READS_ONLY_DUPLICATES) {
                 if (l == reads[i]->size() && reads[i]->size() == reads[i + 1]->size()) {
-//                    markedToRemove[ reads[i]->getId() ] = true;
                     markedToRemove[thread_id][reads[i]->getId()] = true;
                 }
             } else if (Params::REMOVE_PREF_READS_TYPE == Params::PREF_READS_ALL_PREFIX_READS && l == reads[i]->size()) {
-//                markedToRemove[ reads[i]->getId() ] = true;
                 markedToRemove[thread_id][reads[i]->getId()] = true;
 
                 if (reads[i]->size() < reads[i + 1]->size()) {
-//                    markedToRemove[ reads[i]->getIdOfCompRevRead() ] = true; // comprev read is a proper suffix of another read, we remove it as well.
                     markedToRemove[thread_id][reads[i]->getIdOfCompRevRead()] = true; // comprev read is a proper suffix of another read, we remove it as well.
                 }
             }
@@ -88,9 +83,11 @@ vector<Read *> ReadPreprocess::getSortedReads() {
 
     // THE CODE BELOW IS PARALLEL SORTING USING FIRST BUCKET SORT for first block of each biset, then usual sort for each bucket done in every thread separately.
     // creating buckets with reads
-    vector<vector<Read *> > buckets(Params::THREADS);
+    const int B = (1 << 15);
+//    const int B = Params::THREADS;
+    vector<vector<Read *> > buckets(B);
     unsigned N = Global::READS.size();
-    int MOD = (1 << 11);
+    int MOD = (1 << 25);
     for (Read *r : Global::READS) {
         if (r == nullptr) continue;
         Bitset::TYPE bl = r->getSequence().getBlock(0);
@@ -106,7 +103,7 @@ vector<Read *> ReadPreprocess::getSortedReads() {
         if (bl0 >= MOD) cerr << "bl0 >= MOD" << endl;
 
         bl0 &= MOD - 1; // this is just bl0 % MOD
-        int ind = ((double) bl0 / MOD) * Params::THREADS;
+        int ind = (double) bl0 * B / MOD;
         buckets[ind].push_back(r);
     }
 
@@ -126,30 +123,20 @@ vector<Read *> ReadPreprocess::getSortedReads() {
                     int ind;
                     if (sizeof(Bitset::TYPE) == 8) ind = __builtin_ctzll(b1->getBlock(p) ^ b2->getBlock(p));
                     else ind = __builtin_ctz(b1->getBlock(p) ^ b2->getBlock(p));
-                    return (*b1)[p * Bitset::BLOCK_SIZE + ind] < (*b2)[p * Bitset::BLOCK_SIZE + ind];
-
-//                    assert( b1->getBlock(p) ^ b2->getBlock(p) != 0 ); // #TEST
+                    return (*b1)[(p << Bitset::BLOCK_OFFSET) + ind] < (*b2)[(p << Bitset::BLOCK_OFFSET) + ind];
                 }
             }
 
-
             if (r1->size() != r2->size()) return r1->size() < r2->size();
             else return r1->getId() < r2->getId();
-
         });
     };
 
-
-
-    // sorting paralelly
-    vector<std::future<void> > futures(Params::THREADS - 1);
-    for (int i = 1; i < Params::THREADS; i++) {
-        futures[i - 1] = std::async(std::launch::async, [&sortFun](int i) {
-            sortFun(i);
-        }, i);
-    }
-    sortFun(0);
-    for (auto &p : futures) p.get();
+    int blocks = 10;
+    WorkloadManager::parallelBlockExecution(0, B - 1, blocks, Params::THREADS,
+                                            [&sortFun](unsigned a, unsigned b, unsigned thread_id) {
+                                                for (int i = a; i <= b; i++) sortFun(i);
+                                            });
 
     cerr << "sorted" << endl;
 
@@ -161,7 +148,6 @@ vector<Read *> ReadPreprocess::getSortedReads() {
 
 
     TimeMeasurer::stopMeasurement("SORTING");
-//    return std::move(reads);
     return reads;
 }
 

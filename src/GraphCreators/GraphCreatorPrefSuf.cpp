@@ -41,6 +41,9 @@ GraphCreatorPrefSuf::GraphCreatorPrefSuf(vector<Read *> *reads, Graph *G, bool r
     int lg = (int) log2((double) G->size() / 2);
     prefixKmersBuckets = (1ll << lg);
     if (prefixKmersBuckets * 3ll > G->size()) prefixKmersBuckets >>= 1;
+
+    prefixKmersBuckets = max(3, prefixKmersBuckets);
+
 //    prefixKmersBuckets = MyUtils::getNearestLowerPrime((double) G->size() / 3);
     prefixKmersInBuckets = vector<vector<unsigned> >(prefixKmersBuckets);
 

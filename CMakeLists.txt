@@ -8,7 +8,7 @@ project(ALGA)
 SET(CMAKE_CXX_FLAGS "-pthread -std=c++14 -lm -O3") # compilation for faster execution -O2 uses all compiler optimizations, -O0 uses no optimizations at all
 #SET(CMAKE_CXX_FLAGS "-m64 -lm -O0 -g -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_GLIBCXX_SANITIZE_VECTOR -D_GLIBCXX_CONCEPT_CHECKS -D_GLIBCXX_DEBUG_ASSERT -D_GLIBCXX_DEBUG_PEDASSERT -D_GLIBCXX_DEBUG_VERIFY -pedantic -march=native -ffast-math -Wextra") # compilation for faster execution -O2 uses compiler optimizations, -O0 uses no optimizations at all
 
-#SET(CMAKE_CXX_FLAGS "-static -pthread -std=c++14 -lm -O3") # turbo fast
+#SET(CMAKE_CXX_FLAGS "-static -pthread -std=c++14 -lm -O3")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
