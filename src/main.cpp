@@ -358,6 +358,22 @@ int main(int argc, char **argv) {
     G->pruneGraph();
     Global::removeIsolatedReads();
 
+//    { // #TEST - checking for longest path
+//        int N = G->size();
+//        VI visited(N,0);
+//        VB was(N,false);
+//
+//        int L = 0;
+//        for(int i=0; i<N; i++){
+//            for(int d : visited) was[d] = false;
+//            visited.clear();
+//            L = max(L, MyUtils::getLongestPathDFSGreedy(*G,i,was,visited) );
+//
+//            for( int j=0; j<N; j++ ) random_shuffle( (*G)[j].begin(), (*G)[j].end() );
+//        }
+//        cerr << "Longest path in G by greedy DFS: " << L << endl;
+//    }
+
     clog << "There are " << Global::countValidReads() << " reads after creating the overlap graph" << endl;
 
     {
@@ -410,7 +426,13 @@ int main(int argc, char **argv) {
 
     clog << "There are " << Global::countValidReads() << " reads after graph simplification" << endl;
 
-    G->retainOnlySmallestOffset();
+    if (Global::countValidReads() != 0) G->retainOnlySmallestOffset();
+    else {
+        cerr
+                << "No valid nodes after graph simplification, no contig to extract. Please check the quality of the input data."
+                << endl;
+        exit(1);
+    }
 
 
     vector<Contig *> contigs;
@@ -440,25 +462,31 @@ int main(int argc, char **argv) {
     cerr << endl << "After filtering, there are " << contigs.size() << " contigs" << endl;
     MyUtils::process_mem_usage();
 
-    cerr << "Contigs length check:" << endl;
-    for (auto t : contigs) {
-        if (t->size() != t->getSequenceAsString().size()) {
-            DEBUG(t->size());
-            DEBUG(t->getSequenceAsString().size());
-            exit(1);
-        }
-    }
+    if (!contigs.empty()) {
 
-
-    for (auto ctg : contigs) {
-        for (auto pair : ctg->getContainedReads()) {
-            if (pair.first == nullptr) {
-                cerr << "pair.first == nullptr" << endl;
+        cerr << "Contigs length check:" << endl;
+        for (auto t : contigs) {
+            if (t->size() != t->getSequenceAsString().size()) {
+                DEBUG(t->size());
+                DEBUG(t->getSequenceAsString().size());
                 exit(1);
-            } else if (pair.first->getId() < 0 || pair.first->getId() >= G->size()) {
-                cerr << "pair.first->getId() = " << pair.first->getId() << endl;
             }
         }
+
+
+        for (auto ctg : contigs) {
+            for (auto pair : ctg->getContainedReads()) {
+                if (pair.first == nullptr) {
+                    cerr << "pair.first == nullptr" << endl;
+                    exit(1);
+                } else if (pair.first->getId() < 0 || pair.first->getId() >= G->size()) {
+                    cerr << "pair.first->getId() = " << pair.first->getId() << endl;
+                }
+            }
+        }
+    } else {
+        cerr << "NO CONTIGS PRODUCED. PLEASE CHECK THE QUALITY OF THE INPUT DATA." << endl;
+        clog << "NO CONTIGS PRODUCED. PLEASE CHECK THE QUALITY OF THE INPUT DATA." << endl;
     }
 
 
@@ -602,7 +630,7 @@ int main(int argc, char **argv) {
     }
 
 
-    bool trimContigs = true;
+    bool trimContigs = (!contigs.empty());
     if (trimContigs) {
 
 
