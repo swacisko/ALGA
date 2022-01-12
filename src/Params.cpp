@@ -331,7 +331,7 @@ void Params::initializeParams(int argc, char **argv) {
 
                     if (fileExtension == "fasta") INPUT_FILE_TYPE = FASTA;
                     else if (fileExtension == "pfasta") INPUT_FILE_TYPE = PFASTA;
-                    else if (fileExtension == "fastq") INPUT_FILE_TYPE = FASTQ;
+                    else if (fileExtension == "fastq" || fileExtension == "fq") INPUT_FILE_TYPE = FASTQ;
                     else INPUT_FILE_TYPE = MY_INPUT;
 
                     fileNameNoExt = "";
