@@ -55,7 +55,7 @@ If you suspect that the input data are for some reason of very poor quality and 
 ---
 
 # Docker:
-One can you docker to run ALGA.
+One can use docker to run ALGA.
 
 ```
 	docker build -t ALGA . 
