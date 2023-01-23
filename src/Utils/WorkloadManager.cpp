@@ -6,7 +6,7 @@
 #include <future>
 #include <cmath>
 #include <iostream>
-#include <zconf.h>
+//#include <zconf.h>
 #include "Utils/WorkloadManager.h"
 
 void WorkloadManager::parallelBlockExecution(unsigned n, unsigned N, unsigned blocks, unsigned threads,
@@ -51,7 +51,7 @@ void WorkloadManager::test() {
 
     auto job = [](unsigned a, unsigned b, unsigned id) {
         cerr << "Executing job in thread id = " << id << "  a = " << a << "  b = " << b << endl;
-        sleep(5);
+//        sleep(5);
     };
 
     parallelBlockExecution(0, N, B, T, job);
