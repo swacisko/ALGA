@@ -51,3 +51,12 @@ You can run ALGA specifying only one input file. In that case just remove the ar
 
 # Additional parameters:
 If you suspect that the input data are for some reason of very poor quality and may – even after the read correction – still contain a large number of errors, you can additionally use the option _\-\-error-rate=0.02_ (the value used, here 0.02, denotes the average expected fraction of errors).
+
+---
+
+# Docker:
+One can use docker to run ALGA.
+
+```
+	docker build -t ALGA . 
+```
